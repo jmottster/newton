@@ -24,22 +24,28 @@ pygame.init()
 
 # Set up the drawing window, frame rate clock, and fonts
 screen = pygame.display.set_mode([SCREEN_SIZE, SCREEN_SIZE])
+pygame.display.set_caption("Newton's Laws")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsans", 16)
 
 
 def setup_blobs():
+    # split the screen up into enough partitions for every blob
     blob_partition = round((SCALED_SCREEN_SIZE / math.sqrt(NUM_BLOBS)))
 
+    # Set up the center blob, which will be the massive star all other blobs orbit
     x = SCALED_SCREEN_SIZE / 2
     y = SCALED_SCREEN_SIZE / 2
 
     blobs.append(MassiveBlob("sun", (255, 255, 0), 20, CENTER_BLOB_MASS, x, y, 0, 0))
 
+    # Spiral around the center in a square grid of partitions,
+    # one partition at a time, to place the other blobs
     y_count = 0
     y_turns = 0
     x_turns = 1
     for z in range(NUM_BLOBS - 1):
+        # Set up some random values for this blob
         color = round(random.random() * (len(COLORS) - 1))
         radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
         mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
@@ -47,6 +53,9 @@ def setup_blobs():
         velocityx = random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
         velocityy = random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
 
+        # Get x and y coordinates for this blob
+        # x and y take turns moving, each turn gives the other one more turn than
+        # last time, which we need to do to spiral around in a square grid
         if y_turns == 0:
             x_turns -= 1
             if x_turns == 0:
@@ -68,22 +77,30 @@ def setup_blobs():
             elif x < (SCALED_SCREEN_SIZE / 2):
                 y -= blob_partition
 
+        # If we're on the center verticle line, no y velocity
         if x == (SCALED_SCREEN_SIZE / 2):
             velocityy = 0
 
+        # If we're on the center horizontal line, no x velocity
         if y == (SCALED_SCREEN_SIZE / 2):
             velocityx = 0
 
+        ## To ensure a roughly circuler trajectory of blobs around the center,
+        ## to encourage orbiting . . .
+
+        # Adjust y velocities according to where they are on the x axis
         if x > (SCALED_SCREEN_SIZE / 2) and velocityy < 0:
             velocityy = -velocityy
         elif x < (SCALED_SCREEN_SIZE / 2) and velocityy > 0:
             velocityy = -velocityy
 
+        # Adjust x velocities according to where they are on the y axis
         if y > (SCALED_SCREEN_SIZE / 2) and velocityx > 0:
             velocityx = -velocityx
         elif y < (SCALED_SCREEN_SIZE / 2) and velocityx < 0:
             velocityx = -velocityx
 
+        # Phew, let's instantiate this puppy . . .
         blobs.append(
             MassiveBlob(
                 str(z + 1), COLORS[color], radius, mass, x, y, velocityx, velocityy
