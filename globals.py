@@ -31,16 +31,17 @@ BACKGROUND_COLOR = (19, 21, 21)  # screen background color
 # jet grey (43, 44, 40)
 
 # Vars for creating blobs somewhat randomly
-NUM_BLOBS = 80
+NUM_BLOBS = 90
 MIN_RADIUS = 8
-MAX_RADIUS = 18
-MIN_VELOCITY = 24.783 * 600
-MAX_VELOCITY = 28.783 * 600
+MAX_RADIUS = 15
+MIN_VELOCITY = 25.783 * 550
+MAX_VELOCITY = 27.783 * 650
 MIN_MASS = 3.30 * 10**23 / 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
 CENTER_BLOB_MASS = 2.98892 * 10**29  # currently set with mass of the sun
 CENTER_BLOB_RADIUS = 20
 CENTER_BLOB_COLOR = (255, 210, 63)
+CENTER_BLOB_NAME = "sun"
 
 COLORS = [
     (221, 110, 66),

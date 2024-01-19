@@ -39,7 +39,14 @@ def setup_blobs():
 
     blobs.append(
         MassiveBlob(
-            "sun", CENTER_BLOB_COLOR, CENTER_BLOB_RADIUS, CENTER_BLOB_MASS, x, y, 0, 0
+            CENTER_BLOB_NAME,
+            CENTER_BLOB_COLOR,
+            CENTER_BLOB_RADIUS,
+            CENTER_BLOB_MASS,
+            x,
+            y,
+            0,
+            0,
         )
     )
 
@@ -129,6 +136,10 @@ while running:
 
     # Draw the blobs
     for blob in blobs:
+        # get rid of dead blobs
+        if blob.dead == True:
+            blobs.remove(blob)
+            continue
         x, y = blob.x * SCALE, blob.y * SCALE
         pygame.draw.circle(
             screen,
@@ -138,7 +149,7 @@ while running:
         )
         # Uncomment for writting lables on blobs
         # mass_text = font.render(
-        #     f"{blob.mass}",
+        #     f"D{blob.dead}, vx={blob.vx}, vy={blob.vy}",
         #     1,
         #     (255, 255, 255),
         # )
