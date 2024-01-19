@@ -23,7 +23,7 @@ AU = 149.6e6 * 1000  # 1 Astronomical Unit
 SCALE_FACTOR = 500  # Number of pixles to equal 1 AU
 SCALE = SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
-TIMESCALE = 3600 * 24  # elapsed time per frame, in seconds
+TIMESCALE = 3600 * 10  # elapsed time per frame, in seconds
 SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
 BACKGROUND_COLOR = (19, 21, 21)  # screen background color
@@ -32,13 +32,15 @@ BACKGROUND_COLOR = (19, 21, 21)  # screen background color
 
 # Vars for creating blobs somewhat randomly
 NUM_BLOBS = 90
-MIN_RADIUS = 8
+MIN_RADIUS = 5
 MAX_RADIUS = 15
-MIN_VELOCITY = 25.783 * 550
-MAX_VELOCITY = 27.783 * 650
-MIN_MASS = 3.30 * 10**23 / 0.75  # currently set with 75% of mass of Mercury
+START_PERFECT_ORBIT = True  # If true all blobs will start
+# with a perfect orbital velocity
+MIN_VELOCITY = 25.783 * 500  # Only if START_PERFECT_ORBIT is False
+MAX_VELOCITY = 29.783 * 500  # Only if START_PERFECT_ORBIT is False
+MIN_MASS = 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
-CENTER_BLOB_MASS = 2.98892 * 10**29  # currently set with mass of the sun
+CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
 CENTER_BLOB_RADIUS = 20
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
