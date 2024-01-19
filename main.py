@@ -37,7 +37,18 @@ def setup_blobs():
     x = SCALED_SCREEN_SIZE / 2
     y = SCALED_SCREEN_SIZE / 2
 
-    blobs.append(MassiveBlob("sun", (255, 255, 0), 20, CENTER_BLOB_MASS, x, y, 0, 0))
+    blobs.append(
+        MassiveBlob(
+            CENTER_BLOB_NAME,
+            CENTER_BLOB_COLOR,
+            CENTER_BLOB_RADIUS,
+            CENTER_BLOB_MASS,
+            x,
+            y,
+            0,
+            0,
+        )
+    )
 
     # Spiral around the center in a square grid of partitions,
     # one partition at a time, to place the other blobs
@@ -125,6 +136,10 @@ while running:
 
     # Draw the blobs
     for blob in blobs:
+        # get rid of dead blobs
+        if blob.dead == True:
+            blobs.remove(blob)
+            continue
         x, y = blob.x * SCALE, blob.y * SCALE
         pygame.draw.circle(
             screen,
@@ -134,7 +149,7 @@ while running:
         )
         # Uncomment for writting lables on blobs
         # mass_text = font.render(
-        #     f"{blob.mass}",
+        #     f"D{blob.dead}, vx={blob.vx}, vy={blob.vy}",
         #     1,
         #     (255, 255, 255),
         # )

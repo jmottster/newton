@@ -73,6 +73,7 @@ class MassiveBlob:
         self.ghosty = y
         self.vx = vx  # x velocity per frame
         self.vy = vy  # y velocity per frame
+        self.dead = False
         self.ghosting = False
 
     def advance(self):
@@ -167,18 +168,32 @@ class MassiveBlob:
             ) / (self.mass + blob.mass)
 
             # some fake energy loss due to collision
-            self.vx = self.vx * 0.99
-            blob.vx = blob.vx * 0.99
-            self.vy = self.vy * 0.99
-            blob.vy = blob.vy * 0.99
+            self.vx = self.vx * 0.995
+            blob.vx = blob.vx * 0.995
+            self.vy = self.vy * 0.995
+            blob.vy = blob.vy * 0.995
+
+            # To prevent cling-ons, we have the center blob swallow blobs
+            # that cross the collision boundry too far
+            if self.name == CENTER_BLOB_NAME or blob.name == CENTER_BLOB_NAME:
+                smaller_blob = self
+                if self.name != CENTER_BLOB_NAME:
+                    smaller_blob = blob
+                if abs(dd - d) >= (smaller_blob.scaled_radius * 0.5):
+                    if self.mass > blob.mass:
+                        self.mass += blob.mass
+                        blob.dead = True
+                    else:
+                        blob.mass += self.mass
+                        self.dead = True
 
     def gravitational_pull(self, blob, g):
         dx = blob.x - self.x
         dy = blob.y - self.y
         d = math.sqrt((dx * dx) + (dy * dy))
-        dd = self.scaled_radius + blob.scaled_radius
+        dd = (self.scaled_radius * 0.90) + blob.scaled_radius
 
-        if d < self.GRAVITATIONAL_RANGE and d > dd:
+        if d < self.GRAVITATIONAL_RANGE and d >= dd:
             F = g * self.mass * blob.mass / d**2
 
             theta = math.atan2(dy, dx)
