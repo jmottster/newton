@@ -26,18 +26,42 @@ FRAME_RATE = 60  # there are FRAME_RATE frames per second
 TIMESCALE = 3600 * 24  # elapsed time per frame, in seconds
 SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
-BACKGROUND_COLOR = (0, 0, 0)  # screen background color
+BACKGROUND_COLOR = (19, 21, 21)  # screen background color
+# night black (19, 21, 21)
+# jet grey (43, 44, 40)
 
 # Vars for creating blobs somewhat randomly
-NUM_BLOBS = 90
-MIN_RADIUS = 5
-MAX_RADIUS = 10
+NUM_BLOBS = 80
+MIN_RADIUS = 8
+MAX_RADIUS = 18
 MIN_VELOCITY = 24.783 * 600
 MAX_VELOCITY = 28.783 * 600
-MIN_MASS = 3.30 * 10**23  # currently set with mass of Mercury
+MIN_MASS = 3.30 * 10**23 / 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
-CENTER_BLOB_MASS = 2.98892 * 10**29
-COLORS = [(155, 155, 255), (155, 255, 155), (255, 155, 155)]
+CENTER_BLOB_MASS = 2.98892 * 10**29  # currently set with mass of the sun
+CENTER_BLOB_RADIUS = 20
+CENTER_BLOB_COLOR = (255, 210, 63)
+
+COLORS = [
+    (221, 110, 66),
+    (33, 118, 174),
+    (51, 115, 87),
+    (147, 3, 46),
+    (255, 133, 82),
+    (230, 230, 230),
+    (157, 195, 194),
+    (171, 146, 191),
+    (255, 81, 84),
+    (59, 244, 251),
+    (202, 255, 138),
+    (177, 15, 46),
+    (35, 116, 171),
+    (120, 188, 97),
+    (179, 0, 27),
+    (255, 196, 235),
+    (242, 100, 25),
+    (20, 92, 158),
+]
 
 
 # TODO get this working, keep false for now

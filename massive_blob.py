@@ -167,10 +167,10 @@ class MassiveBlob:
             ) / (self.mass + blob.mass)
 
             # some fake energy loss due to collision
-            self.vx = self.vx * 0.99
-            blob.vx = blob.vx * 0.99
-            self.vy = self.vy * 0.99
-            blob.vy = blob.vy * 0.99
+            self.vx = self.vx * 0.995
+            blob.vx = blob.vx * 0.995
+            self.vy = self.vy * 0.995
+            blob.vy = blob.vy * 0.995
 
     def gravitational_pull(self, blob, g):
         dx = blob.x - self.x

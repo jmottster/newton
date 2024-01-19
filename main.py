@@ -37,7 +37,11 @@ def setup_blobs():
     x = SCALED_SCREEN_SIZE / 2
     y = SCALED_SCREEN_SIZE / 2
 
-    blobs.append(MassiveBlob("sun", (255, 255, 0), 20, CENTER_BLOB_MASS, x, y, 0, 0))
+    blobs.append(
+        MassiveBlob(
+            "sun", CENTER_BLOB_COLOR, CENTER_BLOB_RADIUS, CENTER_BLOB_MASS, x, y, 0, 0
+        )
+    )
 
     # Spiral around the center in a square grid of partitions,
     # one partition at a time, to place the other blobs
