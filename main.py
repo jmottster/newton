@@ -6,8 +6,10 @@ Main file to run application with
 by Jason Mott, copyright 2024
 """
 
+import sys
 import pygame
 import random
+from os import path
 from massive_blob import MassiveBlob
 from globals import *
 
@@ -19,12 +21,26 @@ __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
+
+def resource_path(relative_path):
+    # Get absolute path to resource, works for dev and for PyInstaller
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = path.abspath(".")
+
+    return path.join(base_path, relative_path)
+
+
 blobs = []
 pygame.init()
 
-# Set up the drawing window, frame rate clock, and fonts
+# Set up the window, frame rate clock, and fonts
 screen = pygame.display.set_mode([SCREEN_SIZE, SCREEN_SIZE])
 pygame.display.set_caption("Newton's Laws")
+img = pygame.image.load(resource_path("newton_icon.png"))
+pygame.display.set_icon(img)
 clock = pygame.time.Clock()
 font = pygame.font.SysFont("comicsans", 16)
 
@@ -61,9 +77,6 @@ def setup_blobs():
         radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
         mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
 
-        velocityx = random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
-        velocityy = random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
-
         # Get x and y coordinates for this blob
         # x and y take turns moving, each turn gives the other one more turn than
         # last time, which we need to do to spiral around in a square grid
@@ -88,16 +101,27 @@ def setup_blobs():
             elif x < (SCALED_SCREEN_SIZE / 2):
                 y -= blob_partition
 
-        # If we're on the center verticle line, no y velocity
-        if x == (SCALED_SCREEN_SIZE / 2):
-            velocityy = 0
+        dx = x - (SCALED_SCREEN_SIZE / 2)
+        dy = y - (SCALED_SCREEN_SIZE / 2)
 
-        # If we're on the center horizontal line, no x velocity
-        if y == (SCALED_SCREEN_SIZE / 2):
-            velocityx = 0
+        velocity = 0
+        if START_PERFECT_ORBIT == True:
+            # get velocity for a perfect orbit around center blob
+            d = math.sqrt(dx**2 + dy**2)
+            velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
+        else:
+            # Just use a random velocity
+            velocity = random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
 
-        ## To ensure a roughly circuler trajectory of blobs around the center,
-        ## to encourage orbiting . . .
+        # Take our angle to the center and move it 90 degrees
+        # to set an orbital trajectory
+        rad = math.atan2(dy, dx)
+        rad = rad + (math.pi * 0.5)
+        # Set x and y velocities proportionate to orbital direction
+        velocityx = math.cos(rad) * velocity
+        velocityy = math.sin(rad) * velocity
+
+        ## Make sure all velocities are pointing is the right direction
 
         # Adjust y velocities according to where they are on the x axis
         if x > (SCALED_SCREEN_SIZE / 2) and velocityy < 0:
