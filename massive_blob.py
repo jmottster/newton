@@ -84,9 +84,8 @@ class MassiveBlob:
         self.y += self.vy * TIMESCALE
 
     def edge_detection(self, screen, wrap):
-        if (
-            wrap == True
-        ):  # TODO fix wraping for scale, get ghosting to work (or find a new strategy)
+        if wrap == True:
+            # TODO fix wraping for scale, get ghosting to work (or find a new strategy)
             # Move real x to other side of screen if it's gone off the edge
             if self.vx < 0 and self.x < 0:
                 self.x = screen.get_width()
@@ -173,37 +172,38 @@ class MassiveBlob:
             self.vy = self.vy * 0.995
             blob.vy = blob.vy * 0.995
 
-            # To prevent cling-ons, we have the center blob swallow blobs
+            # To prevent (or reduce) cling-ons, we have the center blob swallow blobs
             # that cross the collision boundry too far
             if self.name == CENTER_BLOB_NAME or blob.name == CENTER_BLOB_NAME:
                 smaller_blob = self
-                if self.name != CENTER_BLOB_NAME:
+                larger_blob = blob
+                if self.name == CENTER_BLOB_NAME:
                     smaller_blob = blob
-                if abs(dd - d) >= (smaller_blob.scaled_radius * 0.5):
-                    if self.mass > blob.mass:
-                        self.mass += blob.mass
-                        blob.dead = True
-                    else:
-                        blob.mass += self.mass
-                        self.dead = True
+                    larger_blob = self
+                if abs(dd - d) >= (smaller_blob.scaled_radius * 0.6):
+                    larger_blob.mass += smaller_blob.mass
+                    smaller_blob.dead = True
 
     def gravitational_pull(self, blob, g):
+        # Get distance between blobs, and cross over distance
+        # where gravity stops (to keep blobs from gluing to each other)
         dx = blob.x - self.x
         dy = blob.y - self.y
         d = math.sqrt((dx * dx) + (dy * dy))
         dd = (self.scaled_radius * 0.90) + blob.scaled_radius
 
+        # if two blobs are within gravitational range of each other,
+        # and not overlapping too much
         if d < self.GRAVITATIONAL_RANGE and d >= dd:
             F = g * self.mass * blob.mass / d**2
 
-            theta = math.atan2(dy, dx)
-            fdx = math.cos(theta) * F
-            fdy = math.sin(theta) * F
-
-            # print(
-            #     f"s={self.name} to {blob.name} d={round(d)}, F={F} vx={self.vx}, vy={self.vy}, fdx={fdx}, fdy={fdy}"
-            # )
-            # i = input()
+            rad = math.atan2(dy, dx)
+            fdx = math.cos(rad) * F
+            fdy = math.sin(rad) * F
 
             self.vx += fdx / self.mass * TIMESCALE
             self.vy += fdy / self.mass * TIMESCALE
+
+        elif d > self.GRAVITATIONAL_RANGE and self.name == CENTER_BLOB_NAME:
+            # If out of Sun's gravitational range, kill it
+            blob.dead = True
