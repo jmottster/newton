@@ -97,7 +97,7 @@ class BlobPlotter:
             radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
             mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
 
-            if self.square_grid == True:  # Square grid x,y plot for this blob
+            if self.square_grid:  # Square grid x,y plot for this blob
                 # Get x and y coordinates for this blob
                 # x and y take turns moving, each turn gives the other one more turn than
                 # last time, which we need to do to spiral around in a square grid
@@ -140,7 +140,7 @@ class BlobPlotter:
             dy = y - (SCALED_SCREEN_SIZE / 2)
 
             velocity = 0
-            if self.start_perfect_orbit == True:
+            if self.start_perfect_orbit:
                 # get velocity for a perfect orbit around center blob
                 d = math.sqrt(dx**2 + dy**2)
                 velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
@@ -183,10 +183,10 @@ class BlobPlotter:
         # Draw the blobs
         for blob in self.blobs:
             # get rid of dead blobs
-            if blob.dead == True:
-                if blob.swallowed == True:
+            if blob.dead:
+                if blob.swallowed:
                     self.blobs_swalled += 1
-                elif blob.escaped == True:
+                elif blob.escaped:
                     self.blobs_escaped += 1
                 self.blobs.remove(blob)
                 continue
@@ -206,15 +206,6 @@ class BlobPlotter:
             #         (blob.y * SCALE) - (mass_text.get_height() / 2),
             #     ),
             # )
-            #
-            # Ghosting not really working at the moment
-            # if blob.ghosting == True:
-            #     pygame.draw.circle(
-            #         screen,
-            #         blob.color,
-            #         (blob.ghostx, blob.ghosty),
-            #         blob.radius,
-            #     )
 
     def draw_stats(self, screen, stat_font):
         # Top left, showing sun mass
@@ -286,7 +277,7 @@ class BlobPlotter:
             # Check for and react to any collisions with other blobs
             for blob2 in self.blobs:
                 if (id(blob2) != id(blob)) and (checked.get(id(blob2)) == None):
-                    blob.collision_detection(blob2)  # TODO ghost collision detection
+                    blob.collision_detection(blob2)  # TODO wraping collision detection
                 blob.gravitational_pull(blob2, G)
 
             checked[id(blob)] = 1

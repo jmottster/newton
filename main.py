@@ -44,7 +44,7 @@ paused = False
 show_stats = True
 
 while running:
-    # Check for quit event
+    # Check for events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -64,7 +64,7 @@ while running:
             if event.key == pygame.K_w:
                 blob_plotter.start_perfect_orbit = not blob_plotter.start_perfect_orbit
 
-    # Fill the background
+    # Fill the background, then draw stuff
     screen.fill(BACKGROUND_COLOR)
 
     blob_plotter.draw_blobs(screen, blob_font)
