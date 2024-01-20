@@ -44,6 +44,16 @@ class BlobPlotter:
 
     def __init__(self):
         self.blobs = []
+        self.blobs_swalled = 0
+        self.blobs_escaped = 0
+        self.square_grid = SQUARE_BLOB_PLOTTER
+        self.start_perfect_orbit = START_PERFECT_ORBIT
+
+    def start_over(self):
+        self.blobs = []
+        self.blobs_swalled = 0
+        self.blobs_escaped = 0
+        self.setup_blobs()
 
     def setup_blobs(self):
         # split the screen up into enough partitions for every blob
@@ -87,7 +97,7 @@ class BlobPlotter:
             radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
             mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
 
-            if SQUARE_BLOB_PLOTTER == True:  # Square grid x,y plot for this blob
+            if self.square_grid == True:  # Square grid x,y plot for this blob
                 # Get x and y coordinates for this blob
                 # x and y take turns moving, each turn gives the other one more turn than
                 # last time, which we need to do to spiral around in a square grid
@@ -130,7 +140,7 @@ class BlobPlotter:
             dy = y - (SCALED_SCREEN_SIZE / 2)
 
             velocity = 0
-            if START_PERFECT_ORBIT == True:
+            if self.start_perfect_orbit == True:
                 # get velocity for a perfect orbit around center blob
                 d = math.sqrt(dx**2 + dy**2)
                 velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
@@ -174,6 +184,10 @@ class BlobPlotter:
         for blob in self.blobs:
             # get rid of dead blobs
             if blob.dead == True:
+                if blob.swallowed == True:
+                    self.blobs_swalled += 1
+                elif blob.escaped == True:
+                    self.blobs_escaped += 1
                 self.blobs.remove(blob)
                 continue
             x, y = blob.x * SCALE, blob.y * SCALE
@@ -203,30 +217,63 @@ class BlobPlotter:
             #     )
 
     def draw_stats(self, screen, stat_font):
-        stat_text_left = stat_font.render(
+        # Top left, showing sun mass
+        stat_text_top_left = stat_font.render(
             f"Sun mass: {self.blobs[0].mass}",
             1,
             (255, 255, 255),
             (19, 21, 21),
         )
         screen.blit(
-            stat_text_left,
+            stat_text_top_left,
             (
                 20,
                 20,
             ),
         )
-        stat_text_right = stat_font.render(
-            f"Number of blobs: {len(self.blobs)-1}",
+
+        # Top right, showing number of orbiting blobs
+        stat_text_top_right = stat_font.render(
+            f"Orbiting blobs: {len(self.blobs)-1}",
             1,
             (255, 255, 255),
             (19, 21, 21),
         )
         screen.blit(
-            stat_text_right,
+            stat_text_top_right,
             (
-                SCREEN_SIZE - stat_text_right.get_width() - 20,
+                SCREEN_SIZE - stat_text_top_right.get_width() - 20,
                 20,
+            ),
+        )
+
+        # Bottom left, showing number of blobs swallowed by the sun
+        stat_text_bottom_left = stat_font.render(
+            f"Blobs swallowed by Sun: {self.blobs_swalled}",
+            1,
+            (255, 255, 255),
+            (19, 21, 21),
+        )
+        screen.blit(
+            stat_text_bottom_left,
+            (
+                20,
+                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
+            ),
+        )
+
+        # Bottom right, showing number of blobs escaped the sun
+        stat_text_bottom_right = stat_font.render(
+            f"Blobs escaped Sun: {self.blobs_escaped}",
+            1,
+            (255, 255, 255),
+            (19, 21, 21),
+        )
+        screen.blit(
+            stat_text_bottom_right,
+            (
+                SCREEN_SIZE - stat_text_bottom_right.get_width() - 20,
+                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
             ),
         )
 

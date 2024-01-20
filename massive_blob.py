@@ -74,6 +74,8 @@ class MassiveBlob:
         self.vx = vx  # x velocity per frame
         self.vy = vy  # y velocity per frame
         self.dead = False
+        self.swallowed = False
+        self.escaped = False
         self.ghosting = False
 
     def advance(self):
@@ -183,6 +185,7 @@ class MassiveBlob:
                 if abs(dd - d) >= (smaller_blob.scaled_radius * 0.6):
                     larger_blob.mass += smaller_blob.mass
                     smaller_blob.dead = True
+                    smaller_blob.swallowed = True
 
     def gravitational_pull(self, blob, g):
         # Get distance between blobs, and cross over distance
@@ -207,3 +210,4 @@ class MassiveBlob:
         elif d > self.GRAVITATIONAL_RANGE and self.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it
             blob.dead = True
+            blob.escaped = True
