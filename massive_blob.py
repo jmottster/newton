@@ -69,14 +69,11 @@ class MassiveBlob:
         self.scaled_radius = (self.radius / SCALE_FACTOR) * AU
         self.x = x
         self.y = y
-        self.ghostx = x
-        self.ghosty = y
         self.vx = vx  # x velocity per frame
         self.vy = vy  # y velocity per frame
         self.dead = False
         self.swallowed = False
         self.escaped = False
-        self.ghosting = False
 
     def advance(self):
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
@@ -86,8 +83,8 @@ class MassiveBlob:
         self.y += self.vy * TIMESCALE
 
     def edge_detection(self, screen, wrap):
-        if wrap == True:
-            # TODO fix wraping for scale, get ghosting to work (or find a new strategy)
+        if wrap:
+            # TODO fix wraping for scale
             # Move real x to other side of screen if it's gone off the edge
             if self.vx < 0 and self.x < 0:
                 self.x = screen.get_width()
@@ -99,28 +96,6 @@ class MassiveBlob:
                 self.y = screen.get_height()
             elif self.vy > 0 and self.y > screen.get_height():
                 self.y = 0
-
-            self.ghostx, self.ghosty, self.ghosting = self.x, self.y, False
-
-            # If radius has gone off x axis edge, draw ghost selficle on other side of screen for wraping effect
-            if (self.x - self.radius) < 0 and self.x >= 0:
-                self.ghostx = screen.get_width() + self.x
-                self.ghosting = True
-            elif (
-                self.x + self.radius
-            ) > screen.get_width() and self.x <= screen.get_width():
-                self.ghostx = 0 - (screen.get_width() - self.x)
-                self.ghosting = True
-
-            # If radius has gone off y axis edge, draw ghost selficle on other side of screen for wraping effect
-            if (self.y - self.radius) < 0 and self.y >= 0:
-                self.ghosty = screen.get_height() + self.y
-                self.ghosting = True
-            elif (
-                self.y + self.radius
-            ) > screen.get_height() and self.y <= screen.get_height():
-                self.ghosty = 0 - (screen.get_height() - self.y)
-                self.ghosting = True
 
         else:
             zero = 0  # -(SCALED_SCREEN_SIZE / 4)
