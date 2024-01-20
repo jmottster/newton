@@ -38,27 +38,46 @@ blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), 18)
 blob_plotter = BlobPlotter()
 blob_plotter.setup_blobs()
 
-# Run until the user asks to quit
+# Runtime behavior bools
 running = True
+paused = False
+show_stats = True
 
 while running:
     # Check for quit event
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                paused = not paused
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_d:
+                show_stats = not show_stats
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_s:
+                blob_plotter.start_over()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                blob_plotter.square_grid = not blob_plotter.square_grid
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_w:
+                blob_plotter.start_perfect_orbit = not blob_plotter.start_perfect_orbit
 
     # Fill the background
     screen.fill(BACKGROUND_COLOR)
 
     blob_plotter.draw_blobs(screen, blob_font)
 
-    blob_plotter.draw_stats(screen, stat_font)
+    if show_stats:
+        blob_plotter.draw_stats(screen, stat_font)
 
     # Flip the display
     pygame.display.flip()
 
-    # Apply changes
-    blob_plotter.update_blobs()
+    if not paused:
+        # Apply changes
+        blob_plotter.update_blobs()
 
     # ensure frame rate
     clock.tick(FRAME_RATE)

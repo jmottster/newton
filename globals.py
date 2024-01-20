@@ -42,8 +42,8 @@ START_PERFECT_ORBIT = True  # If true all blobs will start
 # with a perfect orbital velocity
 SQUARE_BLOB_PLOTTER = False  # Plot blobs in a square grid to start
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
-MIN_VELOCITY = 25.783 * 500  # Only if START_PERFECT_ORBIT is False
-MAX_VELOCITY = 29.783 * 500  # Only if START_PERFECT_ORBIT is False
+MIN_VELOCITY = 47.4 * 1000  # Only if START_PERFECT_ORBIT is False
+MAX_VELOCITY = 29.783 * 1000  # Only if START_PERFECT_ORBIT is False
 MIN_MASS = 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
