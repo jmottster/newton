@@ -46,38 +46,49 @@ class BlobPlotter:
         self.blobs = []
         self.blobs_swalled = 0
         self.blobs_escaped = 0
+        self.z_axis = {}
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
+        self.start_perfect_floor_bounce = START_PERFECT_FLOOR_BOUNCE
 
     def start_over(self):
         self.blobs = []
         self.blobs_swalled = 0
         self.blobs_escaped = 0
-        self.setup_blobs()
+        self.z_axis = {}
+        self.plot_blobs()
 
-    def setup_blobs(self):
+    def plot_blobs(self):
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 9:
-            blob_partition = round((SCALED_SCREEN_SIZE / math.sqrt(NUM_BLOBS)))
+            blob_partition = round(((SCALED_SCREEN_SIZE) / math.sqrt(NUM_BLOBS)))
         else:
             blob_partition = SCALED_SCREEN_SIZE / 4
 
-        # Set up the center blob, which will be the massive star all other blobs orbit
-        x = SCALED_SCREEN_SIZE / 2
-        y = SCALED_SCREEN_SIZE / 2
+        half_screen = SCALED_SCREEN_SIZE / 2
 
-        self.blobs.append(
-            MassiveBlob(
-                CENTER_BLOB_NAME,
-                CENTER_BLOB_COLOR,
-                CENTER_BLOB_RADIUS,
-                CENTER_BLOB_MASS,
-                x,
-                y,
-                0,
-                0,
-            )
+        # Set up the center blob, which will be the massive star all other blobs orbit
+        x = half_screen
+        y = half_screen
+        z = half_screen
+
+        sun_blob = MassiveBlob(
+            CENTER_BLOB_NAME,
+            CENTER_BLOB_COLOR,
+            CENTER_BLOB_RADIUS,
+            CENTER_BLOB_MASS,
+            x,
+            y,
+            z,
+            0,
+            0,
+            0,
         )
+        self.blobs.append(sun_blob)
+
+        if self.z_axis.get(sun_blob.z) is None:
+            self.z_axis[sun_blob.z] = []
+        self.z_axis[sun_blob.z].append(sun_blob)
 
         # Blob placement grid, either square (if SQUARE_BLOB_PLOTTER True) or circular . . .
 
@@ -87,11 +98,12 @@ class BlobPlotter:
         x_turns = 1
 
         # Interators for circular grid placement
-        plot_rad = 0
+        plot_phi = 0.0
+        plot_theta = math.pi * 0.5
         pi_inc = 0.25
         plot_radius = blob_partition
 
-        for z in range(NUM_BLOBS - 1):
+        for i in range(NUM_BLOBS - 1):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
             radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
@@ -107,9 +119,9 @@ class BlobPlotter:
                         y_turns = y_count + 1
                         y_count = 0
 
-                    if y <= (SCALED_SCREEN_SIZE / 2):
+                    if y <= half_screen:
                         x += blob_partition
-                    elif y > (SCALED_SCREEN_SIZE / 2):
+                    elif y > half_screen:
                         x -= blob_partition
                 else:
                     y_count += 1
@@ -117,95 +129,110 @@ class BlobPlotter:
                     if y_turns == 0:
                         x_turns = y_count + 1
 
-                    if x >= (SCALED_SCREEN_SIZE / 2):
+                    if x >= half_screen:
                         y += blob_partition
-                    elif x < (SCALED_SCREEN_SIZE / 2):
+                    elif x < half_screen:
                         y -= blob_partition
             else:  # Circular grid x,y plot for this blob
                 # Get x and y for this blob, vars set up from last interation or initial setting
-                x = (SCALED_SCREEN_SIZE / 2) + math.cos(plot_rad) * plot_radius
-                y = (SCALED_SCREEN_SIZE / 2) + math.sin(plot_rad) * plot_radius
+                x = half_screen + plot_radius * math.sin(plot_theta) * math.cos(
+                    plot_phi
+                )
+                y = half_screen + plot_radius * math.sin(plot_theta) * math.sin(
+                    plot_phi
+                )
+                z = half_screen + plot_radius * math.cos(plot_theta)
 
                 # Set up vars for next interation, move the "clock dial" another notch,
                 # or make it longer by blob_partition if we've gone around 360 degrees
-                if round(plot_rad, 8) == round((math.pi * 2) - (math.pi * pi_inc), 8):
-                    plot_rad = 0
+                if round(plot_phi, 8) == round((math.pi * 2) - (math.pi * pi_inc), 8):
+                    plot_phi = 0.0
                     plot_radius += blob_partition
                     pi_inc = pi_inc / 2
                 else:
-                    plot_rad += math.pi * pi_inc
+                    plot_phi += math.pi * pi_inc
 
             # Figure out velocity for this blob
-            dx = x - (SCALED_SCREEN_SIZE / 2)
-            dy = y - (SCALED_SCREEN_SIZE / 2)
+            dx = x - half_screen
+            dy = y - half_screen
+            dz = z - half_screen
+            d = math.sqrt(dx**2 + dy**2 + dz**2)
 
             velocity = 0
             if self.start_perfect_orbit:
                 # get velocity for a perfect orbit around center blob
-                d = math.sqrt(dx**2 + dy**2)
                 velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
+            elif self.start_perfect_floor_bounce:
+                # get velocity for a perfect floor bounce when that is on
+                velocity = math.sqrt(G * FLOOR_MASS / d)
             else:
                 # Just use a random velocity
                 velocity = (
                     random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
                 )
 
-            # Take our angle to the center and move it 90 degrees
-            # to set an orbital trajectory
-            rad = math.atan2(dy, dx)
-            rad = rad + (math.pi * 0.5)
-            # Set x and y velocities proportionate to orbital direction
-            velocityx = math.cos(rad) * velocity
-            velocityy = math.sin(rad) * velocity
+            theta = math.acos(dz / d)
+            phi = math.atan2(dy, dx)
 
-            ## Make sure all velocities are pointing is the right direction
+            theta = theta + (math.pi * 0.25)
+            phi = phi - (math.pi * 0.5)
 
-            # Adjust y velocities according to where they are on the x axis
-            if x > (SCALED_SCREEN_SIZE / 2) and velocityy < 0:
-                velocityy = -velocityy
-            elif x < (SCALED_SCREEN_SIZE / 2) and velocityy > 0:
-                velocityy = -velocityy
-
-            # Adjust x velocities according to where they are on the y axis
-            if y > (SCALED_SCREEN_SIZE / 2) and velocityx > 0:
-                velocityx = -velocityx
-            elif y < (SCALED_SCREEN_SIZE / 2) and velocityx < 0:
-                velocityx = -velocityx
+            velocityx = velocity * math.sin(theta) * math.cos(phi)
+            velocityy = velocity * math.sin(theta) * math.sin(phi)
+            velocityz = velocity * math.cos(theta)
 
             # Phew, let's instantiate this puppy . . .
-            self.blobs.append(
-                MassiveBlob(
-                    str(z + 1), COLORS[color], radius, mass, x, y, velocityx, velocityy
-                )
+            new_blob = MassiveBlob(
+                str(i + 1),
+                COLORS[color],
+                radius,
+                mass,
+                y,
+                z,
+                x,
+                velocityz,
+                velocityy,
+                velocityx,
             )
+            self.blobs.append(new_blob)
+
+            if self.z_axis.get(new_blob.z) is None:
+                self.z_axis[new_blob.z] = []
+            self.z_axis[new_blob.z].append(new_blob)
 
     def draw_blobs(self, screen, blob_font):
-        # Draw the blobs
-        for blob in self.blobs:
-            # get rid of dead blobs
-            if blob.dead:
-                if blob.swallowed:
-                    self.blobs_swalled += 1
-                elif blob.escaped:
-                    self.blobs_escaped += 1
-                self.blobs.remove(blob)
-                continue
-            x, y = blob.x * SCALE, blob.y * SCALE
-            pygame.draw.circle(
-                screen,
-                blob.color,
-                (x, y),
-                blob.radius,
-            )
-            # Uncomment for writting lables on blobs
-            # mass_text = blob_font.render(f"{blob.name}", 1, (255, 255, 255), (0, 0, 0))
-            # screen.blit(
-            #     mass_text,
-            #     (
-            #         (blob.x * SCALE) - (mass_text.get_width() / 2),
-            #         (blob.y * SCALE) - (mass_text.get_height() / 2),
-            #     ),
-            # )
+        keys = reversed(sorted(self.z_axis.keys()))
+
+        for key in keys:
+            # Draw the blobs
+            for blob in self.z_axis[key]:
+                # get rid of dead blobs
+                if blob.dead:
+                    if blob.swallowed:
+                        self.blobs_swalled += 1
+                    elif blob.escaped:
+                        self.blobs_escaped += 1
+                    self.blobs.remove(blob)
+                    continue
+                x, y = blob.x * SCALE, blob.y * SCALE
+
+                pygame.draw.circle(
+                    screen,
+                    blob.color,
+                    (x, y),
+                    blob.radius,
+                )
+                # Uncomment for writting lables on blobs
+                # mass_text = blob_font.render(
+                #     f"{round(blob.radius)}", 1, (255, 255, 255), (0, 0, 0)
+                # )
+                # screen.blit(
+                #     mass_text,
+                #     (
+                #         (blob.x * SCALE) - (mass_text.get_width() / 2),
+                #         (blob.y * SCALE) - (mass_text.get_height() / 2),
+                #     ),
+                # )
 
     def draw_stats(self, screen, stat_font):
         # Top left, showing sun mass
@@ -271,6 +298,7 @@ class BlobPlotter:
     def update_blobs(self):
         # set up hash to prevent double checking blob pairs for collision
         checked = {}
+        self.z_axis = {}
 
         # Check blobs
         for blob in self.blobs:
@@ -283,7 +311,13 @@ class BlobPlotter:
             checked[id(blob)] = 1
 
             # Change direction or wrap if hitting the edge of screen
-            # blob.edge_detection(screen, wrap)
+            # blob.edge_detection(wrap)
+            # Turn on floor gravity (experimental)
+            # blob.floor_gravity(G)
 
             # Apply velocity
             blob.advance()
+
+            if self.z_axis.get(blob.z) is None:
+                self.z_axis[blob.z] = []
+            self.z_axis[blob.z].append(blob)

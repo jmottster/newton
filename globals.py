@@ -19,38 +19,42 @@ __status__ = "In Progress"
 
 
 # Global vars
+
+
+# No need to ever change these
 G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
-SCALE_FACTOR = 500  # Number of pixles to equal 1 AU
+
+# Change to scale the size of universe (thus window)
+SCALE_PERCENT = 1
+SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
+TIMESCALE = 3600 * 12 * SCALE_PERCENT  # elapsed time per frame, in seconds
+# Height and width of screen (square is best for orbits)
+SCREEN_SIZE = 1000 * SCALE_PERCENT
+MIN_RADIUS = 5 * SCALE_PERCENT
+MAX_RADIUS = 20 * SCALE_PERCENT
 SCALE = SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-FRAME_RATE = 60  # there are FRAME_RATE frames per second
-TIMESCALE = 3600 * 12  # elapsed time per frame, in seconds
-SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
-BACKGROUND_COLOR = (0, 21, 36)  # screen background color
-# night black (19, 21, 21)
-# jet grey (43, 44, 40)
-# rich black (0, 21, 36)
-DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = path.join("resources", "newton_icon.png")
+FRAME_RATE = 60  # there are FRAME_RATE frames per second
 
 # Vars for creating blobs somewhat randomly
 NUM_BLOBS = 100
-MIN_RADIUS = 5
-MAX_RADIUS = 15
-START_PERFECT_ORBIT = True  # If true all blobs will start
+# If true all blobs will start
 # with a perfect orbital velocity
-SQUARE_BLOB_PLOTTER = False  # Plot blobs in a square grid to start
+START_PERFECT_ORBIT = True
+START_PERFECT_FLOOR_BOUNCE = False
+# Plot blobs in a square grid to start
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
+SQUARE_BLOB_PLOTTER = False
 MIN_VELOCITY = 47.4 * 1000  # Only if START_PERFECT_ORBIT is False
 MAX_VELOCITY = 29.783 * 1000  # Only if START_PERFECT_ORBIT is False
 MIN_MASS = 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
+FLOOR_MASS = 1.98892 * 10**28
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
-CENTER_BLOB_RADIUS = 30
+CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
-
 COLORS = [
     (221, 110, 66),
     (33, 118, 174),
@@ -78,6 +82,14 @@ COLORS = [
     (166, 161, 94),
     (194, 151, 184),
 ]
+BACKGROUND_COLOR = (0, 21, 36)  # screen background color
+# night black (19, 21, 21)
+# jet grey (43, 44, 40)
+# rich black (0, 21, 36)
+DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
+WINDOW_ICON = path.join("resources", "newton_icon.png")
+STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
+BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)
 
 
 # TODO get this working, keep false for now

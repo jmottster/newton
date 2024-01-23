@@ -6,7 +6,6 @@ Main file to run application with
 by Jason Mott, copyright 2024
 """
 
-
 import pygame
 from resources import resource_path
 from massive_blob import MassiveBlob
@@ -30,13 +29,13 @@ pygame.display.set_caption("Newton's Laws")
 img = pygame.image.load(resource_path(WINDOW_ICON))
 pygame.display.set_icon(img)
 clock = pygame.time.Clock()
-stat_font = pygame.font.Font(resource_path(DISPLAY_FONT), 24)
-blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), 18)
+stat_font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
+blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
 
 
 # Get all the blobs ready to roll
 blob_plotter = BlobPlotter()
-blob_plotter.setup_blobs()
+blob_plotter.plot_blobs()
 
 # Runtime behavior bools
 running = True
