@@ -68,7 +68,7 @@ class MassiveBlob:
         self.name = name
         self.color = color
         self.radius = radius
-        self.scaled_radius = (self.radius / SCALE_FACTOR) * AU
+        self.scaled_radius = (self.radius / AU_SCALE_FACTOR) * AU
         self.mass = mass
         self.x = x
         self.y = y
@@ -123,9 +123,9 @@ class MassiveBlob:
 
         else:
             zero = 0  # -(SCALED_SCREEN_SIZE / 4)
-            screen_size = (
-                SCREEN_SIZE  # SCALED_SCREEN_SIZE  # + (SCALED_SCREEN_SIZE / 4)
-            )
+            screen_size = SCREEN_SIZE
+            scaled_screen_size = SCALED_SCREEN_SIZE
+
             local_x = self.x * SCALE
             local_y = self.y * SCALE
             local_z = self.z * SCALE
@@ -138,7 +138,7 @@ class MassiveBlob:
 
             if ((local_x + self.radius) >= screen_size) and (self.vx >= 0):
                 self.vx = -self.vx
-                self.x = SCALED_SCREEN_SIZE - self.scaled_radius
+                self.x = scaled_screen_size - self.scaled_radius
                 self.vx = self.vx * 0.995
 
             # Change y direction if hitting the edge of screen
@@ -149,7 +149,7 @@ class MassiveBlob:
 
             if ((local_y + self.radius) >= screen_size) and self.vy >= 0:
                 self.vy = -self.vy
-                self.y = SCALED_SCREEN_SIZE - self.scaled_radius
+                self.y = scaled_screen_size - self.scaled_radius
                 self.vy = self.vy * 0.995
 
             # Change z direction if hitting the edge of screen
@@ -160,7 +160,7 @@ class MassiveBlob:
 
             if ((local_z + self.radius) >= screen_size - screen_size) and self.vz >= 0:
                 self.vz = -self.vz
-                self.z = SCALED_SCREEN_SIZE - self.scaled_radius
+                self.z = scaled_screen_size - self.scaled_radius
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):

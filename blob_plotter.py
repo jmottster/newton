@@ -106,8 +106,24 @@ class BlobPlotter:
         for i in range(NUM_BLOBS - 1):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
-            radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
-            mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
+
+            # Divide mass and radius ranges in half, put smaller masses with
+            # smaller radiuses, and vice versa. Randomize whether we're doing
+            # a bigger or smaller blob.
+            if round(random.random() * 10) % 2:
+                min_radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) / 2
+                min_mass = MIN_MASS + (MAX_MASS - MIN_MASS) / 2
+                radius = round(
+                    (random.random() * (MAX_RADIUS - min_radius)) + min_radius
+                )
+                mass = (random.random() * (MAX_MASS - min_mass)) + min_mass
+            else:
+                max_radius = MAX_RADIUS - (MAX_RADIUS - MIN_RADIUS) / 2
+                max_mass = MAX_MASS - (MAX_MASS - MIN_MASS) / 2
+                radius = round(
+                    (random.random() * (max_radius - MIN_RADIUS)) + MIN_RADIUS
+                )
+                mass = (random.random() * (max_mass - MIN_MASS)) + MIN_MASS
 
             if self.square_grid:  # Square grid x,y plot for this blob
                 # Get x and y coordinates for this blob
@@ -153,9 +169,9 @@ class BlobPlotter:
                     plot_phi += math.pi * pi_inc
 
             # Figure out velocity for this blob
-            dx = x - half_screen
-            dy = y - half_screen
-            dz = z - half_screen
+            dx = half_screen - x
+            dy = half_screen - y
+            dz = half_screen - z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
 
             velocity = 0
@@ -174,7 +190,7 @@ class BlobPlotter:
             theta = math.acos(dz / d)
             phi = math.atan2(dy, dx)
 
-            theta = theta + (math.pi * 0.25)
+            theta = theta - (math.pi * 0.25)
             phi = phi - (math.pi * 0.5)
 
             velocityx = velocity * math.sin(theta) * math.cos(phi)
@@ -187,8 +203,8 @@ class BlobPlotter:
                 COLORS[color],
                 radius,
                 mass,
-                y,
                 z,
+                y,
                 x,
                 velocityz,
                 velocityy,
@@ -224,7 +240,7 @@ class BlobPlotter:
                 )
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
-                #     f"{round(blob.radius)}", 1, (255, 255, 255), (0, 0, 0)
+                #     f"{blob.name}", 1, (255, 255, 255), (0, 0, 0)
                 # )
                 # screen.blit(
                 #     mass_text,
