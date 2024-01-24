@@ -199,19 +199,22 @@ class BlobPlotter:
             #     blob.radius,
             # )
             # Uncomment for writting lables on blobs
-            # mass_text = blob_font.render(f"{blob.name}", 1, (255, 255, 255), (0, 0, 0))
+            # mass_text = blob_font.render(f"{blob.color}", 1, (255, 255, 255), (0, 0, 0))
             # screen.blit(
             #     mass_text,
             #     (
             #         (blob.x * SCALE) - (mass_text.get_width() / 2),
-            #         (blob.y * SCALE) - (mass_text.get_height() / 2),
+            #         (blob.y * SCALE) - (mass_text.get_height()) - blob.radius,
             #     ),
             # )
 
-    def draw_stats(self, screen, stat_font):
+    def draw_stats(self, screen, stat_font, message=None):
+        if message is None:
+            message = f"Sun mass: {self.blobs[0].mass}"
+
         # Top left, showing sun mass
         stat_text_top_left = stat_font.render(
-            f"Sun mass: {self.blobs[0].mass}",
+            message,
             1,
             (255, 255, 255),
             (19, 21, 21),
