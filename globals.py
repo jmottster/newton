@@ -24,7 +24,7 @@ AU = 149.6e6 * 1000  # 1 Astronomical Unit
 SCALE_FACTOR = 500  # Number of pixles to equal 1 AU
 SCALE = SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
-TIMESCALE = 3600 * 12  # elapsed time per frame, in seconds
+TIMESCALE = 3600 * 6  # elapsed time per frame, in seconds
 SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
 BACKGROUND_COLOR = (0, 21, 36)  # screen background color
@@ -37,7 +37,7 @@ WINDOW_ICON = path.join("resources", "newton_icon.png")
 # Vars for creating blobs somewhat randomly
 NUM_BLOBS = 100
 MIN_RADIUS = 5
-MAX_RADIUS = 15
+MAX_RADIUS = 20
 START_PERFECT_ORBIT = True  # If true all blobs will start
 # with a perfect orbital velocity
 SQUARE_BLOB_PLOTTER = False  # Plot blobs in a square grid to start

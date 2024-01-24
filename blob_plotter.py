@@ -190,13 +190,14 @@ class BlobPlotter:
                     self.blobs_escaped += 1
                 self.blobs.remove(blob)
                 continue
-            x, y = blob.x * SCALE, blob.y * SCALE
-            pygame.draw.circle(
-                screen,
-                blob.color,
-                (x, y),
-                blob.radius,
-            )
+            blob.draw(screen)
+            # x, y = blob.x * SCALE, blob.y * SCALE
+            # pygame.draw.circle(
+            #     screen,
+            #     blob.color,
+            #     (x, y),
+            #     blob.radius,
+            # )
             # Uncomment for writting lables on blobs
             # mass_text = blob_font.render(f"{blob.name}", 1, (255, 255, 255), (0, 0, 0))
             # screen.blit(

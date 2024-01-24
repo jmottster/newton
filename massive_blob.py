@@ -6,7 +6,8 @@ Class file for blobs that will interact with each other (like planets and stars)
 by Jason Mott, copyright 2024
 """
 
-import math
+import math, random
+import pygame
 from globals import *
 
 __author__ = "Jason Mott"
@@ -74,6 +75,25 @@ class MassiveBlob:
         self.dead = False
         self.swallowed = False
         self.escaped = False
+        self.blob_suface = BlobSurface(radius, color)
+
+    def draw(self, screen):
+        x = self.x * SCALE
+        y = self.y * SCALE
+
+        if self.name != CENTER_BLOB_NAME:
+            self.blob_suface.draw(screen, (x, y))
+        else:
+            pygame.draw.circle(screen, self.color, (x, y), self.radius)
+
+            sun_radius = self.radius + random.randint(1, 4)
+            surf = pygame.Surface((sun_radius * 2, sun_radius * 2))
+            pygame.draw.circle(surf, self.color, (sun_radius, sun_radius), sun_radius)
+            screen.blit(
+                surf,
+                (500 - sun_radius, 500 - sun_radius),
+                special_flags=pygame.BLEND_RGB_ADD,
+            )
 
     def advance(self):
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
@@ -186,3 +206,101 @@ class MassiveBlob:
             # If out of Sun's gravitational range, kill it
             blob.dead = True
             blob.escaped = True
+
+
+class BlobSurface(pygame.Surface):
+    def __init__(self, radius, color):
+        pygame.Surface.__init__(self, (radius * 2, radius * 2))
+        self.position = (0, 0)
+        self.radius = radius
+        self.rect = pygame.Rect(self.position, (radius * 2, radius * 2))
+        self.color = color
+        self.parent_blob = self.create_blob()
+        self.center_blob_pos = (SCREEN_SIZE / 2, SCREEN_SIZE / 2)
+        self.shade_radius = radius * 10
+        self.shade_flag_light = pygame.BLEND_RGB_ADD
+        self.shade_flag_dark = pygame.BLEND_RGB_SUB
+        self.shade_colorkey = (0, 0, 0)
+        self.shade_color = (50, 50, 50)
+        self.shade = None
+        self.alpha_image = None
+        self.mask_image = None
+        self.create_alpha_image()
+        self.create_mask()
+        self.create_shade()
+
+    def get_rect(self):
+        return self.rect
+
+    def create_blob(self):
+        pygame.draw.circle(self, self.color, (self.radius, self.radius), self.radius)
+
+    def create_shade(self):
+        self.shade = pygame.Surface((self.shade_radius * 2, self.shade_radius * 2))
+        pygame.draw.circle(
+            self.shade,
+            self.shade_color,
+            (self.shade_radius, self.shade_radius),
+            self.shade_radius,
+        )
+        self.shade.set_colorkey(self.shade_colorkey)
+
+    def create_alpha_image(self):
+        self.alpha_image = self.subsurface(
+            pygame.Rect(0, 0, self.radius * 2, self.radius * 2)
+        ).convert_alpha()
+
+    def create_mask(self):
+        self.mask_image = pygame.Surface(self.alpha_image.get_size(), pygame.SRCALPHA)
+
+        pygame.draw.circle(
+            self.mask_image,
+            (255, 255, 255, 255),
+            (self.radius, self.radius),
+            self.radius,
+        )
+
+    def get_shaded_blob(self):
+        self.create_alpha_image()
+
+        offset = self.get_lighting_direction()
+
+        self.alpha_image.blit(
+            self.shade,
+            (
+                -(self.shade_radius - self.radius) + offset[0],
+                -(self.shade_radius - self.radius) + offset[1],
+            ),
+            special_flags=self.shade_flag_light,
+        )
+
+        self.alpha_image.blit(
+            self.mask_image, (0, 0), special_flags=pygame.BLEND_RGBA_MIN
+        )
+
+        return self.alpha_image
+
+    def get_lighting_direction(self):
+        x1 = self.position[0]
+        y1 = self.position[1]
+        x2 = self.center_blob_pos[0]
+        y2 = self.center_blob_pos[1]
+
+        dx = x2 - x1
+        dy = y2 - y1
+
+        theta = math.atan2(dy, dx)
+
+        x = self.shade_radius * math.cos(theta)
+        y = self.shade_radius * math.sin(theta)
+
+        return (x, y)
+
+    def draw(self, screen, pos=None):
+        if pos is not None:
+            self.position = pos
+
+        screen.blit(
+            self.get_shaded_blob(),
+            (self.position[0] - self.radius, self.position[1] - self.radius),
+        )
