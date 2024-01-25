@@ -25,7 +25,7 @@ pygame.init()
 
 # Set up the window, frame rate clock, and fonts
 screen = pygame.display.set_mode([SCREEN_SIZE, SCREEN_SIZE])
-pygame.display.set_caption("Newton's Laws")
+pygame.display.set_caption("Newton's Blobs")
 img = pygame.image.load(resource_path(WINDOW_ICON))
 pygame.display.set_icon(img)
 clock = pygame.time.Clock()
@@ -41,6 +41,13 @@ blob_plotter.plot_blobs()
 running = True
 paused = False
 show_stats = True
+message = None
+message_counter = 0
+toggle_start_square_t = f"Toggled starting formation to square"
+toggle_start_circular_t = f"Toggled starting formation to circular"
+
+toggle_start_perfect_orbit = f"Toggled starting orbit to perfect velocities"
+toggle_start_random_orbit = f"Toggled starting orbit to random velocities"
 
 while running:
     # Check for events
@@ -50,6 +57,10 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 paused = not paused
+                if paused:
+                    blob_plotter.blobs[0].pause = True
+                else:
+                    blob_plotter.blobs[0].pause = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_d:
                 show_stats = not show_stats
@@ -59,9 +70,19 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 blob_plotter.square_grid = not blob_plotter.square_grid
+                if blob_plotter.square_grid:
+                    message = toggle_start_square_t
+                else:
+                    message = toggle_start_circular_t
+                message_counter = 60 * 5
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
                 blob_plotter.start_perfect_orbit = not blob_plotter.start_perfect_orbit
+                if blob_plotter.start_perfect_orbit:
+                    message = toggle_start_perfect_orbit
+                else:
+                    message = toggle_start_random_orbit
+                message_counter = 60 * 5
 
     # Fill the background, then draw stuff
     screen.fill(BACKGROUND_COLOR)
@@ -69,7 +90,12 @@ while running:
     blob_plotter.draw_blobs(screen, blob_font)
 
     if show_stats:
-        blob_plotter.draw_stats(screen, stat_font)
+        blob_plotter.draw_stats(screen, stat_font, message)
+        if message_counter > 0:
+            message_counter -= 1
+        else:
+            message = None
+            message_counter = 0
 
     # Flip the display
     pygame.display.flip()

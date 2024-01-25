@@ -230,14 +230,7 @@ class BlobPlotter:
                         self.blobs_escaped += 1
                     self.blobs.remove(blob)
                     continue
-                x, y = blob.x * SCALE, blob.y * SCALE
-
-                pygame.draw.circle(
-                    screen,
-                    blob.color,
-                    (x, y),
-                    blob.radius,
-                )
+                blob.draw(screen)
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
                 #     f"{blob.name}", 1, (255, 255, 255), (0, 0, 0)
@@ -250,10 +243,13 @@ class BlobPlotter:
                 #     ),
                 # )
 
-    def draw_stats(self, screen, stat_font):
+    def draw_stats(self, screen, stat_font, message=None):
+        if message is None:
+            message = f"Sun mass: {self.blobs[0].mass}"
+
         # Top left, showing sun mass
         stat_text_top_left = stat_font.render(
-            f"Sun mass: {self.blobs[0].mass}",
+            message,
             1,
             (255, 255, 255),
             (19, 21, 21),
