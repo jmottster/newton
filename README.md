@@ -12,7 +12,7 @@ There isn't much to it, but it can be fun to just watch the blobs go . . .
 
 ## Instructions
 
-This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for size, mass, velocity, and acceleration. The size, of course, is scaled when rendered on the screen. :D Time is sped up to about 360 days per second. 
+This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 360 days per second.
 
 There are a few controls here while you watch it go.
 
@@ -22,7 +22,10 @@ There are a few controls here while you watch it go.
 * W - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
 * S - Start over based on above options!
 
-Here's a Windows executable download if you're not inclined to fiddle around with Python code.
+Here are Windows executable downloads if you're not inclined to fiddle around with Python code. The window is not resizable, so there is a 1000x1000 and a 768x768 version.
+
+[Release 0.0.1 downloads](https://github.com/jmottster/newton/releases/tag/release%2F0.0.1)
+
 
 Here are screen shots of the two optional starting patterns . . .
 
