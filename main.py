@@ -26,7 +26,7 @@ pygame.init()
 
 # Set up the window, frame rate clock, and fonts
 screen = pygame.display.set_mode([SCREEN_SIZE, SCREEN_SIZE])
-pygame.display.set_caption("Newton's Laws")
+pygame.display.set_caption("Newton's Blobs")
 img = pygame.image.load(resource_path(WINDOW_ICON))
 pygame.display.set_icon(img)
 clock = pygame.time.Clock()

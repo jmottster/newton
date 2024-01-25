@@ -23,8 +23,8 @@ G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
 SCALE_FACTOR = 500  # Number of pixles to equal 1 AU
 SCALE = SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-FRAME_RATE = 60  # there are FRAME_RATE frames per second
-TIMESCALE = 3600 * 6  # elapsed time per frame, in seconds
+FRAME_RATE = 120  # there are FRAME_RATE frames per second
+TIMESCALE = 3600 * 3  # elapsed time per frame, in seconds
 SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
 BACKGROUND_COLOR = (0, 21, 36)  # screen background color
