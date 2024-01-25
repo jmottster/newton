@@ -96,7 +96,10 @@ class MassiveBlob:
             )
             screen.blit(
                 surf,
-                (500 - self.glow_radius, 500 - self.glow_radius),
+                (
+                    (SCREEN_SIZE / 2) - self.glow_radius,
+                    (SCREEN_SIZE / 2) - self.glow_radius,
+                ),
                 special_flags=pygame.BLEND_RGB_ADD,
             )
 

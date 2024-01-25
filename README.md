@@ -12,7 +12,7 @@ There isn't much to it, but it can be fun to just watch the blobs go . . .
 
 ## Instructions
 
-This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for size, mass, velocity, and acceleration. The size, of course, is scaled when rendered on the screen. :D 
+This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for size, mass, velocity, and acceleration. The size, of course, is scaled when rendered on the screen. :D Time is sped up to about 360 days per second. 
 
 There are a few controls here while you watch it go.
 
