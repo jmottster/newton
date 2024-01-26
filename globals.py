@@ -34,10 +34,10 @@ MIN_RADIUS = 5 * SCALE_PERCENT
 MAX_RADIUS = 20 * SCALE_PERCENT
 SCALE = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALED_SCREEN_SIZE = (SCREEN_SIZE / AU_SCALE_FACTOR) * AU  # Real height and width in AU
-FRAME_RATE = 60  # there are FRAME_RATE frames per second
+FRAME_RATE = 120  # there are FRAME_RATE frames per second
 
 # Vars for creating blobs somewhat randomly
-NUM_BLOBS = 30
+NUM_BLOBS = 100
 # If true all blobs will start
 # with a perfect orbital velocity
 START_PERFECT_ORBIT = True
@@ -52,6 +52,7 @@ MIN_MASS = 7.34767309 * 10**22  # Mass of Moon
 MAX_MASS = 6.9742 * 10**24  # currently set slightly larger than mass of Earth
 FLOOR_MASS = 1.98892 * 10**28
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
+# 8.54 * 10**36 <-- black hole
 CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
