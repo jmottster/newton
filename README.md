@@ -1,6 +1,6 @@
 # Newton's Blobs
 
-*A simulator of Newton's laws of physiscs, using space scale objects*
+*A simulator of Newton's laws of physics, using space scale objects*
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
@@ -12,7 +12,7 @@ There isn't much to it, but it can be fun to just watch the blobs go . . .
 
 ## Instructions
 
-This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for size, mass, velocity, and acceleration. The size, of course, is scaled when rendered on the screen. :D Time is sped up to about 360 days per second.
+This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 360 days per second.
 
 There are a few controls here while you watch it go.
 
