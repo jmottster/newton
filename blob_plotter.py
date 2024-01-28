@@ -27,22 +27,26 @@ class BlobPlotter:
 
     Attributes
     ----------
+    screen : pygame.Surface
+        the main surface everything will be drawn on
+    display : pygame.Surface
+        the display representing the monitor
 
 
     Methods
     -------
     setup_blobs()
         populates blob array according to global var values
-    draw_blobs(screen, blob_font)
+    draw_blobs(blob_font)
         draws the blobs on the screen (a PyGame screen), also draws a name label if that's turned on
-    draw_stats(screen, stat_font)
+    draw_stats(stat_font)
         draws blob stats on the screen corners (mass of sun, number of blobs left, how many swallowed, how many escaped)
     update_blobs()
         applies collision detection, gravitational pull, and if activated, edge detection
 
     """
 
-    def __init__(self):
+    def __init__(self, screen, display):
         self.blobs = []
         self.blobs_swalled = 0
         self.blobs_escaped = 0
@@ -50,6 +54,15 @@ class BlobPlotter:
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
         self.start_perfect_floor_bounce = START_PERFECT_FLOOR_BOUNCE
+        self.screen = screen
+        self.scaled_screen_width = (screen.get_width() / AU_SCALE_FACTOR) * AU
+        self.scaled_screen_height = (screen.get_height() / AU_SCALE_FACTOR) * AU
+        self.display = display
+        self.scaled_display_width = (display.get_width() / AU_SCALE_FACTOR) * AU
+        self.scaled_display_height = (display.get_height() / AU_SCALE_FACTOR) * AU
+        MassiveBlob.center_blob_x = screen.get_width()
+        MassiveBlob.center_blob_y = screen.get_height()
+        MassiveBlob.center_blob_z = screen.get_height()
 
     def start_over(self):
         self.blobs = []
@@ -61,18 +74,22 @@ class BlobPlotter:
     def plot_blobs(self):
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 9:
-            blob_partition = round(((SCALED_SCREEN_SIZE) / math.sqrt(NUM_BLOBS)))
+            blob_partition = round(
+                ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
+            )
         else:
-            blob_partition = SCALED_SCREEN_SIZE / 4
+            blob_partition = self.scaled_display_height / 4
 
-        half_screen = SCALED_SCREEN_SIZE / 2
+        half_screen_h = self.scaled_screen_height / 2
+        half_screen_w = self.scaled_screen_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = half_screen
-        y = half_screen
-        z = half_screen
+        x = half_screen_w
+        y = half_screen_h
+        z = half_screen_h
 
         sun_blob = MassiveBlob(
+            self.screen,
             CENTER_BLOB_NAME,
             CENTER_BLOB_COLOR,
             CENTER_BLOB_RADIUS,
@@ -145,9 +162,9 @@ class BlobPlotter:
                         y_turns = y_count + 1
                         y_count = 0
 
-                    if y <= half_screen:
+                    if y <= half_screen_h:
                         x += blob_partition
-                    elif y > half_screen:
+                    elif y > half_screen_h:
                         x -= blob_partition
                 else:
                     y_count += 1
@@ -155,19 +172,19 @@ class BlobPlotter:
                     if y_turns == 0:
                         x_turns = y_count + 1
 
-                    if x >= half_screen:
+                    if x >= half_screen_w:
                         y += blob_partition
-                    elif x < half_screen:
+                    elif x < half_screen_w:
                         y -= blob_partition
             else:  # Circular grid x,y plot for this blob
                 # Get x and y for this blob, vars set up from last interation or initial setting
-                x = half_screen + plot_radius * math.sin(plot_theta) * math.cos(
+                x = half_screen_w + plot_radius * math.sin(plot_theta) * math.cos(
                     plot_phi
                 )
-                y = half_screen + plot_radius * math.sin(plot_theta) * math.sin(
+                y = half_screen_h + plot_radius * math.sin(plot_theta) * math.sin(
                     plot_phi
                 )
-                z = half_screen + plot_radius * math.cos(plot_theta)
+                z = half_screen_h + plot_radius * math.cos(plot_theta)
 
                 # Set up vars for next interation, move the "clock dial" another notch,
                 # or make it longer by blob_partition if we've gone around 360 degrees
@@ -179,9 +196,9 @@ class BlobPlotter:
                     plot_phi += math.pi * pi_inc
 
             # Figure out velocity for this blob
-            dx = half_screen - x
-            dy = half_screen - y
-            dz = half_screen - z
+            dx = half_screen_w - x
+            dy = half_screen_h - y
+            dz = half_screen_h - z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
 
             if self.start_perfect_orbit:
@@ -205,6 +222,7 @@ class BlobPlotter:
 
             # Phew, let's instantiate this puppy . . .
             new_blob = MassiveBlob(
+                self.screen,
                 str(i + 1),
                 COLORS[color],
                 radius,
@@ -222,7 +240,7 @@ class BlobPlotter:
                 self.z_axis[new_blob.z] = []
             self.z_axis[new_blob.z].append(new_blob)
 
-    def draw_blobs(self, screen, blob_font):
+    def draw_blobs(self, blob_font):
         keys = reversed(sorted(self.z_axis.keys()))
 
         for key in keys:
@@ -236,7 +254,7 @@ class BlobPlotter:
                         self.blobs_escaped += 1
                     self.blobs.remove(blob)
                     continue
-                blob.draw(screen)
+                blob.draw()
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
                 #     f"{round(blob.z * SCALE)}", 1, (255, 255, 255), (0, 0, 0)
@@ -249,18 +267,39 @@ class BlobPlotter:
                 #     ),
                 # )
 
-    def draw_stats(self, screen, stat_font, message=None):
-        if message is None:
-            message = f"Sun mass: {self.blobs[0].mass}"
+        self.display.blit(
+            self.screen,
+            (
+                (self.display.get_width() - self.screen.get_width()) / 2,
+                (self.display.get_height() - self.screen.get_height()) / 2,
+            ),
+        )
+
+    def draw_stats(self, stat_font, message=None):
+        if message is not None:
+            # Center, showing message, if any
+            message_center = stat_font.render(
+                message,
+                1,
+                (255, 255, 255),
+                (19, 21, 21),
+            )
+            self.display.blit(
+                message_center,
+                (
+                    (self.display.get_width() / 2) - (message_center.get_width() / 2),
+                    (self.display.get_height() / 2) - (message_center.get_height() / 2),
+                ),
+            )
 
         # Top left, showing sun mass
         stat_text_top_left = stat_font.render(
-            message,
+            f"Sun mass: {self.blobs[0].mass}",
             1,
             (255, 255, 255),
             (19, 21, 21),
         )
-        screen.blit(
+        self.display.blit(
             stat_text_top_left,
             (
                 20,
@@ -275,10 +314,10 @@ class BlobPlotter:
             (255, 255, 255),
             (19, 21, 21),
         )
-        screen.blit(
+        self.display.blit(
             stat_text_top_right,
             (
-                SCREEN_SIZE - stat_text_top_right.get_width() - 20,
+                self.display.get_width() - stat_text_top_right.get_width() - 20,
                 20,
             ),
         )
@@ -290,11 +329,11 @@ class BlobPlotter:
             (255, 255, 255),
             (19, 21, 21),
         )
-        screen.blit(
+        self.display.blit(
             stat_text_bottom_left,
             (
                 20,
-                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
             ),
         )
 
@@ -305,11 +344,11 @@ class BlobPlotter:
             (255, 255, 255),
             (19, 21, 21),
         )
-        screen.blit(
+        self.display.blit(
             stat_text_bottom_right,
             (
-                SCREEN_SIZE - stat_text_bottom_right.get_width() - 20,
-                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
+                self.display.get_width() - stat_text_bottom_right.get_width() - 20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
             ),
         )
 

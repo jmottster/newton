@@ -28,8 +28,11 @@ AU = 149.6e6 * 1000  # 1 Astronomical Unit
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
 TIMESCALE = 3600 * 12 * SCALE_PERCENT  # elapsed time per frame, in seconds
-# Height and width of screen (square is best for orbits)
-SCREEN_SIZE = 1000 * SCALE_PERCENT
+# Height and with of display (monitor)
+DISPLAY_SIZE_H = 1000
+DISPLAY_SIZE_W = 1000
+# Height and width of screen (square is best for orbits, can be bigger than display)
+SCREEN_SIZE = 2000 * SCALE_PERCENT
 SCREEN_SIZE_H = SCREEN_SIZE
 SCREEN_SIZE_W = SCREEN_SIZE
 SCREEN_SIZE_D = SCREEN_SIZE

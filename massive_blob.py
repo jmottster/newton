@@ -26,6 +26,8 @@ class MassiveBlob:
 
     Attributes
     ----------
+    screen : pygame.Surface
+        the main surface everything will be drawn on
     name : str
         a string to identify the blob
     color : tuple
@@ -65,10 +67,15 @@ class MassiveBlob:
     center_blob_y = SCREEN_SIZE_H / 2
     center_blob_z = SCREEN_SIZE_D / 2
 
-    def __init__(self, name, color, radius, mass, x, y, z, vx, vy, vz):
-        self.GRAVITATIONAL_RANGE = SCALED_SCREEN_SIZE
-        self.scaled_screen_size_squared = SCALED_SCREEN_SIZE * 2
-        self.scaled_screen_size_half = SCALED_SCREEN_SIZE / 2
+    def __init__(self, screen, name, color, radius, mass, x, y, z, vx, vy, vz):
+        self.screen = screen
+        self.scaled_screen_width = (screen.get_width() / AU_SCALE_FACTOR) * AU
+        self.scaled_screen_height = (screen.get_height() / AU_SCALE_FACTOR) * AU
+        self.GRAVITATIONAL_RANGE = self.scaled_screen_height
+        self.scaled_screen_size_squared_x = self.scaled_screen_width * 2
+        self.scaled_screen_size_half_x = self.scaled_screen_width / 2
+        self.scaled_screen_size_squared_y = self.scaled_screen_height * 2
+        self.scaled_screen_size_half_y = self.scaled_screen_height / 2
 
         self.name = name
         self.color = color
@@ -93,18 +100,18 @@ class MassiveBlob:
 
         self.fake_blob_z()
 
-    def draw(self, screen):
+    def draw(self):
         x = self.x * SCALE
         y = self.y * SCALE
         z = self.z * SCALE
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_suface.draw(screen, (x, y, z))
+            self.blob_suface.draw(self.screen, (x, y, z))
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y
             MassiveBlob.center_blob_z = z
-            pygame.draw.circle(screen, self.color, (x, y), self.radius)
+            pygame.draw.circle(self.screen, self.color, (x, y), self.radius)
 
             if not self.pause:
                 glow_radius = self.radius + random.randint(1, 4)
@@ -114,7 +121,7 @@ class MassiveBlob:
             pygame.draw.circle(
                 surf, self.color, (glow_radius, glow_radius), glow_radius
             )
-            screen.blit(
+            self.screen.blit(
                 surf,
                 (
                     x - glow_radius,
@@ -125,9 +132,11 @@ class MassiveBlob:
 
     def fake_blob_z(self):
         # alters viewed radius to show perspective (closer=bigger/further=smaller)
-        diff = self.scaled_screen_size_half - self.z
+        diff = self.scaled_screen_size_half_y - self.z
+        if diff < 1:
+            diff = 1
         self.scaled_radius = self.orig_radius[0] + (
-            self.orig_radius[1] * (diff / self.scaled_screen_size_half) * 0.75
+            self.orig_radius[1] * (diff / self.scaled_screen_size_half_y) * 0.75
         )
         self.radius = self.scaled_radius * SCALE
         self.blob_suface = BlobSurface(self.radius, self.color)
@@ -149,20 +158,22 @@ class MassiveBlob:
             # TODO fix wraping for scale
             # Move real x to other side of screen if it's gone off the edge
             if self.vx < 0 and self.x < 0:
-                self.x = SCALED_SCREEN_SIZE
-            elif self.vx > 0 and self.x > SCALED_SCREEN_SIZE:
+                self.x = self.scaled_screen_width
+            elif self.vx > 0 and self.x > self.scaled_screen_width:
                 self.x = 0
 
             # Move real y to other side of screen if it's gone off the edge
             if self.vy < 0 and self.y < 0:
-                self.y = SCALED_SCREEN_SIZE
-            elif self.vy > 0 and self.y > SCALED_SCREEN_SIZE:
+                self.y = self.scaled_screen_height
+            elif self.vy > 0 and self.y > self.scaled_screen_height:
                 self.y = 0
 
         else:
-            zero = 0  # -(SCALED_SCREEN_SIZE / 4)
-            screen_size = SCREEN_SIZE
-            scaled_screen_size = SCALED_SCREEN_SIZE
+            zero = 0
+            screen_size_w = self.screen.get_width()
+            screen_size_h = self.screen.get_height()
+            scaled_screen_size_w = self.scaled_screen_width
+            scaled_screen_size_h = self.scaled_screen_height
 
             local_x = self.x * SCALE
             local_y = self.y * SCALE
@@ -174,9 +185,9 @@ class MassiveBlob:
                 self.x = self.scaled_radius
                 self.vx = self.vx * 0.995
 
-            if ((local_x + self.radius) >= screen_size) and (self.vx >= 0):
+            if ((local_x + self.radius) >= screen_size_w) and (self.vx >= 0):
                 self.vx = -self.vx
-                self.x = scaled_screen_size - self.scaled_radius
+                self.x = scaled_screen_size_w - self.scaled_radius
                 self.vx = self.vx * 0.995
 
             # Change y direction if hitting the edge of screen
@@ -185,20 +196,20 @@ class MassiveBlob:
                 self.y = self.scaled_radius
                 self.vy = self.vy * 0.995
 
-            if ((local_y + self.radius) >= screen_size) and self.vy >= 0:
+            if ((local_y + self.radius) >= screen_size_h) and self.vy >= 0:
                 self.vy = -self.vy
-                self.y = scaled_screen_size - self.scaled_radius
+                self.y = scaled_screen_size_h - self.scaled_radius
                 self.vy = self.vy * 0.995
 
             # Change z direction if hitting the edge of screen
-            if ((local_z - self.radius) <= screen_size) and (self.vz <= 0):
+            if ((local_z - self.radius) <= zero) and (self.vz <= 0):
                 self.vz = -self.vz
                 self.z = self.scaled_radius
                 self.vz = self.vz * 0.995
 
-            if ((local_z + self.radius) >= screen_size - screen_size) and self.vz >= 0:
+            if ((local_z + self.radius) >= screen_size_h) and self.vz >= 0:
                 self.vz = -self.vz
-                self.z = scaled_screen_size - self.scaled_radius
+                self.z = scaled_screen_size_h - self.scaled_radius
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):
@@ -300,9 +311,9 @@ class MassiveBlob:
 
         # Get distance between blobs, and cross over distance
         # where gravity stops (to keep blobs from gluing to each other)
-        dx = self.scaled_screen_size_half - self.x
-        dy = SCALED_SCREEN_SIZE - self.y
-        dz = self.scaled_screen_size_half - self.z
+        dx = self.scaled_screen_size_half_x - self.x
+        dy = self.scaled_screen_size_half_y - self.y
+        dz = self.scaled_screen_size_half_y - self.z
         d = dy
 
         # if two blobs are within gravitational range of each other,
