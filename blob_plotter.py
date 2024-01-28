@@ -106,24 +106,34 @@ class BlobPlotter:
         for i in range(NUM_BLOBS - 1):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
-
+            velocity = 0
+            radius = 0
+            mass = 0
             # Divide mass and radius ranges in half, put smaller masses with
             # smaller radiuses, and vice versa. Randomize whether we're doing
             # a bigger or smaller blob.
-            if round(random.random() * 10) % 2:
-                min_radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) / 2
-                min_mass = MIN_MASS + (MAX_MASS - MIN_MASS) / 2
+            max_radius_delta = MIN_RADIUS + ((MAX_RADIUS - MIN_RADIUS) / 2)
+            max_mass_delta = MIN_MASS + ((MAX_MASS - MIN_MASS) / 2)
+            max_velocity_delta = MIN_VELOCITY + ((MAX_VELOCITY - MIN_VELOCITY) / 2)
+            if round(random.randint(1, 10)) % 2:
                 radius = round(
-                    (random.random() * (MAX_RADIUS - min_radius)) + min_radius
+                    (random.random() * (max_radius_delta - MIN_RADIUS)) + MIN_RADIUS
                 )
-                mass = (random.random() * (MAX_MASS - min_mass)) + min_mass
+                mass = random.random() * (max_mass_delta - MIN_MASS) + MIN_MASS
+                velocity = (
+                    random.random() * (max_velocity_delta - MIN_VELOCITY) + MIN_VELOCITY
+                )
+
             else:
-                max_radius = MAX_RADIUS - (MAX_RADIUS - MIN_RADIUS) / 2
-                max_mass = MAX_MASS - (MAX_MASS - MIN_MASS) / 2
                 radius = round(
-                    (random.random() * (max_radius - MIN_RADIUS)) + MIN_RADIUS
+                    (random.random() * (MAX_RADIUS - max_radius_delta))
+                    + max_radius_delta
                 )
-                mass = (random.random() * (max_mass - MIN_MASS)) + MIN_MASS
+                mass = (random.random() * (MAX_MASS - max_mass_delta)) + max_mass_delta
+                velocity = (
+                    random.random() * (MAX_VELOCITY - max_velocity_delta)
+                    + max_velocity_delta
+                )
 
             if self.square_grid:  # Square grid x,y plot for this blob
                 # Get x and y coordinates for this blob
@@ -174,23 +184,19 @@ class BlobPlotter:
             dz = half_screen - z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
 
-            velocity = 0
             if self.start_perfect_orbit:
                 # get velocity for a perfect orbit around center blob
                 velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
             elif self.start_perfect_floor_bounce:
                 # get velocity for a perfect floor bounce when that is on
                 velocity = math.sqrt(G * FLOOR_MASS / d)
-            else:
-                # Just use a random velocity
-                velocity = (
-                    random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
-                )
 
             theta = math.acos(dz / d)
             phi = math.atan2(dy, dx)
 
+            # Add some chaos to starting trajectory
             theta = theta - (math.pi * 0.25)
+            # turn 90 degrees from pointing center for begining velocity (orbit)
             phi = phi - (math.pi * 0.5)
 
             velocityx = velocity * math.sin(theta) * math.cos(phi)
@@ -203,12 +209,12 @@ class BlobPlotter:
                 COLORS[color],
                 radius,
                 mass,
-                z,
-                y,
                 x,
-                velocityz,
-                velocityy,
+                y,
+                z,
                 velocityx,
+                velocityy,
+                velocityz,
             )
             self.blobs.append(new_blob)
 
@@ -233,13 +239,13 @@ class BlobPlotter:
                 blob.draw(screen)
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
-                #     f"{blob.name}", 1, (255, 255, 255), (0, 0, 0)
+                #     f"{round(blob.z * SCALE)}", 1, (255, 255, 255), (0, 0, 0)
                 # )
                 # screen.blit(
                 #     mass_text,
                 #     (
                 #         (blob.x * SCALE) - (mass_text.get_width() / 2),
-                #         (blob.y * SCALE) - (mass_text.get_height() / 2),
+                #         (blob.y * SCALE) - (blob.radius) - (mass_text.get_height()),
                 #     ),
                 # )
 
@@ -316,7 +322,7 @@ class BlobPlotter:
         for blob in self.blobs:
             # Check for and react to any collisions with other blobs
             for blob2 in self.blobs:
-                if (id(blob2) != id(blob)) and (checked.get(id(blob2)) == None):
+                if (id(blob2) != id(blob)) and (checked.get(id(blob2)) is None):
                     blob.collision_detection(blob2)  # TODO wraping collision detection
                 blob.gravitational_pull(blob2, G)
 
