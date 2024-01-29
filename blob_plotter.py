@@ -227,12 +227,12 @@ class BlobPlotter:
                 COLORS[color],
                 radius,
                 mass,
-                x,
-                y,
                 z,
-                velocityx,
-                velocityy,
+                y,
+                x,
                 velocityz,
+                velocityy,
+                velocityx,
             )
             self.blobs.append(new_blob)
 
@@ -257,9 +257,9 @@ class BlobPlotter:
                 blob.draw()
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
-                #     f"{round(blob.z * SCALE)}", 1, (255, 255, 255), (0, 0, 0)
+                #     f"{round(blob.radius)}", 1, (255, 255, 255), (0, 0, 0)
                 # )
-                # screen.blit(
+                # self.screen.blit(
                 #     mass_text,
                 #     (
                 #         (blob.x * SCALE) - (mass_text.get_width() / 2),

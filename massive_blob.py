@@ -40,10 +40,14 @@ class MassiveBlob:
         initial x coordinate for center of blob
     y : int
         initial y coordinate for center of blob
+    z : int
+        initial z coordinate for center of blob
     vx : float
         initial x direction velocity in meters per second
     vy : float
         initial y direction velocity in meters per second
+    vz : float
+        initial z direction velocity in meters per second
 
     Methods
     -------
@@ -133,13 +137,12 @@ class MassiveBlob:
     def fake_blob_z(self):
         # alters viewed radius to show perspective (closer=bigger/further=smaller)
         diff = self.scaled_screen_size_half_y - self.z
-        if diff < 1:
-            diff = 1
+
         self.scaled_radius = self.orig_radius[0] + (
-            self.orig_radius[1] * (diff / self.scaled_screen_size_half_y) * 0.75
+            self.orig_radius[1] * (diff / self.scaled_screen_size_half_y)
         )
         self.radius = self.scaled_radius * SCALE
-        self.blob_suface = BlobSurface(self.radius, self.color)
+        self.blob_suface.resize(self.radius)
 
     def advance(self):
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
@@ -363,93 +366,137 @@ class BlobSurface(pygame.Surface):
 
     def __init__(self, radius, color):
         self.LIGHT_RADIUS_MULTI = 10
-        pygame.Surface.__init__(self, (radius * 2, radius * 2))
-        self.position = (0, 0, 0)
         self.radius = radius
+        self.width_center = radius + (radius)
+        self.height_center = radius + (radius)
+        pygame.Surface.__init__(self, (self.width_center * 2, self.height_center * 2))
+        self.position = (0, 0, 0)
         self.animation_radius = radius * self.LIGHT_RADIUS_MULTI
+        self.animation_width_center = self.width_center * self.LIGHT_RADIUS_MULTI
+        self.animation_height_center = self.height_center * self.LIGHT_RADIUS_MULTI
         self.rect = pygame.Rect(
-            (self.position[0], self.position[1]), (radius * 2, radius * 2)
+            (self.position[0], self.position[1]),
+            (self.width_center * 2, self.height_center * 2),
         )
         self.color = color
+        self.colorkey = (0, 0, 0)
         self.light_radius = self.animation_radius
         self.light_flag = pygame.BLEND_RGB_ADD
-        self.light_colorkey = (0, 0, 0)
-        self.light_color = (100, 100, 100)
+        self.light_color = (75, 75, 75)
         self.light = None
         self.shade_radius = self.animation_radius
-        self.shade_colorkey = (0, 0, 0)
         self.shade_color = color
         self.shade = None
         self.alpha_image = None
         self.mask_image = None
-        self.parent_blob = self.create_blob()
-        self.create_light()
-        self.create_shade()
-        self.create_alpha_image()
-        self.create_mask()
+        self.parent_blob = self.draw_blob()
+        self.draw_light()
+        self.draw_shade()
+        self.draw_alpha_image()
+        self.draw_mask()
+
+    def resize(self, radius):
+        # Self explanotory, I think. A way to resize without having to delete and reinstantiate
+        self.radius = radius
+        self.animation_radius = radius * self.LIGHT_RADIUS_MULTI
+        self.light_radius = self.animation_radius
+        self.shade_radius = self.animation_radius
 
     def get_rect(self):
         return self.rect
 
-    def create_blob(self):
+    def draw_blob(self):
         # Create the main blob this instance will represent. For now, just drawing to self,
         # not to any screen. This is created only once per instance no matter how many times
         # it is drawn. Called in the constructor.
-        pygame.draw.circle(self, self.color, (self.radius, self.radius), self.radius)
-        pygame.Surface.set_colorkey(self, self.light_colorkey)
-
-    def create_light(self):
-        # Create the overlay the will add shine to the blob in the direction of the center blob.
-        # This is created only once per instance no matter how many times it is drawn. Called in
-        # the constructor.
-        self.light = pygame.Surface((self.light_radius * 2, self.light_radius * 2))
+        self.fill(self.colorkey)
         pygame.draw.circle(
-            self.light,
-            self.light_color,
-            (self.light_radius, self.light_radius),
-            self.light_radius,
+            self, self.color, (self.width_center, self.height_center), self.radius
         )
-        self.light.set_colorkey(self.light_colorkey)
+        pygame.Surface.set_colorkey(self, self.colorkey)
 
-    def create_shade(self):
-        # Create the overlay the will add shade to the blob in the direction of the center blob.
-        # This is created only once per instance no matter how many times it is drawn. Called in
-        # the constructor.
-        self.shade = pygame.Surface((self.shade_radius * 2, self.shade_radius * 2))
-        pygame.draw.circle(
-            self.shade,
-            self.shade_color,
-            (self.shade_radius, self.shade_radius),
-            self.shade_radius,
-        )
-        self.shade.set_colorkey(self.shade_colorkey)
-
-    def create_alpha_image(self):
-        # Create the prerequisite for the mask. This needs to be created new for
-        # every draw, but it's the only peice that needs it. Called from get_shaded_blob()
+    def draw_alpha_image(self):
+        # Create/draw the prerequisite for the mask. Called from get_lighting_blob()
         # for each draw, but also in the constructor because it's needed to create the mask.
-        self.alpha_image = self.subsurface(
-            pygame.Rect(0, 0, self.radius * 2, self.radius * 2)
-        ).convert_alpha()
+        # Created the first time it's called, just a fill and draw every time after.
 
-    def create_mask(self):
-        # Create the mask, which will hide the parts of the overlay that go beyond the boundary
-        # of the main blob. This is created only once per instance no matter how many times it is
-        # drawn. This is called in the constructor.
-        self.mask_image = pygame.Surface(self.alpha_image.get_size(), pygame.SRCALPHA)
+        if self.alpha_image is None:
+            self.alpha_image = self.subsurface(
+                pygame.Rect(0, 0, self.width_center * 2, self.height_center * 2)
+            ).convert_alpha()
+            self.alpha_image.set_colorkey(self.colorkey)
 
+        self.alpha_image.fill(self.colorkey)
+        pygame.draw.circle(
+            self.alpha_image,
+            self.color,
+            (self.width_center, self.height_center),
+            self.radius,
+        )
+
+    def draw_mask(self):
+        # Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
+        # of the main blob. This is called in the constructor and from get_lighting_blob().
+        # Created the first time it's called, just a fill and draw every time after.
+        if self.mask_image is None:
+            self.mask_image = pygame.Surface(self.get_size(), pygame.SRCALPHA)
+
+        self.mask_image.fill(self.colorkey)
         pygame.draw.circle(
             self.mask_image,
             (255, 255, 255, 255),
-            (self.radius, self.radius),
+            (self.width_center, self.height_center),
             self.radius,
+        )
+
+    def draw_light(self):
+        # Create/draw the overlay the will add shine to the blob in the direction of the center blob.
+        # Called in the constructor and from check_animation_radius().
+        # Created the first time it's called, just a fill and draw every time after.
+        if self.light is None:
+            width = self.animation_width_center * 2
+            height = self.animation_height_center * 2
+            self.light = pygame.Surface((width, height))
+            self.light.set_colorkey(self.colorkey)
+
+        self.light.fill(self.colorkey)
+        pygame.draw.circle(
+            self.light,
+            self.light_color,
+            (
+                self.animation_width_center,
+                self.animation_height_center,
+            ),
+            self.light_radius,
+        )
+
+    def draw_shade(self):
+        # Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
+        # direction of the center blob. Called in the constructor and from check_animation_radius().
+        # Created the first time it's called, just a fill and draw every time after.
+        if self.shade is None:
+            width = self.animation_width_center * 2
+            height = self.animation_height_center * 2
+            self.shade = pygame.Surface((width, height))
+            self.shade.set_colorkey(self.colorkey)
+
+        self.shade.fill(self.colorkey)
+        pygame.draw.circle(
+            self.shade,
+            self.shade_color,
+            (
+                self.animation_width_center,
+                self.animation_height_center,
+            ),
+            self.shade_radius,
         )
 
     def get_lighting_blob(self):
         # Create the final package for drawing. This puts all the peices together. Everything
-        # is cached for every call except the alpha image, we have to create that new each time. This is called
+        # is cached for every call, it just does a fill/draw on all the peices. This is called
         # by the draw() method.
-        self.create_alpha_image()
+        self.draw_alpha_image()
+        self.draw_mask()
 
         self.check_animation_radius(self.position[2])
         offset = self.get_lighting_direction()
@@ -457,8 +504,8 @@ class BlobSurface(pygame.Surface):
         self.alpha_image.blit(
             self.light,
             (
-                (self.radius - self.light_radius) + offset[0],
-                (self.radius - self.light_radius) + offset[1],
+                (self.width_center - self.animation_width_center) + offset[0],
+                (self.height_center - self.animation_height_center) + offset[1],
             ),
             special_flags=self.light_flag,
         )
@@ -467,8 +514,8 @@ class BlobSurface(pygame.Surface):
             self.alpha_image.blit(
                 self.shade,
                 (
-                    (self.radius - self.shade_radius) - offset[2],
-                    (self.radius - self.shade_radius) - offset[3],
+                    (self.width_center - self.animation_width_center) - offset[2],
+                    (self.height_center - self.animation_height_center) - offset[3],
                 ),
             )
 
@@ -480,19 +527,22 @@ class BlobSurface(pygame.Surface):
 
     def check_animation_radius(self, z):
         # This points the lighted up side of the blob toward the center
-        # blob, and ensures radius is honering z depth and realistic curvature.
-        # Unfortunately, this ruins our caching, I will fix that when I get to optimizing.
+        # blob, the shade side opposite of the center blob, and ensures
+        # radius is honering z depth and realistic curvature.
 
         diff = abs(MassiveBlob.center_blob_z - z)
         radius = self.animation_radius
         scale = 1
-        range = MassiveBlob.center_blob_z * 0.45
-        diff = abs(range - diff)
+        range = MassiveBlob.center_blob_z * 0.3
+        if diff < range:
+            diff = abs(range - diff)
+            scale = diff / (range)
+        else:
+            scale = 0.15
 
-        scale = round(diff / (range), 4)
         if scale < 0.15:
             scale = 0.15
-        radius = round(self.radius * (self.LIGHT_RADIUS_MULTI * (scale)))
+        radius = self.radius * (self.LIGHT_RADIUS_MULTI * (scale))
 
         if z > MassiveBlob.center_blob_z:
             self.light_radius = radius
@@ -501,13 +551,13 @@ class BlobSurface(pygame.Surface):
             self.shade_radius = radius
             self.light_radius = self.animation_radius
 
-        self.create_light()
-        self.create_shade()
+        self.draw_light()
+        self.draw_shade()
 
     def get_lighting_direction(self):
         # Get the x,y,z coordinates for the center of the overlay. This will point to the
         # center blob relative to offset of the main blob center in this instance (i.e., if a line were draw between the center of
-        # the main blob and the center of the overlay, it would point to the center blob). This is called by the get_shaded_blob()
+        # the main blob and the center of the overlay, the offset would point to the center blob). This is called by the get_lighting_blob()
         # method.
         x1 = self.position[0]
         y1 = self.position[1]
@@ -540,10 +590,16 @@ class BlobSurface(pygame.Surface):
         if no_lighting:
             screen.blit(
                 self,
-                (self.position[0] - self.radius, self.position[1] - self.radius),
+                (
+                    self.position[0] - self.width_center,
+                    self.position[1] - self.height_center,
+                ),
             )
         else:
             screen.blit(
                 self.get_lighting_blob(),
-                (self.position[0] - self.radius, self.position[1] - self.radius),
+                (
+                    self.position[0] - self.width_center,
+                    self.position[1] - self.height_center,
+                ),
             )
