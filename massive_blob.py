@@ -314,26 +314,16 @@ class MassiveBlob:
 
         # Get distance between blobs, and cross over distance
         # where gravity stops (to keep blobs from gluing to each other)
-        dx = self.scaled_screen_size_half_x - self.x
+        # dx = self.scaled_screen_size_half_x - self.x
         dy = self.scaled_screen_size_half_y - self.y
-        dz = self.scaled_screen_size_half_y - self.z
+        # dz = self.scaled_screen_size_half_y - self.z
         d = dy
 
         # if two blobs are within gravitational range of each other,
         # and not overlapping too much
         if d > self.orig_radius[0]:
             F = g * self.mass * other_mass / d**2
-
-            # theta = math.acos(dz / d)
-            # phi = math.atan2(dy, dx)
-
-            # fdx = F * math.sin(theta) * math.cos(phi)
-            # fdy = F * math.sin(theta) * math.sin(phi)
-            # fdz = F * math.cos(theta)
-
-            # self.vx += fdx / self.mass * TIMESCALE
             self.vy += F / self.mass * TIMESCALE
-            # self.vz += fdz / self.mass * TIMESCALE
 
 
 class BlobSurface(pygame.Surface):

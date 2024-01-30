@@ -6,8 +6,8 @@ Class file for setting up initial posisions and velocities of blobs and maintain
 by Jason Mott, copyright 2024
 """
 import pygame
-import math
-import random
+import numpy as np
+import math, random
 from globals import *
 from massive_blob import MassiveBlob
 
@@ -47,7 +47,7 @@ class BlobPlotter:
     """
 
     def __init__(self, screen, display):
-        self.blobs = []
+        self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
         self.z_axis = {}
@@ -65,7 +65,7 @@ class BlobPlotter:
         MassiveBlob.center_blob_z = screen.get_height()
 
     def start_over(self):
-        self.blobs = []
+        self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
         self.z_axis = {}
@@ -101,11 +101,12 @@ class BlobPlotter:
             0,
             0,
         )
-        self.blobs.append(sun_blob)
+        self.blobs[0] = sun_blob
 
         if self.z_axis.get(sun_blob.z) is None:
-            self.z_axis[sun_blob.z] = []
-        self.z_axis[sun_blob.z].append(sun_blob)
+            self.z_axis[sun_blob.z] = np.array([sun_blob], dtype=object)
+        else:
+            self.z_axis[sun_blob.z] = np.append(self.z_axis[sun_blob.z], sun_blob)
 
         # Blob placement grid, either square (if SQUARE_BLOB_PLOTTER True) or circular . . .
 
@@ -234,14 +235,17 @@ class BlobPlotter:
                 velocityy,
                 velocityx,
             )
-            self.blobs.append(new_blob)
+            self.blobs[i + 1] = new_blob
 
             if self.z_axis.get(new_blob.z) is None:
-                self.z_axis[new_blob.z] = []
-            self.z_axis[new_blob.z].append(new_blob)
+                self.z_axis[new_blob.z] = np.array([new_blob], dtype=object)
+            else:
+                self.z_axis[new_blob.z] = np.append(self.z_axis[new_blob.z], new_blob)
 
     def draw_blobs(self, blob_font):
-        keys = reversed(sorted(self.z_axis.keys()))
+        keys = np.flip(
+            np.sort(np.array([k for k in self.z_axis], dtype=float), axis=None)
+        )
 
         for key in keys:
             # Draw the blobs
@@ -252,7 +256,7 @@ class BlobPlotter:
                         self.blobs_swalled += 1
                     elif blob.escaped:
                         self.blobs_escaped += 1
-                    self.blobs.remove(blob)
+                    self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
                     continue
                 blob.draw()
                 # Uncomment for writting lables on blobs
@@ -309,7 +313,7 @@ class BlobPlotter:
 
         # Top right, showing number of orbiting blobs
         stat_text_top_right = stat_font.render(
-            f"Orbiting blobs: {len(self.blobs)-1}",
+            f"Orbiting blobs: {self.blobs.size - 1}",
             1,
             (255, 255, 255),
             (19, 21, 21),
@@ -376,5 +380,6 @@ class BlobPlotter:
             blob.advance()
 
             if self.z_axis.get(blob.z) is None:
-                self.z_axis[blob.z] = []
-            self.z_axis[blob.z].append(blob)
+                self.z_axis[blob.z] = np.array([blob], dtype=object)
+            else:
+                self.z_axis[blob.z] = np.append(self.z_axis[blob.z], blob)
