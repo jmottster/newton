@@ -60,9 +60,9 @@ class BlobPlotter:
         self.display = display
         self.scaled_display_width = (display.get_width() / AU_SCALE_FACTOR) * AU
         self.scaled_display_height = (display.get_height() / AU_SCALE_FACTOR) * AU
-        MassiveBlob.center_blob_x = screen.get_width()
-        MassiveBlob.center_blob_y = screen.get_height()
-        MassiveBlob.center_blob_z = screen.get_height()
+        MassiveBlob.center_blob_x = screen.get_width() / 2
+        MassiveBlob.center_blob_y = screen.get_height() / 2
+        MassiveBlob.center_blob_z = screen.get_height() / 2
 
     def start_over(self):
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
@@ -72,6 +72,7 @@ class BlobPlotter:
         self.plot_blobs()
 
     def plot_blobs(self):
+        # TODO This function is getting unruly, clean it up
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 9:
             blob_partition = round(
@@ -115,12 +116,27 @@ class BlobPlotter:
         y_turns = 0
         x_turns = 1
 
-        # Interators for circular grid placement
+        # Interators for circular grid placement, blobs will be placed in ever
+        # increasing sized circles around the center blob
         plot_phi = 0.0
         plot_theta = math.pi * 0.5
-        pi_inc = 0.25
-        plot_radius = blob_partition
+        # How much the radius will increase each time we move to the next biggest
+        # circle around the center blob (the size will be some multiple of the diameter of the biggest
+        # blob)
+        plot_radius_partition = (((MAX_RADIUS * 3.5)) / AU_SCALE_FACTOR) * AU
+        # How far apart each blob will be on each circumferance
+        chord_scaled = ((MAX_RADIUS * 2.5) / AU_SCALE_FACTOR) * AU
+        # The start radius (smallest circle around center blob)
+        plot_radius = (
+            ((MAX_RADIUS * 2) + (CENTER_BLOB_RADIUS * 2)) / AU_SCALE_FACTOR
+        ) * AU
+        # How many radians to increase for each blob around the circumference (such that
+        # we get chord_scaled length between each blob center)
+        pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+        # Divy up the remainder for a more even distribution
+        pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
+        # Now, for each blob . . .
         for i in range(NUM_BLOBS - 1):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
@@ -188,13 +204,19 @@ class BlobPlotter:
                 z = half_screen_h + plot_radius * math.cos(plot_theta)
 
                 # Set up vars for next interation, move the "clock dial" another notch,
-                # or make it longer by blob_partition if we've gone around 360 degrees
-                if round(plot_phi, 8) == round((math.pi * 2) - (math.pi * pi_inc), 8):
+                # or make it longer by plot_radius_partition if we've gone around 360 degrees
+                if round(plot_phi + pi_inc, 8) >= round((math.pi * 2) - (pi_inc), 8):
                     plot_phi = 0.0
-                    plot_radius += blob_partition
-                    pi_inc = pi_inc / 2
+                    # Increase the radius for the next go around the center blob
+                    plot_radius += plot_radius_partition
+                    # How many radians to increase for each blob around the circumference (such that
+                    # we get chord_scaled length between each blob center)
+                    pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+                    # Divy up the remainder for a more even distribution
+                    pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
                 else:
-                    plot_phi += math.pi * pi_inc
+                    plot_phi += pi_inc
 
             # Figure out velocity for this blob
             dx = half_screen_w - x
@@ -261,7 +283,7 @@ class BlobPlotter:
                 blob.draw()
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
-                #     f"{round(blob.radius)}", 1, (255, 255, 255), (0, 0, 0)
+                #     f"{blob.color}", 1, (255, 255, 255), (0, 0, 0)
                 # )
                 # self.screen.blit(
                 #     mass_text,
@@ -367,7 +389,7 @@ class BlobPlotter:
             for blob2 in self.blobs:
                 if (id(blob2) != id(blob)) and (checked.get(id(blob2)) is None):
                     blob.collision_detection(blob2)  # TODO wraping collision detection
-                blob.gravitational_pull(blob2, G)
+                    blob.gravitational_pull(blob2, G)
 
             checked[id(blob)] = 1
 

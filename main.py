@@ -5,9 +5,10 @@ Main file to run application with
 
 by Jason Mott, copyright 2024
 """
-
+import time
+import numpy as np
 import pygame
-from resources import resource_path
+from resources import resource_path, FPS
 from massive_blob import MassiveBlob
 from blob_plotter import BlobPlotter
 from globals import *
@@ -29,7 +30,7 @@ display = pygame.display.set_mode([DISPLAY_SIZE_W, DISPLAY_SIZE_H], pygame.RESIZ
 pygame.display.set_caption("Newton's Blobs")
 img = pygame.image.load(resource_path(WINDOW_ICON))
 pygame.display.set_icon(img)
-clock = pygame.time.Clock()
+fps = FPS()
 stat_font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
 blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
 
@@ -111,6 +112,12 @@ while running:
             message = None
             message_counter = 0
 
+    if CLOCK_FPS:
+        fps.render(
+            display,
+            20,
+            display.get_height() - (fps.text.get_height() * 2) - 20,
+        )
     # Flip the display
     pygame.display.flip()
 
@@ -119,7 +126,7 @@ while running:
         blob_plotter.update_blobs()
 
     # ensure frame rate
-    clock.tick(FRAME_RATE)
+    fps.clock.tick(FRAME_RATE)
 
 # Done! Time to quit.
 pygame.quit()

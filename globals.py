@@ -25,6 +25,8 @@ G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
 
 # Change to scale the size of universe (thus window)
+CLOCK_FPS = True
+LIGHTING = False
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
 TIMESCALE = 3600 * 12 * SCALE_PERCENT  # elapsed time per frame, in seconds
@@ -43,7 +45,7 @@ SCALED_SCREEN_SIZE = (SCREEN_SIZE / AU_SCALE_FACTOR) * AU  # Real height and wid
 FRAME_RATE = 120  # there are FRAME_RATE frames per second
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 100
+NUM_BLOBS = 150
 # If true all blobs will start
 # with a perfect orbital velocity
 START_PERFECT_ORBIT = True
@@ -68,12 +70,10 @@ COLORS = [
     (51, 115, 87),
     (147, 3, 46),
     (255, 133, 82),
-    (157, 195, 194),
-    (171, 146, 191),
     (255, 81, 84),
     (177, 15, 46),
     (35, 116, 171),
-    (120, 188, 97),
+    # (120, 188, 97),
     (179, 0, 27),
     (242, 100, 25),
     (20, 92, 158),
@@ -83,7 +83,23 @@ COLORS = [
     (145, 23, 31),
     (116, 66, 83),
     (166, 161, 94),
-    (194, 151, 184),
+    (78, 56, 34),
+    (56, 63, 81),
+    (115, 87, 81),
+    (140, 28, 19),
+    (73, 17, 28),
+    (186, 90, 49),
+    (46, 41, 78),
+    (41, 115, 115),
+    (57, 57, 58),
+    (3, 71, 50),
+    (114, 155, 121),
+    (81, 52, 77),
+    (44, 66, 63),
+    (64, 4, 6),
+    (41, 51, 92),
+    (105, 122, 33),
+    (109, 26, 54),
 ]
 BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # night black (19, 21, 21)

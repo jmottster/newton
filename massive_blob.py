@@ -110,7 +110,7 @@ class MassiveBlob:
         z = self.z * SCALE
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_suface.draw(self.screen, (x, y, z))
+            self.blob_suface.draw(self.screen, (x, y, z), LIGHTING)
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y
@@ -304,6 +304,10 @@ class MassiveBlob:
             self.vy += fdy / self.mass * TIMESCALE
             self.vz += fdz / self.mass * TIMESCALE
 
+            blob.vx -= fdx / blob.mass * TIMESCALE
+            blob.vy -= fdy / blob.mass * TIMESCALE
+            blob.vz -= fdz / blob.mass * TIMESCALE
+
         elif d > self.GRAVITATIONAL_RANGE and self.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it
             blob.dead = True
@@ -357,6 +361,7 @@ class BlobSurface(pygame.Surface):
     def __init__(self, radius, color):
         self.LIGHT_RADIUS_MULTI = 10
         self.radius = radius
+        # Double size of box, because radius can get twice the size
         self.width_center = radius + (radius)
         self.height_center = radius + (radius)
         pygame.Surface.__init__(self, (self.width_center * 2, self.height_center * 2))
@@ -572,14 +577,14 @@ class BlobSurface(pygame.Surface):
 
         return (lx, ly, sx, sy)
 
-    def draw(self, screen, pos=None, no_lighting=False):
+    def draw(self, screen, pos=None, lighting=True):
         # Draw the blob to the screen.
         if pos is not None:
             self.position = pos
 
-        if no_lighting:
+        if lighting:
             screen.blit(
-                self,
+                self.get_lighting_blob(),
                 (
                     self.position[0] - self.width_center,
                     self.position[1] - self.height_center,
@@ -587,7 +592,7 @@ class BlobSurface(pygame.Surface):
             )
         else:
             screen.blit(
-                self.get_lighting_blob(),
+                self,
                 (
                     self.position[0] - self.width_center,
                     self.position[1] - self.height_center,
