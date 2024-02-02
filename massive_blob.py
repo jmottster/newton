@@ -173,8 +173,6 @@ class MassiveBlob:
         )
         self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_suface.resize(self.radius)
-        # if self.name == "50":
-        #     print(f"new radius:{self.radius}")
 
     def advance(self):
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
@@ -315,12 +313,6 @@ class MassiveBlob:
                     smaller_blob.swallowed = True
 
     def gravitational_pull(self, blob, g):
-        if (
-            self.name != CENTER_BLOB_NAME
-            and abs(blob.x - self.x) > self.scaled_screen_size_eighth_x
-        ):
-            return
-
         # Get distance between blobs, and cross over distance
         # where gravity stops (to keep blobs from gluing to each other)
         dx = blob.x - self.x
@@ -434,7 +426,6 @@ class BlobSurface(pygame.Surface):
         self.draw_mask()
         self.draw_light()
         self.draw_shade()
-        self.debug = None
 
     def resize(self, radius):
         # Self explanotory, I think. A way to resize without having to delete and reinstantiate
@@ -582,7 +573,6 @@ class BlobSurface(pygame.Surface):
         cache_index = round((scale / self.animation_scale_div))
 
         radius = radius + round((self.animation_radius - radius) * (scale))
-        self.debug = f" diff={diff}, scale={scale}, cache_index={cache_index}"
 
         if z > MassiveBlob.center_blob_z:
             self.light_radius = radius
