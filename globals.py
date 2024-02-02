@@ -26,22 +26,27 @@ AU = 149.6e6 * 1000  # 1 Astronomical Unit
 
 # Change to scale the size of universe (thus window)
 CLOCK_FPS = True
-LIGHTING = False
+LIGHTING = True
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
-TIMESCALE = 3600 * 12 * SCALE_PERCENT  # elapsed time per frame, in seconds
+TIMESCALE = 3600 * 6 * SCALE_PERCENT  # elapsed time per frame, in seconds
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000
-# Height and width of screen (square is best for orbits, can be bigger than display)
-SCREEN_SIZE = 2000 * SCALE_PERCENT
-SCREEN_SIZE_H = SCREEN_SIZE
-SCREEN_SIZE_W = SCREEN_SIZE
-SCREEN_SIZE_D = SCREEN_SIZE
+# Cube size of Universe in pixles
+UNIVERSE_SIZE = 2000 * SCALE_PERCENT
+UNIVERSE_SIZE_H = UNIVERSE_SIZE
+UNIVERSE_SIZE_W = UNIVERSE_SIZE
+UNIVERSE_SIZE_D = UNIVERSE_SIZE
 MIN_RADIUS = 5 * SCALE_PERCENT
 MAX_RADIUS = 20 * SCALE_PERCENT
-SCALE = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-SCALED_SCREEN_SIZE = (SCREEN_SIZE / AU_SCALE_FACTOR) * AU  # Real height and width in AU
+GRID_CELL_SIZE = MAX_RADIUS * 3
+GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
+GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
+SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
+SCALE_UP = AU / AU_SCALE_FACTOR  # 1 AU = SCALE_FACTOR pixels
+# Cube size of the universe in real life scale
+SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
 FRAME_RATE = 120  # there are FRAME_RATE frames per second
 
 # Constants for creating blobs somewhat randomly

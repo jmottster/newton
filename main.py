@@ -5,8 +5,7 @@ Main file to run application with
 
 by Jason Mott, copyright 2024
 """
-import time
-import numpy as np
+
 import pygame
 from resources import resource_path, FPS
 from massive_blob import MassiveBlob
@@ -25,7 +24,7 @@ __status__ = "In Progress"
 pygame.init()
 
 # Set up the window, frame rate clock, and fonts
-screen = pygame.Surface([SCREEN_SIZE_W, SCREEN_SIZE_H])
+screen = pygame.Surface([UNIVERSE_SIZE_W, UNIVERSE_SIZE_H])
 display = pygame.display.set_mode([DISPLAY_SIZE_W, DISPLAY_SIZE_H], pygame.RESIZABLE)
 pygame.display.set_caption("Newton's Blobs")
 img = pygame.image.load(resource_path(WINDOW_ICON))

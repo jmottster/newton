@@ -6,6 +6,7 @@ Class file for blobs that will interact with each other (like planets and stars)
 by Jason Mott, copyright 2024
 """
 
+import numpy as np
 import math, random
 import pygame
 from globals import *
@@ -67,24 +68,27 @@ class MassiveBlob:
         g is the Gravitational Constant to be applied to equation
     """
 
-    center_blob_x = SCREEN_SIZE_W / 2
-    center_blob_y = SCREEN_SIZE_H / 2
-    center_blob_z = SCREEN_SIZE_D / 2
+    center_blob_x = UNIVERSE_SIZE_W / 2
+    center_blob_y = UNIVERSE_SIZE_H / 2
+    center_blob_z = UNIVERSE_SIZE_D / 2
 
     def __init__(self, screen, name, color, radius, mass, x, y, z, vx, vy, vz):
         self.screen = screen
-        self.scaled_screen_width = (screen.get_width() / AU_SCALE_FACTOR) * AU
-        self.scaled_screen_height = (screen.get_height() / AU_SCALE_FACTOR) * AU
-        self.GRAVITATIONAL_RANGE = self.scaled_screen_height
+        self.scaled_screen_width = screen.get_width() * SCALE_UP
+        self.scaled_screen_height = screen.get_height() * SCALE_UP
+
         self.scaled_screen_size_squared_x = self.scaled_screen_width * 2
-        self.scaled_screen_size_half_x = self.scaled_screen_width / 2
         self.scaled_screen_size_squared_y = self.scaled_screen_height * 2
+        self.scaled_screen_size_half_x = self.scaled_screen_width / 2
         self.scaled_screen_size_half_y = self.scaled_screen_height / 2
+        self.scaled_screen_size_eighth_x = self.scaled_screen_width / 8
+        self.scaled_screen_size_eighth_y = self.scaled_screen_height / 8
+        self.GRAVITATIONAL_RANGE = self.scaled_screen_size_eighth_y * 6
 
         self.name = name
         self.color = color
         self.radius = radius
-        self.scaled_radius = (self.radius / AU_SCALE_FACTOR) * AU
+        self.scaled_radius = self.radius * SCALE_UP
         self.mass = mass
         self.x = x
         self.y = y
@@ -104,10 +108,36 @@ class MassiveBlob:
 
         self.fake_blob_z()
 
+    def grid_key(self):
+        x = int((self.x * SCALE_DOWN) / GRID_CELL_SIZE)
+        y = int((self.y * SCALE_DOWN) / GRID_CELL_SIZE)
+        z = int((self.z * SCALE_DOWN) / GRID_CELL_SIZE)
+
+        if x <= 0:
+            x = 1
+        if x >= GRID_KEY_CHECK_BOUND:
+            x = GRID_KEY_CHECK_BOUND - 1
+
+        if y <= 0:
+            y = 1
+        if y >= GRID_KEY_CHECK_BOUND:
+            y = GRID_KEY_CHECK_BOUND - 1
+
+        if z <= 0:
+            z = 1
+        if z >= GRID_KEY_CHECK_BOUND:
+            z = GRID_KEY_CHECK_BOUND - 1
+
+        return (
+            x,
+            y,
+            z,
+        )
+
     def draw(self):
-        x = self.x * SCALE
-        y = self.y * SCALE
-        z = self.z * SCALE
+        x = self.x * SCALE_DOWN
+        y = self.y * SCALE_DOWN
+        z = self.z * SCALE_DOWN
 
         if self.name != CENTER_BLOB_NAME:
             self.blob_suface.draw(self.screen, (x, y, z), LIGHTING)
@@ -141,8 +171,10 @@ class MassiveBlob:
         self.scaled_radius = self.orig_radius[0] + (
             self.orig_radius[1] * (diff / self.scaled_screen_size_half_y)
         )
-        self.radius = self.scaled_radius * SCALE
+        self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_suface.resize(self.radius)
+        # if self.name == "50":
+        #     print(f"new radius:{self.radius}")
 
     def advance(self):
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
@@ -178,9 +210,9 @@ class MassiveBlob:
             scaled_screen_size_w = self.scaled_screen_width
             scaled_screen_size_h = self.scaled_screen_height
 
-            local_x = self.x * SCALE
-            local_y = self.y * SCALE
-            local_z = self.z * SCALE
+            local_x = self.x * SCALE_DOWN
+            local_y = self.y * SCALE_DOWN
+            local_z = self.z * SCALE_DOWN
 
             # Change x direction if hitting the edge of screen
             if ((local_x - self.radius) <= zero) and (self.vx <= 0):
@@ -216,6 +248,10 @@ class MassiveBlob:
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):
+        dd = self.orig_radius[0] + blob.orig_radius[0]
+        if abs(blob.x - self.x) > dd:
+            return
+
         dx = blob.x - self.x
         dy = blob.y - self.y
         dz = blob.z - self.z
@@ -279,14 +315,19 @@ class MassiveBlob:
                     smaller_blob.swallowed = True
 
     def gravitational_pull(self, blob, g):
+        if (
+            self.name != CENTER_BLOB_NAME
+            and abs(blob.x - self.x) > self.scaled_screen_size_eighth_x
+        ):
+            return
+
         # Get distance between blobs, and cross over distance
         # where gravity stops (to keep blobs from gluing to each other)
         dx = blob.x - self.x
         dy = blob.y - self.y
         dz = blob.z - self.z
-
-        d = math.sqrt((dx**2) + (dy**2) + (dz**2))
         dd = (self.orig_radius[0] * 0.90) + blob.orig_radius[0]
+        d = math.sqrt((dx**2) + (dy**2) + (dz**2))
 
         # if two blobs are within gravitational range of each other,
         # and not overlapping too much
@@ -375,27 +416,29 @@ class BlobSurface(pygame.Surface):
         )
         self.color = color
         self.colorkey = (0, 0, 0)
+        self.animation_scale_div = 0.04
+        self.animation_cache_size = round(1 / self.animation_scale_div)
         self.light_radius = self.animation_radius
         self.light_flag = pygame.BLEND_RGB_ADD
         self.light_color = (75, 75, 75)
-        self.light = None
+        self.light_cache = np.empty([self.animation_cache_size + 1], dtype=object)
+        self.light_index = self.animation_cache_size
         self.shade_radius = self.animation_radius
         self.shade_color = color
-        self.shade = None
+        self.shade_cache = np.empty([self.animation_cache_size + 1], dtype=object)
+        self.shade_index = self.animation_cache_size
         self.alpha_image = None
         self.mask_image = None
         self.parent_blob = self.draw_blob()
-        self.draw_light()
-        self.draw_shade()
         self.draw_alpha_image()
         self.draw_mask()
+        self.draw_light()
+        self.draw_shade()
+        self.debug = None
 
     def resize(self, radius):
         # Self explanotory, I think. A way to resize without having to delete and reinstantiate
         self.radius = radius
-        self.animation_radius = radius * self.LIGHT_RADIUS_MULTI
-        self.light_radius = self.animation_radius
-        self.shade_radius = self.animation_radius
 
     def get_rect(self):
         return self.rect
@@ -421,13 +464,7 @@ class BlobSurface(pygame.Surface):
             ).convert_alpha()
             self.alpha_image.set_colorkey(self.colorkey)
 
-        self.alpha_image.fill(self.colorkey)
-        pygame.draw.circle(
-            self.alpha_image,
-            self.color,
-            (self.width_center, self.height_center),
-            self.radius,
-        )
+        self.alpha_image.fill(self.color)
 
     def draw_mask(self):
         # Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
@@ -448,48 +485,53 @@ class BlobSurface(pygame.Surface):
         # Create/draw the overlay the will add shine to the blob in the direction of the center blob.
         # Called in the constructor and from check_animation_radius().
         # Created the first time it's called, just a fill and draw every time after.
-        if self.light is None:
-            width = self.animation_width_center * 2
-            height = self.animation_height_center * 2
-            self.light = pygame.Surface((width, height))
-            self.light.set_colorkey(self.colorkey)
+        if self.light_cache[self.light_index] is None:
+            width = self.light_radius * 2
+            height = self.light_radius * 2
+            self.light_cache[self.light_index] = pygame.Surface((width, height))
+            self.light_cache[self.light_index].set_colorkey(self.colorkey)
 
-        self.light.fill(self.colorkey)
-        pygame.draw.circle(
-            self.light,
-            self.light_color,
-            (
-                self.animation_width_center,
-                self.animation_height_center,
-            ),
-            self.light_radius,
-        )
+            self.light_cache[self.light_index].fill(self.colorkey)
+            pygame.draw.circle(
+                self.light_cache[self.light_index],
+                self.light_color,
+                (
+                    self.light_radius,
+                    self.light_radius,
+                ),
+                self.light_radius,
+            )
+
+        self.light_radius = self.light_cache[self.light_index].get_width() / 2
 
     def draw_shade(self):
         # Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
         # direction of the center blob. Called in the constructor and from check_animation_radius().
         # Created the first time it's called, just a fill and draw every time after.
-        if self.shade is None:
-            width = self.animation_width_center * 2
-            height = self.animation_height_center * 2
-            self.shade = pygame.Surface((width, height))
-            self.shade.set_colorkey(self.colorkey)
+        if self.shade_cache[self.shade_index] is None:
+            width = self.shade_radius * 2
+            height = self.shade_radius * 2
+            self.shade_cache[self.shade_index] = pygame.Surface((width, height))
+            self.shade_cache[self.shade_index].set_colorkey(self.colorkey)
 
-        self.shade.fill(self.colorkey)
-        pygame.draw.circle(
-            self.shade,
-            self.shade_color,
-            (
-                self.animation_width_center,
-                self.animation_height_center,
-            ),
-            self.shade_radius,
-        )
+            self.shade_cache[self.shade_index].fill(self.colorkey)
+            pygame.draw.circle(
+                self.shade_cache[self.shade_index],
+                self.shade_color,
+                (
+                    self.shade_radius,
+                    self.shade_radius,
+                ),
+                self.shade_radius,
+            )
+
+        self.shade_radius = self.shade_cache[self.shade_index].get_width() / 2
 
     def get_lighting_blob(self):
         # Create the final package for drawing. This puts all the peices together. Everything
         # is cached for every call, it just does a fill/draw on all the peices. This is called
         # by the draw() method.
+
         self.draw_alpha_image()
         self.draw_mask()
 
@@ -497,20 +539,20 @@ class BlobSurface(pygame.Surface):
         offset = self.get_lighting_direction()
 
         self.alpha_image.blit(
-            self.light,
+            self.light_cache[self.light_index],
             (
-                (self.width_center - self.animation_width_center) + offset[0],
-                (self.height_center - self.animation_height_center) + offset[1],
+                (self.width_center - self.light_radius) + offset[0],
+                (self.height_center - self.light_radius) + offset[1],
             ),
             special_flags=self.light_flag,
         )
 
         if self.position[2] < MassiveBlob.center_blob_z:
             self.alpha_image.blit(
-                self.shade,
+                self.shade_cache[self.shade_index],
                 (
-                    (self.width_center - self.animation_width_center) - offset[2],
-                    (self.height_center - self.animation_height_center) - offset[3],
+                    (self.width_center - self.shade_radius) - offset[2],
+                    (self.height_center - self.shade_radius) - offset[3],
                 ),
             )
 
@@ -524,27 +566,32 @@ class BlobSurface(pygame.Surface):
         # This points the lighted up side of the blob toward the center
         # blob, the shade side opposite of the center blob, and ensures
         # radius is honering z depth and realistic curvature.
-
-        diff = abs(MassiveBlob.center_blob_z - z)
-        radius = self.animation_radius
-        scale = 1
-        range = MassiveBlob.center_blob_z * 0.3
-        if diff < range:
-            diff = abs(range - diff)
-            scale = diff / (range)
+        fraction_center = MassiveBlob.center_blob_z * 0.75
+        diff = MassiveBlob.center_blob_z - abs(MassiveBlob.center_blob_z - z)
+        if diff > fraction_center:
+            diff = diff - fraction_center
+            scale = round(diff / fraction_center, 2)
         else:
-            scale = 0.15
+            scale = self.animation_scale_div
 
-        if scale < 0.15:
-            scale = 0.15
-        radius = self.radius * (self.LIGHT_RADIUS_MULTI * (scale))
+        radius = self.animation_radius * 0.1
+
+        if scale < self.animation_scale_div:
+            scale = self.animation_scale_div
+
+        cache_index = round((scale / self.animation_scale_div))
+
+        radius = radius + round((self.animation_radius - radius) * (scale))
+        self.debug = f" diff={diff}, scale={scale}, cache_index={cache_index}"
 
         if z > MassiveBlob.center_blob_z:
             self.light_radius = radius
-            self.shade_radius = self.animation_radius
+            self.light_index = cache_index
+            self.shade_index = self.animation_cache_size
         elif z < MassiveBlob.center_blob_z:
             self.shade_radius = radius
-            self.light_radius = self.animation_radius
+            self.shade_index = cache_index
+            self.light_index = self.animation_cache_size
 
         self.draw_light()
         self.draw_shade()
