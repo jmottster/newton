@@ -7,6 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import pygame
+
 from resources import resource_path, FPS
 from massive_blob import MassiveBlob
 from blob_plotter import BlobPlotter
@@ -21,111 +22,159 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-pygame.init()
+class BlobRunner:
 
-# Set up the window, frame rate clock, and fonts
-screen = pygame.Surface([UNIVERSE_SIZE_W, UNIVERSE_SIZE_H])
-display = pygame.display.set_mode([DISPLAY_SIZE_W, DISPLAY_SIZE_H], pygame.RESIZABLE)
-pygame.display.set_caption("Newton's Blobs")
-img = pygame.image.load(resource_path(WINDOW_ICON))
-pygame.display.set_icon(img)
-fps = FPS()
-stat_font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
-blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
+    MINUTES = 60
+    HOURS = MINUTES * 60
+    DAYS = HOURS * 24
+    YEARS = DAYS * 365.25
 
+    def __init__(self):
 
-# Get all the blobs ready to roll
-blob_plotter = BlobPlotter(screen, display)
-blob_plotter.plot_blobs()
+        self.pg = pygame
+        self.pg.init()
 
-# Runtime behavior bools
-running = True
-paused = False
-show_stats = True
-message = None
-message_counter = 0
-fullscreen = False
-fullscreen_save_w = DISPLAY_SIZE_W
-fullscreen_save_h = DISPLAY_SIZE_H
-toggle_start_square_t = f"Toggled starting formation to square"
-toggle_start_circular_t = f"Toggled starting formation to circular"
-
-toggle_start_perfect_orbit = f"Toggled starting orbit to perfect velocities"
-toggle_start_random_orbit = f"Toggled starting orbit to random velocities"
-
-while running:
-    # Check for events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:
-                running = False
-            if event.key == pygame.K_SPACE:
-                paused = not paused
-                if paused:
-                    blob_plotter.blobs[0].pause = True
-                else:
-                    blob_plotter.blobs[0].pause = False
-            if event.key == pygame.K_d:
-                show_stats = not show_stats
-            if event.key == pygame.K_s:
-                blob_plotter.start_over()
-            if event.key == pygame.K_a:
-                blob_plotter.square_grid = not blob_plotter.square_grid
-                if blob_plotter.square_grid:
-                    message = toggle_start_square_t
-                else:
-                    message = toggle_start_circular_t
-                message_counter = 60 * 3
-            if event.key == pygame.K_w:
-                blob_plotter.start_perfect_orbit = not blob_plotter.start_perfect_orbit
-                if blob_plotter.start_perfect_orbit:
-                    message = toggle_start_perfect_orbit
-                else:
-                    message = toggle_start_random_orbit
-                message_counter = 60 * 3
-            if event.key == pygame.K_f:
-                if fullscreen:
-                    pygame.display.set_mode(
-                        (fullscreen_save_w, fullscreen_save_h), pygame.RESIZABLE
-                    )
-                    fullscreen = False
-                else:
-                    fullscreen_save_w = display.get_width()
-                    fullscreen_save_h = display.get_height()
-                    pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                    fullscreen = True
-
-    # Fill the background, then draw stuff
-    display.fill(BACKGROUND_COLOR)
-    screen.fill(BACKGROUND_COLOR)
-
-    blob_plotter.draw_blobs(blob_font)
-
-    if show_stats:
-        blob_plotter.draw_stats(stat_font, message)
-        if message_counter > 0:
-            message_counter -= 1
-        else:
-            message = None
-            message_counter = 0
-
-    if CLOCK_FPS:
-        fps.render(
-            display,
-            20,
-            display.get_height() - (fps.text.get_height() * 2) - 20,
+        # Set up the window, frame rate clock, and fonts
+        self.universe = self.pg.Surface([UNIVERSE_SIZE_W, UNIVERSE_SIZE_H])
+        self.display = self.pg.display.set_mode(
+            [DISPLAY_SIZE_W, DISPLAY_SIZE_H], self.pg.RESIZABLE
         )
-    # Flip the display
-    pygame.display.flip()
+        self.pg.display.set_caption("Newton's Blobs")
+        self.img = self.pg.image.load(resource_path(WINDOW_ICON))
+        self.pg.display.set_icon(self.img)
+        self.fps = FPS()
+        self.stat_font = self.pg.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
+        self.blob_font = self.pg.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
 
-    if not paused:
-        # Apply changes
-        blob_plotter.update_blobs()
+        # Get all the blobs ready to roll
+        self.blob_plotter = BlobPlotter(self.universe, self.display)
+        self.blob_plotter.plot_blobs()
 
-    # ensure frame rate
-    fps.clock.tick(FRAME_RATE)
+        # Runtime behavior bools
+        self.running = True
+        self.paused = False
+        self.elapsed_time = 0
+        self.show_stats = True
+        self.message = None
+        self.message_counter = 0
+        self.fullscreen = False
+        self.fullscreen_save_w = DISPLAY_SIZE_W
+        self.fullscreen_save_h = DISPLAY_SIZE_H
+        self.toggle_start_square_t = f"Toggled starting formation to square"
+        self.toggle_start_circular_t = f"Toggled starting formation to circular"
 
-# Done! Time to quit.
-pygame.quit()
+        self.toggle_start_perfect_orbit = (
+            f"Toggled starting orbit to perfect velocities"
+        )
+        self.toggle_start_random_orbit = f"Toggled starting orbit to random velocities"
+
+    def run(self):
+        while self.running:
+            # Check for events
+            for event in self.pg.event.get():
+                if event.type == self.pg.QUIT:
+                    self.running = False
+                if event.type == self.pg.KEYDOWN:
+                    if event.key == self.pg.K_q:
+                        self.running = False
+                    if event.key == self.pg.K_SPACE:
+                        self.paused = not self.paused
+                        if self.paused:
+                            self.blob_plotter.blobs[0].pause = True
+                        else:
+                            self.blob_plotter.blobs[0].pause = False
+                    if event.key == self.pg.K_d:
+                        self.show_stats = not self.show_stats
+                    if event.key == self.pg.K_s:
+                        self.elapsed_time = 0
+                        self.blob_plotter.start_over()
+                    if event.key == self.pg.K_a:
+                        self.blob_plotter.square_grid = (
+                            not self.blob_plotter.square_grid
+                        )
+                        if self.blob_plotter.square_grid:
+                            self.message = self.toggle_start_square_t
+                        else:
+                            self.message = self.toggle_start_circular_t
+                        self.message_counter = 60 * 3
+                    if event.key == self.pg.K_w:
+                        self.blob_plotter.start_perfect_orbit = (
+                            not self.blob_plotter.start_perfect_orbit
+                        )
+                        if self.blob_plotter.start_perfect_orbit:
+                            self.message = self.toggle_start_perfect_orbit
+                        else:
+                            self.message = self.toggle_start_random_orbit
+                        self.message_counter = 60 * 3
+                    if event.key == self.pg.K_f:
+                        if self.fullscreen:
+                            self.pg.display.set_mode(
+                                (self.fullscreen_save_w, self.fullscreen_save_h),
+                                self.pg.RESIZABLE,
+                            )
+                            self.fullscreen = False
+                        else:
+                            self.fullscreen_save_w = self.display.get_width()
+                            self.fullscreen_save_h = self.display.get_height()
+                            self.pg.display.set_mode((0, 0), self.pg.FULLSCREEN)
+                            self.fullscreen = True
+
+            self.render_frame()
+
+        # While loop broke! Time to quit.
+        self.pg.quit()
+
+    def render_frame(self):
+
+        # Fill the background, then draw stuff
+        self.display.fill(BACKGROUND_COLOR)
+        self.universe.fill(BACKGROUND_COLOR)
+
+        self.blob_plotter.draw_blobs(self.blob_font)
+
+        if self.show_stats:
+            self.blob_plotter.draw_stats(self.stat_font, self.message)
+            if self.message_counter > 0:
+                self.message_counter -= 1
+            else:
+                self.message = None
+                self.message_counter = 0
+
+            self.display_elapsed_time()
+
+            if CLOCK_FPS:
+                self.fps.render(
+                    self.display,
+                    20,
+                    self.display.get_height() - (self.fps.text.get_height() * 2) - 20,
+                )
+
+        # Flip the display
+        self.pg.display.flip()
+
+        if not self.paused:
+            # Apply changes
+            self.blob_plotter.update_blobs()
+
+            self.elapsed_time += 1
+
+        # ensure frame rate
+        self.fps.clock.tick(FRAME_RATE)
+
+    def get_elapsed_time_in(self, divisor):
+        return round((self.elapsed_time * TIMESCALE) / divisor, 2)
+
+    def display_elapsed_time(self):
+
+        self.time_text = self.stat_font.render(
+            f"Years elapsed: {self.get_elapsed_time_in(self.YEARS)}",
+            True,
+            (255, 255, 255),
+            (19, 21, 21),
+        )
+        self.display.blit(self.time_text, (20, self.time_text.get_height() + 20))
+
+
+if __name__ == "__main__":
+    blober = BlobRunner()
+    blober.run()

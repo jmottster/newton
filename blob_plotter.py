@@ -5,6 +5,7 @@ Class file for setting up initial posisions and velocities of blobs and maintain
 
 by Jason Mott, copyright 2024
 """
+
 import pygame
 import numpy as np
 import math, random
@@ -21,9 +22,8 @@ __status__ = "In Progress"
 
 
 class BlobPlotter:
-
     """
-    A class used for setting up initial posisions and velocities of blobs and maintaining them
+    A class used for setting up initial positions and velocities of blobs and maintaining them
 
     Attributes
     ----------
@@ -46,7 +46,7 @@ class BlobPlotter:
 
     """
 
-    def __init__(self, screen, display):
+    def __init__(self, universe, display):
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
@@ -59,19 +59,18 @@ class BlobPlotter:
             ],
             dtype=object,
         )
-
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
         self.start_perfect_floor_bounce = START_PERFECT_FLOOR_BOUNCE
-        self.screen = screen
-        self.scaled_screen_width = screen.get_width() * SCALE_UP
-        self.scaled_screen_height = screen.get_height() * SCALE_UP
+        self.universe = universe
+        self.scaled_universe_width = universe.get_width() * SCALE_UP
+        self.scaled_universe_height = universe.get_height() * SCALE_UP
         self.display = display
         self.scaled_display_width = display.get_width() * SCALE_UP
         self.scaled_display_height = display.get_height() * SCALE_UP
-        MassiveBlob.center_blob_x = screen.get_width() / 2
-        MassiveBlob.center_blob_y = screen.get_height() / 2
-        MassiveBlob.center_blob_z = screen.get_height() / 2
+        MassiveBlob.center_blob_x = universe.get_width() / 2
+        MassiveBlob.center_blob_y = universe.get_height() / 2
+        MassiveBlob.center_blob_z = universe.get_height() / 2
 
     def start_over(self):
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
@@ -83,23 +82,23 @@ class BlobPlotter:
     def plot_blobs(self):
         # TODO This function is getting unruly, clean it up
         # split the screen up into enough partitions for every blob
-        if NUM_BLOBS > 9:
+        if NUM_BLOBS > 5:
             blob_partition = round(
                 ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
             )
         else:
             blob_partition = self.scaled_display_height / 4
 
-        half_screen_h = self.scaled_screen_height / 2
-        half_screen_w = self.scaled_screen_width / 2
+        half_universe_h = self.scaled_universe_height / 2
+        half_universe_w = self.scaled_universe_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = half_screen_w
-        y = half_screen_h
-        z = half_screen_h
+        x = half_universe_w
+        y = half_universe_h
+        z = half_universe_h
 
         sun_blob = MassiveBlob(
-            self.screen,
+            self.universe,
             CENTER_BLOB_NAME,
             CENTER_BLOB_COLOR,
             CENTER_BLOB_RADIUS,
@@ -142,6 +141,12 @@ class BlobPlotter:
         pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
         # Divy up the remainder for a more even distribution
         pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
+        if ((math.pi * 2) / pi_inc) > (NUM_BLOBS - 1):
+            plot_radius = self.scaled_display_height / 4
+
+            pi_inc = (math.pi * 2) / (NUM_BLOBS - 1)
+            pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
         # Now, for each blob . . .
         for i in range(NUM_BLOBS - 1):
@@ -186,9 +191,9 @@ class BlobPlotter:
                         y_turns = y_count + 1
                         y_count = 0
 
-                    if y <= half_screen_h:
+                    if y <= half_universe_h:
                         x += blob_partition
-                    elif y > half_screen_h:
+                    elif y > half_universe_h:
                         x -= blob_partition
                 else:
                     y_count += 1
@@ -196,23 +201,24 @@ class BlobPlotter:
                     if y_turns == 0:
                         x_turns = y_count + 1
 
-                    if x >= half_screen_w:
+                    if x >= half_universe_w:
                         y += blob_partition
-                    elif x < half_screen_w:
+                    elif x < half_universe_w:
                         y -= blob_partition
             else:  # Circular grid x,y plot for this blob
                 # Get x and y for this blob, vars set up from last interation or initial setting
-                x = half_screen_w + plot_radius * math.sin(plot_theta) * math.cos(
+                x = half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
                     plot_phi
                 )
-                y = half_screen_h + plot_radius * math.sin(plot_theta) * math.sin(
+                y = half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
                     plot_phi
                 )
-                z = half_screen_h + plot_radius * math.cos(plot_theta)
+                z = half_universe_h + plot_radius * math.cos(plot_theta)
 
+                blobs_left = NUM_BLOBS - (i + 2)
                 # Set up vars for next interation, move the "clock dial" another notch,
                 # or make it longer by plot_radius_partition if we've gone around 360 degrees
-                if round(plot_phi + pi_inc, 8) >= round((math.pi * 2) - (pi_inc), 8):
+                if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                     plot_phi = 0.0
                     # Increase the radius for the next go around the center blob
                     plot_radius += plot_radius_partition
@@ -222,13 +228,17 @@ class BlobPlotter:
                     # Divy up the remainder for a more even distribution
                     pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
+                    if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
+                        pi_inc = (math.pi * 2) / blobs_left
+                        pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
                 else:
                     plot_phi += pi_inc
 
             # Figure out velocity for this blob
-            dx = half_screen_w - x
-            dy = half_screen_h - y
-            dz = half_screen_h - z
+            dx = half_universe_w - x
+            dy = half_universe_h - y
+            dz = half_universe_h - z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
 
             if self.start_perfect_orbit:
@@ -252,17 +262,17 @@ class BlobPlotter:
 
             # Phew, let's instantiate this puppy . . .
             new_blob = MassiveBlob(
-                self.screen,
+                self.universe,
                 str(i + 1),
                 COLORS[color],
                 radius,
                 mass,
                 x,
-                y,
                 z,
+                y,
                 velocityx,
-                velocityy,
                 velocityz,
+                velocityy,
             )
             self.blobs[i + 1] = new_blob
 
@@ -299,34 +309,40 @@ class BlobPlotter:
                 blob.draw()
                 # Uncomment for writting lables on blobs
                 # mass_text = blob_font.render(
-                #     f"{round(blob.radius)}", 1, (255, 255, 255), (0, 0, 0)
+                #     f"{round(blob.z * SCALE_DOWN)}",
+                #     1,
+                #     (255, 255, 255),
+                #     (0, 0, 0),
                 # )
-                # self.screen.blit(
+                # self.universe.blit(
                 #     mass_text,
                 #     (
-                #         (blob.x * SCALE) - (mass_text.get_width() / 2),
-                #         (blob.y * SCALE) - (blob.radius) - (mass_text.get_height()),
+                #         (blob.x * SCALE_DOWN) - (mass_text.get_width() / 2),
+                #         (blob.y * SCALE_DOWN)
+                #         - (blob.radius)
+                #         - (mass_text.get_height()),
                 #     ),
                 # )
 
                 grid_key = blob.grid_key()
 
                 if self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] is None:
-                    self.proximity_grid[grid_key[0]][grid_key[1]][
-                        grid_key[2]
-                    ] = np.array([blob], dtype=object)
+                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
+                        np.array([blob], dtype=object)
+                    )
                 else:
-                    self.proximity_grid[grid_key[0]][grid_key[1]][
-                        grid_key[2]
-                    ] = np.append(
-                        self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]], blob
+                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
+                        np.append(
+                            self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]],
+                            blob,
+                        )
                     )
 
         self.display.blit(
-            self.screen,
+            self.universe,
             (
-                (self.display.get_width() - self.screen.get_width()) / 2,
-                (self.display.get_height() - self.screen.get_height()) / 2,
+                (self.display.get_width() - self.universe.get_width()) / 2,
+                (self.display.get_height() - self.universe.get_height()) / 2,
             ),
         )
 
@@ -443,7 +459,7 @@ class BlobPlotter:
             gk = blob.grid_key()
 
             # Using the grid approach for optimization. Instead of every blob checking every blob,
-            # every blob only checks the blobs in the grid and the grids surrounding them. The center
+            # every blob only checks the blobs in their own grid cell and the grid cells surrounding them. The center
             # blob is the only exception, which is done before this loop.
 
             # Check my cell, and all the cells on the y axis around me

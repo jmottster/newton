@@ -21,7 +21,6 @@ __status__ = "In Progress"
 
 
 class MassiveBlob:
-
     """
     A class used to represent a massive space blob like a planet or a star
 
@@ -72,18 +71,18 @@ class MassiveBlob:
     center_blob_y = UNIVERSE_SIZE_H / 2
     center_blob_z = UNIVERSE_SIZE_D / 2
 
-    def __init__(self, screen, name, color, radius, mass, x, y, z, vx, vy, vz):
-        self.screen = screen
-        self.scaled_screen_width = screen.get_width() * SCALE_UP
-        self.scaled_screen_height = screen.get_height() * SCALE_UP
+    def __init__(self, universe, name, color, radius, mass, x, y, z, vx, vy, vz):
+        self.universe = universe
+        self.scaled_universe_width = universe.get_width() * SCALE_UP
+        self.scaled_universe_height = universe.get_height() * SCALE_UP
 
-        self.scaled_screen_size_squared_x = self.scaled_screen_width * 2
-        self.scaled_screen_size_squared_y = self.scaled_screen_height * 2
-        self.scaled_screen_size_half_x = self.scaled_screen_width / 2
-        self.scaled_screen_size_half_y = self.scaled_screen_height / 2
-        self.scaled_screen_size_eighth_x = self.scaled_screen_width / 8
-        self.scaled_screen_size_eighth_y = self.scaled_screen_height / 8
-        self.GRAVITATIONAL_RANGE = self.scaled_screen_size_eighth_y * 6
+        self.scaled_universe_size_squared_x = self.scaled_universe_width * 2
+        self.scaled_universe_size_squared_y = self.scaled_universe_height * 2
+        self.scaled_universe_size_half_x = self.scaled_universe_width / 2
+        self.scaled_universe_size_half_y = self.scaled_universe_height / 2
+        self.scaled_universe_size_eighth_x = self.scaled_universe_width / 8
+        self.scaled_universe_size_eighth_y = self.scaled_universe_height / 8
+        self.GRAVITATIONAL_RANGE = self.scaled_universe_size_eighth_y * 6
 
         self.name = name
         self.color = color
@@ -140,12 +139,12 @@ class MassiveBlob:
         z = self.z * SCALE_DOWN
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_suface.draw(self.screen, (x, y, z), LIGHTING)
+            self.blob_suface.draw(self.universe, (x, y, z), LIGHTING)
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y
             MassiveBlob.center_blob_z = z
-            pygame.draw.circle(self.screen, self.color, (x, y), self.radius)
+            pygame.draw.circle(self.universe, self.color, (x, y), self.radius)
 
             if not self.pause:
                 glow_radius = self.radius + random.randint(1, 4)
@@ -155,7 +154,7 @@ class MassiveBlob:
             pygame.draw.circle(
                 surf, self.color, (glow_radius, glow_radius), glow_radius
             )
-            self.screen.blit(
+            self.universe.blit(
                 surf,
                 (
                     x - glow_radius,
@@ -166,10 +165,10 @@ class MassiveBlob:
 
     def fake_blob_z(self):
         # alters viewed radius to show perspective (closer=bigger/further=smaller)
-        diff = self.scaled_screen_size_half_y - self.z
+        diff = self.scaled_universe_size_half_y - self.z
 
         self.scaled_radius = self.orig_radius[0] + (
-            self.orig_radius[1] * (diff / self.scaled_screen_size_half_y)
+            self.orig_radius[1] * (diff / self.scaled_universe_size_half_y)
         )
         self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_suface.resize(self.radius)
@@ -191,22 +190,22 @@ class MassiveBlob:
             # TODO fix wraping for scale
             # Move real x to other side of screen if it's gone off the edge
             if self.vx < 0 and self.x < 0:
-                self.x = self.scaled_screen_width
-            elif self.vx > 0 and self.x > self.scaled_screen_width:
+                self.x = self.scaled_universe_width
+            elif self.vx > 0 and self.x > self.scaled_universe_width:
                 self.x = 0
 
             # Move real y to other side of screen if it's gone off the edge
             if self.vy < 0 and self.y < 0:
-                self.y = self.scaled_screen_height
-            elif self.vy > 0 and self.y > self.scaled_screen_height:
+                self.y = self.scaled_universe_height
+            elif self.vy > 0 and self.y > self.scaled_universe_height:
                 self.y = 0
 
         else:
             zero = 0
-            screen_size_w = self.screen.get_width()
-            screen_size_h = self.screen.get_height()
-            scaled_screen_size_w = self.scaled_screen_width
-            scaled_screen_size_h = self.scaled_screen_height
+            universe_size_w = self.universe.get_width()
+            universe_size_h = self.universe.get_height()
+            scaled_universe_size_w = self.scaled_universe_width
+            scaled_universe_size_h = self.scaled_universe_height
 
             local_x = self.x * SCALE_DOWN
             local_y = self.y * SCALE_DOWN
@@ -218,9 +217,9 @@ class MassiveBlob:
                 self.x = self.scaled_radius
                 self.vx = self.vx * 0.995
 
-            if ((local_x + self.radius) >= screen_size_w) and (self.vx >= 0):
+            if ((local_x + self.radius) >= universe_size_w) and (self.vx >= 0):
                 self.vx = -self.vx
-                self.x = scaled_screen_size_w - self.scaled_radius
+                self.x = scaled_universe_size_w - self.scaled_radius
                 self.vx = self.vx * 0.995
 
             # Change y direction if hitting the edge of screen
@@ -229,9 +228,9 @@ class MassiveBlob:
                 self.y = self.scaled_radius
                 self.vy = self.vy * 0.995
 
-            if ((local_y + self.radius) >= screen_size_h) and self.vy >= 0:
+            if ((local_y + self.radius) >= universe_size_h) and self.vy >= 0:
                 self.vy = -self.vy
-                self.y = scaled_screen_size_h - self.scaled_radius
+                self.y = scaled_universe_size_h - self.scaled_radius
                 self.vy = self.vy * 0.995
 
             # Change z direction if hitting the edge of screen
@@ -240,9 +239,9 @@ class MassiveBlob:
                 self.z = self.scaled_radius
                 self.vz = self.vz * 0.995
 
-            if ((local_z + self.radius) >= screen_size_h) and self.vz >= 0:
+            if ((local_z + self.radius) >= universe_size_h) and self.vz >= 0:
                 self.vz = -self.vz
-                self.z = scaled_screen_size_h - self.scaled_radius
+                self.z = scaled_universe_size_h - self.scaled_radius
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):
@@ -352,7 +351,7 @@ class MassiveBlob:
         # Get distance between blobs, and cross over distance
         # where gravity stops (to keep blobs from gluing to each other)
         # dx = self.scaled_screen_size_half_x - self.x
-        dy = self.scaled_screen_size_half_y - self.y
+        dy = self.scaled_universe_size_half_y - self.y
         # dz = self.scaled_screen_size_half_y - self.z
         d = dy
 
@@ -364,7 +363,6 @@ class MassiveBlob:
 
 
 class BlobSurface(pygame.Surface):
-
     """
     A class used to draw blobs that have shadows from the center blob glow. It is a
     sub class of pygame.Surface
@@ -392,14 +390,19 @@ class BlobSurface(pygame.Surface):
     """
 
     def __init__(self, radius, color):
-        self.LIGHT_RADIUS_MULTI = 10
+        self.LIGHT_RADIUS_MULTI = 6
         self.radius = radius
         # Double size of box, because radius can get twice the size
         self.width_center = radius + (radius)
         self.height_center = radius + (radius)
         pygame.Surface.__init__(self, (self.width_center * 2, self.height_center * 2))
         self.position = (0, 0, 0)
-        self.animation_radius = radius * self.LIGHT_RADIUS_MULTI
+        self.animation_scale_div = 0.15
+        self.animation_cache_size = round(1 / self.animation_scale_div)
+        self.animation_radius = self.radius * self.LIGHT_RADIUS_MULTI
+        self.animation_small_radius = self.animation_radius * (
+            0.1 + self.animation_scale_div
+        )
         self.animation_width_center = self.width_center * self.LIGHT_RADIUS_MULTI
         self.animation_height_center = self.height_center * self.LIGHT_RADIUS_MULTI
         self.rect = pygame.Rect(
@@ -408,8 +411,6 @@ class BlobSurface(pygame.Surface):
         )
         self.color = color
         self.colorkey = (0, 0, 0)
-        self.animation_scale_div = 0.04
-        self.animation_cache_size = round(1 / self.animation_scale_div)
         self.light_radius = self.animation_radius
         self.light_flag = pygame.BLEND_RGB_ADD
         self.light_color = (75, 75, 75)
@@ -424,8 +425,8 @@ class BlobSurface(pygame.Surface):
         self.parent_blob = self.draw_blob()
         self.draw_alpha_image()
         self.draw_mask()
-        self.draw_light()
-        self.draw_shade()
+        # self.draw_light()
+        # self.draw_shade()
 
     def resize(self, radius):
         # Self explanotory, I think. A way to resize without having to delete and reinstantiate
@@ -557,20 +558,35 @@ class BlobSurface(pygame.Surface):
         # This points the lighted up side of the blob toward the center
         # blob, the shade side opposite of the center blob, and ensures
         # radius is honering z depth and realistic curvature.
-        fraction_center = MassiveBlob.center_blob_z * 0.75
-        diff = MassiveBlob.center_blob_z - abs(MassiveBlob.center_blob_z - z)
-        if diff > fraction_center:
-            diff = diff - fraction_center
-            scale = round(diff / fraction_center, 2)
-        else:
-            scale = self.animation_scale_div
+        scale_zone_start = MassiveBlob.center_blob_z * 0.95
+        scale_zone = scale_zone_start * 0.2
+        scale_zone_stop = scale_zone_start - scale_zone
 
-        radius = self.animation_radius * 0.1
+        diff = 0
+
+        if z > 0 and z < MassiveBlob.center_blob_z * 2:
+            diff = MassiveBlob.center_blob_z - abs(MassiveBlob.center_blob_z - z)
+
+        real_diff = diff
+
+        if diff < scale_zone_start:
+
+            if diff > scale_zone_stop:
+                diff = diff - scale_zone_stop
+                scale = round(diff / scale_zone, 2)
+            else:
+                scale = self.animation_scale_div
+        else:
+            scale = 1
+
+        radius = self.animation_radius * 0.13
 
         if scale < self.animation_scale_div:
             scale = self.animation_scale_div
 
         cache_index = round((scale / self.animation_scale_div))
+
+        scale = self.animation_scale_div * cache_index
 
         radius = radius + round((self.animation_radius - radius) * (scale))
 

@@ -29,7 +29,7 @@ CLOCK_FPS = True
 LIGHTING = True
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
-TIMESCALE = 3600 * 6 * SCALE_PERCENT  # elapsed time per frame, in seconds
+TIMESCALE = 3600 * 12 * SCALE_PERCENT  # elapsed time per frame, in seconds
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000
@@ -47,10 +47,10 @@ SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # 1 AU = SCALE_FACTOR pixels
 # Cube size of the universe in real life scale
 SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
-FRAME_RATE = 120  # there are FRAME_RATE frames per second
+FRAME_RATE = 60  # there are FRAME_RATE frames per second
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 150
+NUM_BLOBS = 130
 # If true all blobs will start
 # with a perfect orbital velocity
 START_PERFECT_ORBIT = True
@@ -111,7 +111,7 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # jet grey (43, 44, 40)
 # rich black (0, 21, 36)
 DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = path.join("resources", "newton_icon.png")
+WINDOW_ICON = path.join("resources", "newton_icon.gif")
 STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
 BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)
 
