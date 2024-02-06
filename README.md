@@ -6,8 +6,7 @@
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.2! This is the prototype 3d version!
-
+Alpha release 0.0.2! This is the prototype 3d version! In this version there are many improvements: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
 
 #### Installation
 
@@ -35,9 +34,9 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 #### Instructions
 
-This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 360 days per second.
+This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Moon mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 600 hours per second.
 
-There are a few controls here while you watch it go.
+This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are a few controls here while you watch it go.
 
 * SPACEBAR - Puase/Unpause
 * F - Toggle fullscreen/windowed mode
@@ -46,12 +45,21 @@ There are a few controls here while you watch it go.
 * W - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
 * S - Start over based on W and A options!
 
-Here is the Windows executable download if you're not inclined to fiddle around with Python code:
+Some screen shots:
+
+<img src="./resources/screen_shot004.png"/>
 
 
+<img src="./resources/screen_shot005.png"/>
 
 
+<img src="./resources/screen_shot006.png"/>
 
+
+<img src="./resources/screen_shot007.png"/>
+
+
+<img src="./resources/screen_shot008.png"/>
 
 
 ---
