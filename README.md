@@ -1,6 +1,6 @@
 # Newton's Blobs
 
-### Version 0.0.2 Alpha Prototype
+### Version 0.0.2 Alpha Prototype 3D
 
 *A simulator of Newton's laws of physics, using space scale objects*
 
@@ -8,7 +8,45 @@ This is a small project just for me to learn and experiment. In spite of a life 
 
 Alpha release 0.0.2! This is the prototype 3d version!
 
-There still isn't much to it, but it can be fun to just watch the blobs go . . .
+
+#### Installation
+
+Two ways, the easy way (Windows only) and the nerdy way . . .
+
+###### The easy way (Windows only)
+
+1. Download Windows executalbe here:
+2. Save where you want to store it
+3. Double click and enjoy (runs as is, no system installation)
+
+###### The nerdy way
+
+1. **Requrments:**
+   1. git and github account
+   2. python 3.11.5
+      1. Pygame-CE 2.4.0
+      2. Numpy 1.26.3
+   3. ^ other versions may work, just not tested on any
+2. **In terminal:**
+   1. **cd** to desired working dir
+   2. **git clone https://github.com/jmottster/newton.git**
+      1. ^ or whatever method you use to pull a repository from github
+   3. run **python main.py**
+
+#### Instructions
+
+This is a gravity and collision simulator. At the center is a sun sized blob, and orbiting it are randomly created Earth to Mercury sized blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 360 days per second.
+
+There are a few controls here while you watch it go.
+
+* SPACEBAR - Puase/Unpause
+* F - Toggle fullscreen/windowed mode
+* D - Toggle stat displays
+* A - Toggle Start pattern between square and circular (see below)
+* W - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+* S - Start over based on W and A options!
+
+Here is the Windows executable download if you're not inclined to fiddle around with Python code:
 
 
 
@@ -16,14 +54,9 @@ There still isn't much to it, but it can be fun to just watch the blobs go . . .
 
 
 
+---
 
-
-
-
-
-# Newton's Blobs
-
-### Version 0.0.1 Alpha Prototype
+### Version 0.0.1 Alpha Prototype 2D
 
 *A simulator of Newton's laws of physics, using space scale objects*
 
