@@ -15,6 +15,7 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 ###### The easy way (Windows only)
 
 1. Download Windows executalbe here:
+   1. [Release 0.0.2]("https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.2/newton.exe")
 2. Save where you want to store it
 3. Double click and enjoy (runs as is, no system installation)
 
