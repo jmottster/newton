@@ -5,79 +5,117 @@ Class file for setting up initial posisions and velocities of blobs and maintain
 
 by Jason Mott, copyright 2024
 """
-import pygame
-import math
-import random
+
+import numpy as np
+import math, random
 from globals import *
 from massive_blob import MassiveBlob
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
 class BlobPlotter:
-
     """
-    A class used for setting up initial posisions and velocities of blobs and maintaining them
+    A class used for setting up initial positions and velocities of blobs and maintaining them
 
     Attributes
     ----------
+    screen : pygame.Surface
+        the main surface everything will be drawn on
+    display : pygame.Surface
+        the display representing the monitor
 
 
     Methods
     -------
     setup_blobs()
         populates blob array according to global var values
-    draw_blobs(screen, blob_font)
+    draw_blobs(blob_font)
         draws the blobs on the screen (a PyGame screen), also draws a name label if that's turned on
-    draw_stats(screen, stat_font)
+    draw_stats(stat_font)
         draws blob stats on the screen corners (mass of sun, number of blobs left, how many swallowed, how many escaped)
     update_blobs()
         applies collision detection, gravitational pull, and if activated, edge detection
 
     """
 
-    def __init__(self):
-        self.blobs = []
+    def __init__(self, universe, display):
+        self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
+        self.z_axis = {}
+        self.proximity_grid = np.empty(
+            [
+                int(GRID_KEY_UPPER_BOUND),
+                int(GRID_KEY_UPPER_BOUND),
+                int(GRID_KEY_UPPER_BOUND),
+            ],
+            dtype=object,
+        )
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
+        self.start_perfect_floor_bounce = START_PERFECT_FLOOR_BOUNCE
+        self.universe = universe
+        self.scaled_universe_width = universe.get_width() * SCALE_UP
+        self.scaled_universe_height = universe.get_height() * SCALE_UP
+        self.display = display
+        self.scaled_display_width = display.get_width() * SCALE_UP
+        self.scaled_display_height = display.get_height() * SCALE_UP
+        MassiveBlob.center_blob_x = universe.get_width() / 2
+        MassiveBlob.center_blob_y = universe.get_height() / 2
+        MassiveBlob.center_blob_z = universe.get_height() / 2
 
     def start_over(self):
-        self.blobs = []
+        self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
-        self.setup_blobs()
+        self.z_axis = {}
+        self.plot_blobs()
 
-    def setup_blobs(self):
+    def plot_blobs(self):
+        # TODO This function is getting unruly, clean it up
+
         # split the screen up into enough partitions for every blob
-        if NUM_BLOBS > 9:
-            blob_partition = round((SCALED_SCREEN_SIZE / math.sqrt(NUM_BLOBS)))
+        if NUM_BLOBS > 5:
+            blob_partition = round(
+                ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
+            )
         else:
-            blob_partition = SCALED_SCREEN_SIZE / 4
+            blob_partition = self.scaled_display_height / 4
+
+        half_universe_h = self.scaled_universe_height / 2
+        half_universe_w = self.scaled_universe_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = SCALED_SCREEN_SIZE / 2
-        y = SCALED_SCREEN_SIZE / 2
+        x = half_universe_w
+        y = half_universe_h
+        z = half_universe_h
 
-        self.blobs.append(
-            MassiveBlob(
-                CENTER_BLOB_NAME,
-                CENTER_BLOB_COLOR,
-                CENTER_BLOB_RADIUS,
-                CENTER_BLOB_MASS,
-                x,
-                y,
-                0,
-                0,
-            )
+        sun_blob = MassiveBlob(
+            self.universe,
+            CENTER_BLOB_NAME,
+            CENTER_BLOB_COLOR,
+            CENTER_BLOB_RADIUS,
+            CENTER_BLOB_MASS,
+            x,
+            y,
+            z,
+            0,
+            0,
+            0,
         )
+        self.blobs[0] = sun_blob
+
+        if self.z_axis.get(sun_blob.z) is None:
+            self.z_axis[sun_blob.z] = np.array([sun_blob], dtype=object)
+        else:
+            self.z_axis[sun_blob.z] = np.append(self.z_axis[sun_blob.z], sun_blob)
 
         # Blob placement grid, either square (if SQUARE_BLOB_PLOTTER True) or circular . . .
 
@@ -86,16 +124,62 @@ class BlobPlotter:
         y_turns = 0
         x_turns = 1
 
-        # Interators for circular grid placement
-        plot_rad = 0
-        pi_inc = 0.25
-        plot_radius = blob_partition
+        # Interators for circular grid placement, blobs will be placed in ever
+        # increasing sized circles around the center blob
+        plot_phi = 0.0
+        plot_theta = math.pi * 0.5
+        # How much the radius will increase each time we move to the next biggest
+        # circle around the center blob (the size will be some multiple of the diameter of the biggest
+        # blob)
+        plot_radius_partition = ((MAX_RADIUS * 4)) * SCALE_UP
+        # How far apart each blob will be on each circumferance
+        chord_scaled = (MAX_RADIUS * 3) * SCALE_UP
+        # The start radius (smallest circle around center blob)
+        plot_radius = ((MAX_RADIUS * 3) + (CENTER_BLOB_RADIUS * 2)) * SCALE_UP
+        # How many radians to increase for each blob around the circumference (such that
+        # we get chord_scaled length between each blob center)
+        pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+        # Divy up the remainder for a more even distribution
+        pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
-        for z in range(NUM_BLOBS - 1):
+        if ((math.pi * 2) / pi_inc) > (NUM_BLOBS - 1):
+            plot_radius = self.scaled_display_height / 4
+
+            pi_inc = (math.pi * 2) / (NUM_BLOBS - 1)
+            pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
+        # Now, for each blob . . .
+        for i in range(NUM_BLOBS - 1):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
-            radius = round((random.random() * (MAX_RADIUS - MIN_RADIUS)) + MIN_RADIUS)
-            mass = (random.random() * (MAX_MASS - MIN_MASS)) + MIN_MASS
+            velocity = 0
+            radius = 0
+            mass = 0
+            # Divide mass and radius ranges in half, put smaller masses with
+            # smaller radiuses, and vice versa. Randomize whether we're doing
+            # a bigger or smaller blob.
+            max_radius_delta = MIN_RADIUS + ((MAX_RADIUS - MIN_RADIUS) / 2)
+            max_mass_delta = MIN_MASS + ((MAX_MASS - MIN_MASS) / 2)
+            max_velocity_delta = MIN_VELOCITY + ((MAX_VELOCITY - MIN_VELOCITY) / 2)
+            if round(random.randint(1, 10)) % 2:
+                radius = round(
+                    (random.random() * (max_radius_delta - MIN_RADIUS)) + MIN_RADIUS
+                )
+                mass = random.random() * (max_mass_delta - MIN_MASS) + MIN_MASS
+                velocity = (
+                    random.random() * (max_velocity_delta - MIN_VELOCITY) + MIN_VELOCITY
+                )
+
+            else:
+                radius = round(
+                    (random.random() * (MAX_RADIUS - max_radius_delta))
+                    + max_radius_delta
+                )
+                mass = (random.random() * (MAX_MASS - max_mass_delta)) + max_mass_delta
+                velocity = (
+                    random.random() * (MAX_VELOCITY - max_velocity_delta)
+                    + max_velocity_delta
+                )
 
             if self.square_grid:  # Square grid x,y plot for this blob
                 # Get x and y coordinates for this blob
@@ -107,9 +191,9 @@ class BlobPlotter:
                         y_turns = y_count + 1
                         y_count = 0
 
-                    if y <= (SCALED_SCREEN_SIZE / 2):
+                    if y <= half_universe_h:
                         x += blob_partition
-                    elif y > (SCALED_SCREEN_SIZE / 2):
+                    elif y > half_universe_h:
                         x -= blob_partition
                 else:
                     y_count += 1
@@ -117,109 +201,176 @@ class BlobPlotter:
                     if y_turns == 0:
                         x_turns = y_count + 1
 
-                    if x >= (SCALED_SCREEN_SIZE / 2):
+                    if x >= half_universe_w:
                         y += blob_partition
-                    elif x < (SCALED_SCREEN_SIZE / 2):
+                    elif x < half_universe_w:
                         y -= blob_partition
             else:  # Circular grid x,y plot for this blob
                 # Get x and y for this blob, vars set up from last interation or initial setting
-                x = (SCALED_SCREEN_SIZE / 2) + math.cos(plot_rad) * plot_radius
-                y = (SCALED_SCREEN_SIZE / 2) + math.sin(plot_rad) * plot_radius
+                x = half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
+                    plot_phi
+                )
+                y = half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
+                    plot_phi
+                )
+                z = half_universe_h + plot_radius * math.cos(plot_theta)
 
+                blobs_left = NUM_BLOBS - (i + 2)
                 # Set up vars for next interation, move the "clock dial" another notch,
-                # or make it longer by blob_partition if we've gone around 360 degrees
-                if round(plot_rad, 8) == round((math.pi * 2) - (math.pi * pi_inc), 8):
-                    plot_rad = 0
-                    plot_radius += blob_partition
-                    pi_inc = pi_inc / 2
+                # or make it longer by plot_radius_partition if we've gone around 360 degrees
+                if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
+                    plot_phi = 0.0
+                    # Increase the radius for the next go around the center blob
+                    plot_radius += plot_radius_partition
+                    # How many radians to increase for each blob around the circumference (such that
+                    # we get chord_scaled length between each blob center)
+                    pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+                    # Divy up the remainder for a more even distribution
+                    pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
+                    if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
+                        pi_inc = (math.pi * 2) / blobs_left
+                        pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
                 else:
-                    plot_rad += math.pi * pi_inc
+                    plot_phi += pi_inc
 
             # Figure out velocity for this blob
-            dx = x - (SCALED_SCREEN_SIZE / 2)
-            dy = y - (SCALED_SCREEN_SIZE / 2)
+            dx = half_universe_w - x
+            dy = half_universe_h - y
+            dz = half_universe_h - z
+            d = math.sqrt(dx**2 + dy**2 + dz**2)
 
-            velocity = 0
             if self.start_perfect_orbit:
                 # get velocity for a perfect orbit around center blob
-                d = math.sqrt(dx**2 + dy**2)
                 velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
-            else:
-                # Just use a random velocity
-                velocity = (
-                    random.random() * (MAX_VELOCITY - MIN_VELOCITY) + MIN_VELOCITY
-                )
+            elif self.start_perfect_floor_bounce:
+                # get velocity for a perfect floor bounce when that is on
+                velocity = math.sqrt(G * FLOOR_MASS / d)
 
-            # Take our angle to the center and move it 90 degrees
-            # to set an orbital trajectory
-            rad = math.atan2(dy, dx)
-            rad = rad + (math.pi * 0.5)
-            # Set x and y velocities proportionate to orbital direction
-            velocityx = math.cos(rad) * velocity
-            velocityy = math.sin(rad) * velocity
+            theta = math.acos(dz / d)
+            phi = math.atan2(dy, dx)
 
-            ## Make sure all velocities are pointing is the right direction
+            # Add some chaos to starting trajectory
+            theta = theta - (math.pi * 0.25)
+            # turn 90 degrees from pointing center for begining velocity (orbit)
+            phi = phi - (math.pi * 0.5)
 
-            # Adjust y velocities according to where they are on the x axis
-            if x > (SCALED_SCREEN_SIZE / 2) and velocityy < 0:
-                velocityy = -velocityy
-            elif x < (SCALED_SCREEN_SIZE / 2) and velocityy > 0:
-                velocityy = -velocityy
-
-            # Adjust x velocities according to where they are on the y axis
-            if y > (SCALED_SCREEN_SIZE / 2) and velocityx > 0:
-                velocityx = -velocityx
-            elif y < (SCALED_SCREEN_SIZE / 2) and velocityx < 0:
-                velocityx = -velocityx
+            velocityx = velocity * math.sin(theta) * math.cos(phi)
+            velocityy = velocity * math.sin(theta) * math.sin(phi)
+            velocityz = velocity * math.cos(theta)
 
             # Phew, let's instantiate this puppy . . .
-            self.blobs.append(
-                MassiveBlob(
-                    str(z + 1), COLORS[color], radius, mass, x, y, velocityx, velocityy
-                )
+            new_blob = MassiveBlob(
+                self.universe,
+                str(i + 1),
+                COLORS[color],
+                radius,
+                mass,
+                x,
+                z,
+                y,
+                velocityx,
+                velocityz,
+                velocityy,
             )
+            self.blobs[i + 1] = new_blob
 
-    def draw_blobs(self, screen, blob_font):
-        # Draw the blobs
-        for blob in self.blobs:
-            # get rid of dead blobs
-            if blob.dead:
-                if blob.swallowed:
-                    self.blobs_swalled += 1
-                elif blob.escaped:
-                    self.blobs_escaped += 1
-                self.blobs.remove(blob)
-                continue
-            blob.draw(screen)
-            # x, y = blob.x * SCALE, blob.y * SCALE
-            # pygame.draw.circle(
-            #     screen,
-            #     blob.color,
-            #     (x, y),
-            #     blob.radius,
-            # )
-            # Uncomment for writting lables on blobs
-            # mass_text = blob_font.render(f"{blob.color}", 1, (255, 255, 255), (0, 0, 0))
-            # screen.blit(
-            #     mass_text,
-            #     (
-            #         (blob.x * SCALE) - (mass_text.get_width() / 2),
-            #         (blob.y * SCALE) - (mass_text.get_height()) - blob.radius,
-            #     ),
-            # )
+            if self.z_axis.get(new_blob.z) is None:
+                self.z_axis[new_blob.z] = np.array([new_blob], dtype=object)
+            else:
+                self.z_axis[new_blob.z] = np.append(self.z_axis[new_blob.z], new_blob)
 
-    def draw_stats(self, screen, stat_font, message=None):
-        if message is None:
-            message = f"Sun mass: {self.blobs[0].mass}"
+    def draw_blobs(self, blob_font):
+        self.proximity_grid = np.empty(
+            [
+                int(GRID_KEY_UPPER_BOUND),
+                int(GRID_KEY_UPPER_BOUND),
+                int(GRID_KEY_UPPER_BOUND),
+            ],
+            dtype=object,
+        )
+
+        keys = np.flip(
+            np.sort(np.array([k for k in self.z_axis], dtype=float), axis=None)
+        )
+
+        for key in keys:
+            # Draw the blobs
+            for blob in self.z_axis[key]:
+                # get rid of dead blobs
+                if blob.dead:
+                    if blob.swallowed:
+                        self.blobs_swalled += 1
+                    elif blob.escaped:
+                        self.blobs_escaped += 1
+                    self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
+                    continue
+                blob.draw()
+                # Uncomment for writting lables on blobs
+                # mass_text = blob_font.render(
+                #     f"{round(blob.z * SCALE_DOWN)}",
+                #     1,
+                #     (255, 255, 255),
+                #     BACKGROUND_COLOR,
+                # )
+                # self.universe.blit(
+                #     mass_text,
+                #     (
+                #         (blob.x * SCALE_DOWN) - (mass_text.get_width() / 2),
+                #         (blob.y * SCALE_DOWN)
+                #         - (blob.radius)
+                #         - (mass_text.get_height()),
+                #     ),
+                # )
+
+                grid_key = blob.grid_key()
+
+                if self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] is None:
+                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
+                        np.array([blob], dtype=object)
+                    )
+                else:
+                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
+                        np.append(
+                            self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]],
+                            blob,
+                        )
+                    )
+
+        self.display.blit(
+            self.universe,
+            (
+                (self.display.get_width() - self.universe.get_width()) / 2,
+                (self.display.get_height() - self.universe.get_height()) / 2,
+            ),
+        )
+
+    def draw_stats(self, stat_font, message=None):
+        if message is not None:
+            # Center, showing message, if any
+            message_center = stat_font.render(
+                message,
+                1,
+                (255, 255, 255),
+                BACKGROUND_COLOR,
+            )
+            self.display.blit(
+                message_center,
+                (
+                    (self.display.get_width() / 2) - (message_center.get_width() / 2),
+                    (self.display.get_height() / 2) - (message_center.get_height() / 2),
+                ),
+            )
 
         # Top left, showing sun mass
         stat_text_top_left = stat_font.render(
-            message,
+            f"Sun mass: {self.blobs[0].mass}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
-        screen.blit(
+        self.display.blit(
             stat_text_top_left,
             (
                 20,
@@ -229,15 +380,15 @@ class BlobPlotter:
 
         # Top right, showing number of orbiting blobs
         stat_text_top_right = stat_font.render(
-            f"Orbiting blobs: {len(self.blobs)-1}",
+            f"Orbiting blobs: {self.blobs.size - 1}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
-        screen.blit(
+        self.display.blit(
             stat_text_top_right,
             (
-                SCREEN_SIZE - stat_text_top_right.get_width() - 20,
+                self.display.get_width() - stat_text_top_right.get_width() - 20,
                 20,
             ),
         )
@@ -247,13 +398,13 @@ class BlobPlotter:
             f"Blobs swallowed by Sun: {self.blobs_swalled}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
-        screen.blit(
+        self.display.blit(
             stat_text_bottom_left,
             (
                 20,
-                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
             ),
         )
 
@@ -262,32 +413,105 @@ class BlobPlotter:
             f"Blobs escaped Sun: {self.blobs_escaped}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
-        screen.blit(
+        self.display.blit(
             stat_text_bottom_right,
             (
-                SCREEN_SIZE - stat_text_bottom_right.get_width() - 20,
-                SCREEN_SIZE - stat_text_bottom_left.get_height() - 20,
+                self.display.get_width() - stat_text_bottom_right.get_width() - 20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
             ),
         )
 
     def update_blobs(self):
-        # set up hash to prevent double checking blob pairs for collision
+        # set up hash to prevent double checking blob pairs for collision, so no
+        # unique pair of blobs are ever checked twice.
         checked = {}
+        self.z_axis = {}
+
+        def check_blobs(blob1, blobs):
+            # Check for and react to any collisions with other blobs
+            if blobs is None:
+                return
+            for blob2 in blobs:
+                if (id(blob2) != id(blob1)) and (checked.get(id(blob2)) is None):
+                    blob1.collision_detection(blob2)  # TODO wraping collision detection
+                    if blob1.name != CENTER_BLOB_NAME:
+                        blob1.gravitational_pull(blob2, G)
+
+                    # These are not used, and probably out of date.
+                    # Might just scrap them altogether.
+                    # blob1.edge_detection(wrap)
+                    # Turn on floor gravity (experimental)
+                    # blob1.floor_gravity(G)
+
+        # Do the center blob by itself because we want all blobs to be under its gravitational pull
+        for i in range(1, len(self.blobs)):
+            self.blobs[0].gravitational_pull(self.blobs[i], G)
+        check_blobs(self.blobs[0], self.blobs)
+        # checked[id(self.blobs[0])] = 1
+        self.z_axis[self.blobs[0].z] = np.array([self.blobs[0]], dtype=object)
 
         # Check blobs
-        for blob in self.blobs:
-            # Check for and react to any collisions with other blobs
-            for blob2 in self.blobs:
-                if (id(blob2) != id(blob)) and (checked.get(id(blob2)) == None):
-                    blob.collision_detection(blob2)  # TODO wraping collision detection
-                blob.gravitational_pull(blob2, G)
+        for i in range(0, len(self.blobs)):
+            blob = self.blobs[i]
+            pg = self.proximity_grid
+            gk = blob.grid_key()
 
-            checked[id(blob)] = 1
+            # Using the grid approach for optimization. Instead of every blob checking every blob,
+            # every blob only checks the blobs in their own grid cell and the grid cells surrounding them. The center
+            # blob is the only exception, which is done before this loop.
 
-            # Change direction or wrap if hitting the edge of screen
-            # blob.edge_detection(screen, wrap)
+            # Check my cell, and all the cells on the y axis around me
+
+            check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2]])
+            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2]])
+            check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2]])
+
+            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2]])
+            check_blobs(blob, pg[gk[0]][gk[1]][gk[2]])
+            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2]])
+
+            check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2]])
+            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2]])
+            check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2]])
+
+            # move up one from me on z axis, and do it again, the
+            # commented out lines are the corners of this "rubik's cube",
+            # to improve performance, we'll take our chances on skiping them.
+
+            # check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2] + 1])
+            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2] + 1])
+            # check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2] + 1])
+
+            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2] + 1])
+            check_blobs(blob, pg[gk[0]][gk[1]][gk[2] + 1])
+            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2] + 1])
+
+            # check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2] + 1])
+            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2] + 1])
+            # check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2] + 1])
+
+            # Move down one from me on z axis, and do it again
+
+            # check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2] - 1])
+            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2] - 1])
+            # check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2] - 1])
+
+            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2] - 1])
+            check_blobs(blob, pg[gk[0]][gk[1]][gk[2] - 1])
+            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2] - 1])
+
+            # check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2] - 1])
+            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2] - 1])
+            # check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2] - 1])
 
             # Apply velocity
             blob.advance()
+
+            if self.z_axis.get(blob.z) is None:
+                self.z_axis[blob.z] = np.array([blob], dtype=object)
+            else:
+                self.z_axis[blob.z] = np.append(self.z_axis[blob.z], blob)
+
+            checked[id(blob)] = 1
