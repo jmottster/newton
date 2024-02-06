@@ -14,7 +14,7 @@ from globals import *
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -66,6 +66,36 @@ class MassiveBlob:
         Changes velocity of self in relation to gravitational pull with provided blob
         g is the Gravitational Constant to be applied to equation
     """
+
+    __slots__ = (
+        "universe",
+        "scaled_universe_width",
+        "scaled_universe_height",
+        "scaled_universe_size_squared_x",
+        "scaled_universe_size_squared_y",
+        "scaled_universe_size_half_x",
+        "scaled_universe_size_half_y",
+        "scaled_universe_size_eighth_x",
+        "scaled_universe_size_eighth_y",
+        "GRAVITATIONAL_RANGE",
+        "name",
+        "color",
+        "radius",
+        "scaled_radius",
+        "mass",
+        "x",
+        "y",
+        "z",
+        "orig_radius",
+        "vx",
+        "vy",
+        "vz",
+        "dead",
+        "swallowed",
+        "escaped",
+        "blob_suface",
+        "pause",
+    )
 
     center_blob_x = UNIVERSE_SIZE_W / 2
     center_blob_y = UNIVERSE_SIZE_H / 2
@@ -389,6 +419,35 @@ class BlobSurface(pygame.Surface):
 
     """
 
+    __slots__ = (
+        "LIGHT_RADIUS_MULTI",
+        "radius",
+        "width_center",
+        "height_center",
+        "position",
+        "animation_scale_div",
+        "animation_cache_size",
+        "animation_radius",
+        "animation_small_radius",
+        "animation_width_center",
+        "animation_height_center",
+        "rect",
+        "color",
+        "colorkey",
+        "light_radius",
+        "light_flag",
+        "light_color",
+        "light_cache",
+        "light_index",
+        "shade_radius",
+        "shade_color",
+        "shade_cache",
+        "shade_index",
+        "alpha_image",
+        "mask_image",
+        "parent_blob",
+    )
+
     def __init__(self, radius, color):
         self.LIGHT_RADIUS_MULTI = 6
         self.radius = radius
@@ -425,8 +484,6 @@ class BlobSurface(pygame.Surface):
         self.parent_blob = self.draw_blob()
         self.draw_alpha_image()
         self.draw_mask()
-        # self.draw_light()
-        # self.draw_shade()
 
     def resize(self, radius):
         # Self explanotory, I think. A way to resize without having to delete and reinstantiate

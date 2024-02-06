@@ -6,7 +6,6 @@ Class file for setting up initial posisions and velocities of blobs and maintain
 by Jason Mott, copyright 2024
 """
 
-import pygame
 import numpy as np
 import math, random
 from globals import *
@@ -15,7 +14,7 @@ from massive_blob import MassiveBlob
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -81,6 +80,7 @@ class BlobPlotter:
 
     def plot_blobs(self):
         # TODO This function is getting unruly, clean it up
+
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 5:
             blob_partition = round(
@@ -312,7 +312,7 @@ class BlobPlotter:
                 #     f"{round(blob.z * SCALE_DOWN)}",
                 #     1,
                 #     (255, 255, 255),
-                #     (0, 0, 0),
+                #     BACKGROUND_COLOR,
                 # )
                 # self.universe.blit(
                 #     mass_text,
@@ -353,7 +353,7 @@ class BlobPlotter:
                 message,
                 1,
                 (255, 255, 255),
-                (19, 21, 21),
+                BACKGROUND_COLOR,
             )
             self.display.blit(
                 message_center,
@@ -368,7 +368,7 @@ class BlobPlotter:
             f"Sun mass: {self.blobs[0].mass}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
         self.display.blit(
             stat_text_top_left,
@@ -383,7 +383,7 @@ class BlobPlotter:
             f"Orbiting blobs: {self.blobs.size - 1}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
         self.display.blit(
             stat_text_top_right,
@@ -398,7 +398,7 @@ class BlobPlotter:
             f"Blobs swallowed by Sun: {self.blobs_swalled}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
         self.display.blit(
             stat_text_bottom_left,
@@ -413,7 +413,7 @@ class BlobPlotter:
             f"Blobs escaped Sun: {self.blobs_escaped}",
             1,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
         self.display.blit(
             stat_text_bottom_right,

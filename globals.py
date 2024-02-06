@@ -6,13 +6,12 @@ Global contants
 by Jason Mott, copyright 2024
 """
 
-import math
 from os import path
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -20,12 +19,14 @@ __status__ = "In Progress"
 
 # Global constants
 
+VERSION = __version__
+
 # No need to ever change these
 G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
 
 # Change to scale the size of universe (thus window)
-CLOCK_FPS = True
+CLOCK_FPS = False
 LIGHTING = True
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
@@ -44,7 +45,7 @@ GRID_CELL_SIZE = MAX_RADIUS * 3
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
 SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-SCALE_UP = AU / AU_SCALE_FACTOR  # 1 AU = SCALE_FACTOR pixels
+SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 # Cube size of the universe in real life scale
 SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
@@ -70,15 +71,14 @@ CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
 COLORS = [
-    (221, 110, 66),
-    (33, 118, 174),
-    (51, 115, 87),
-    (147, 3, 46),
+    (221, 110, 66),  # rgb(221, 110, 66)
+    (33, 118, 174),  # rgb(33, 118, 174)
+    (51, 115, 87),  # rgb(51, 115, 87)
+    (147, 3, 46),  # rgb(147, 3, 46)
     (255, 133, 82),
     (255, 81, 84),
     (177, 15, 46),
     (35, 116, 171),
-    # (120, 188, 97),
     (179, 0, 27),
     (242, 100, 25),
     (20, 92, 158),

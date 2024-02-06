@@ -14,7 +14,7 @@ from globals import *
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -36,7 +36,10 @@ class FPS:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
         self.text = self.font.render(
-            str(round(self.clock.get_fps(), 2)), True, (255, 255, 255), (19, 21, 21)
+            f"FPS {round(self.clock.get_fps(), 2)}",
+            True,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
         )
 
     def render(self, display, x, y):
@@ -44,6 +47,6 @@ class FPS:
             f"FPS {round(self.clock.get_fps(), 2)}",
             True,
             (255, 255, 255),
-            (19, 21, 21),
+            BACKGROUND_COLOR,
         )
         display.blit(self.text, (x, y))

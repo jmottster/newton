@@ -1,8 +1,31 @@
 # Newton's Blobs
 
+### Version 0.0.2 Alpha Prototype
+
 *A simulator of Newton's laws of physics, using space scale objects*
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
+
+Alpha release 0.0.2! This is the prototype 3d version!
+
+There still isn't much to it, but it can be fun to just watch the blobs go . . .
+
+
+
+
+
+
+
+
+
+
+
+
+# Newton's Blobs
+
+### Version 0.0.1 Alpha Prototype
+
+*A simulator of Newton's laws of physics, using space scale objects*
 
 Alpha release 0.0.1! This is the prototype 2d version. It'll probably be the only 2d version, as the 3d version is well under way.
 
@@ -25,7 +48,6 @@ There are a few controls here while you watch it go.
 Here are Windows executable downloads if you're not inclined to fiddle around with Python code. The window is not resizable, so there is a 1000x1000 and a 768x768 version.
 
 [Release 0.0.1 downloads](https://github.com/jmottster/newton/releases/tag/release%2F0.0.1)
-
 
 Here are screen shots of the two optional starting patterns . . .
 
