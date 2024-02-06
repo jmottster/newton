@@ -1,73 +1,85 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Global variables
+Global contants
 
 by Jason Mott, copyright 2024
 """
 
-import math
 from os import path
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-# Global vars
+# Global constants
+
+VERSION = __version__
+
+# No need to ever change these
 G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
-SCALE_FACTOR = 500  # Number of pixles to equal 1 AU
-SCALE = SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-FRAME_RATE = 120  # there are FRAME_RATE frames per second
-TIMESCALE = 3600 * 3  # elapsed time per frame, in seconds
-SCREEN_SIZE = 1000  # Height and width of screen (square is best for orbits)
-SCALED_SCREEN_SIZE = (SCREEN_SIZE / SCALE_FACTOR) * AU  # Real height and width in AU
-BACKGROUND_COLOR = (0, 21, 36)  # screen background color
-# night black (19, 21, 21)
-# jet grey (43, 44, 40)
-# rich black (0, 21, 36)
-DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = path.join("resources", "newton_icon.png")
 
-# Vars for creating blobs somewhat randomly
-NUM_BLOBS = 100
-MIN_RADIUS = 5
-MAX_RADIUS = 20
-START_PERFECT_ORBIT = True  # If true all blobs will start
+# Change to scale the size of universe (thus window)
+CLOCK_FPS = False
+LIGHTING = True
+SCALE_PERCENT = 1
+AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
+TIMESCALE = 3600 * 10 * SCALE_PERCENT  # elapsed time per frame, in seconds
+# Height and with of display (monitor)
+DISPLAY_SIZE_H = 1000
+DISPLAY_SIZE_W = 1000
+# Cube size of Universe in pixles
+UNIVERSE_SIZE = 2000 * SCALE_PERCENT
+UNIVERSE_SIZE_H = UNIVERSE_SIZE
+UNIVERSE_SIZE_W = UNIVERSE_SIZE
+UNIVERSE_SIZE_D = UNIVERSE_SIZE
+MIN_RADIUS = 5 * SCALE_PERCENT
+MAX_RADIUS = 25 * SCALE_PERCENT
+GRID_CELL_SIZE = MAX_RADIUS * 3
+GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
+GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
+SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
+SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
+# Cube size of the universe in real life scale
+SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
+FRAME_RATE = 60  # there are FRAME_RATE frames per second
+
+# Constants for creating blobs somewhat randomly
+NUM_BLOBS = 150
+# If true all blobs will start
 # with a perfect orbital velocity
-SQUARE_BLOB_PLOTTER = False  # Plot blobs in a square grid to start
+START_PERFECT_ORBIT = True
+START_PERFECT_FLOOR_BOUNCE = False
+# Plot blobs in a square grid to start
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
+SQUARE_BLOB_PLOTTER = False
 MIN_VELOCITY = 47.4 * 1000  # Only if START_PERFECT_ORBIT is False
-MAX_VELOCITY = 29.783 * 1000  # Only if START_PERFECT_ORBIT is False
-MIN_MASS = 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
-MAX_MASS = 5.9742 * 10**24  # currently set with mass of Earth
+MAX_VELOCITY = 50.217 * 300  # 29.783 * 1000 Only if START_PERFECT_ORBIT is False
+MIN_MASS = 7.34767309 * 10**22  # Mass of Moon
+# 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
+MAX_MASS = 6.9742 * 10**24  # currently set slightly larger than mass of Earth
+FLOOR_MASS = 1.98892 * 10**28
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
-CENTER_BLOB_RADIUS = 30
+# 8.54 * 10**36 <-- black hole, don't do it, your machine will colapse into itself!
+CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
-
 COLORS = [
-    (221, 110, 66),
-    (33, 118, 174),
-    (51, 115, 87),
-    (147, 3, 46),
+    (221, 110, 66),  # rgb(221, 110, 66)
+    (33, 118, 174),  # rgb(33, 118, 174)
+    (51, 115, 87),  # rgb(51, 115, 87)
+    (147, 3, 46),  # rgb(147, 3, 46)
     (255, 133, 82),
-    # (230, 230, 230),
-    (157, 195, 194),
-    (171, 146, 191),
     (255, 81, 84),
-    # (59, 244, 251),
-    # (202, 255, 138),
     (177, 15, 46),
     (35, 116, 171),
-    (120, 188, 97),
     (179, 0, 27),
-    # (255, 196, 235),
     (242, 100, 25),
     (20, 92, 158),
     (255, 125, 0),
@@ -76,8 +88,32 @@ COLORS = [
     (145, 23, 31),
     (116, 66, 83),
     (166, 161, 94),
-    (194, 151, 184),
+    (78, 56, 34),
+    (56, 63, 81),
+    (115, 87, 81),
+    (140, 28, 19),
+    (73, 17, 28),
+    (186, 90, 49),
+    (46, 41, 78),
+    (41, 115, 115),
+    (57, 57, 58),
+    (3, 71, 50),
+    (114, 155, 121),
+    (81, 52, 77),
+    (44, 66, 63),
+    (64, 4, 6),
+    (41, 51, 92),
+    (105, 122, 33),
+    (109, 26, 54),
 ]
+BACKGROUND_COLOR = (0, 21, 36)  # screen background color
+# night black (19, 21, 21)
+# jet grey (43, 44, 40)
+# rich black (0, 21, 36)
+DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
+WINDOW_ICON = path.join("resources", "newton_icon.gif")
+STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
+BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)
 
 
 # TODO get this working, keep false for now
