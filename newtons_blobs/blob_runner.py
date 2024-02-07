@@ -8,9 +8,9 @@ by Jason Mott, copyright 2024
 
 import pygame
 
-from resources import resource_path, FPS
-from blob_plotter import BlobPlotter
-from globals import *
+from .resources import resource_path, FPS
+from .blob_plotter import BlobPlotter
+from .globals import *
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"

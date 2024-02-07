@@ -1,23 +1,23 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Main file to run application with
+The class that runs the application
 
 by Jason Mott, copyright 2024
 """
 
-# from newtons_blobs import globals, blob_runner as br
-import newtons_blobs as nb
-
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = nb.VERSION
+__version__ = "0.0.2"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-if __name__ == "__main__":
-    blober = nb.BlobRunner()
-    blober.run()
+from .globals import *
+from .resources import resource_path, FPS
+from .blob_runner import BlobRunner
+from .blob_plotter import BlobPlotter
+from .massive_blob import MassiveBlob
+from .blob_surface import BlobSurface

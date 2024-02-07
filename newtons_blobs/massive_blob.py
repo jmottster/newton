@@ -6,10 +6,10 @@ Class file for blobs that will interact with each other (like planets and stars)
 by Jason Mott, copyright 2024
 """
 
-from blob_surface import BlobSurface
 import math, random
 import pygame
-from globals import *
+from .globals import *
+from .blob_surface import BlobSurface
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"

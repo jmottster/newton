@@ -10,7 +10,7 @@ import numpy as np
 import math
 import pygame
 
-from globals import *
+from .globals import *
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"

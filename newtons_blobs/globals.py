@@ -110,8 +110,8 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # night black (19, 21, 21)
 # jet grey (43, 44, 40)
 # rich black (0, 21, 36)
-DISPLAY_FONT = path.join("resources", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = path.join("resources", "newton_icon.gif")
+DISPLAY_FONT = path.join(".", "newtons_blobs", "font", "Rushfordclean-rgz89.otf")
+WINDOW_ICON = path.join(".", "newtons_blobs", "img", "newton_icon.gif")
 STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
 BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)
 

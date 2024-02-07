@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 import sys
 from os import path
 import pygame
-from globals import *
+from .globals import *
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"

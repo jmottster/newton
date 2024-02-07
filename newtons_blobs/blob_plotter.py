@@ -8,8 +8,8 @@ by Jason Mott, copyright 2024
 
 import numpy as np
 import math, random
-from globals import *
-from massive_blob import MassiveBlob
+from .globals import *
+from .massive_blob import MassiveBlob
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
