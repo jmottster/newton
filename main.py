@@ -6,7 +6,6 @@ Main file to run application with
 by Jason Mott, copyright 2024
 """
 
-# from newtons_blobs import globals, blob_runner as br
 import newtons_blobs as nb
 
 __author__ = "Jason Mott"
