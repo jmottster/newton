@@ -71,11 +71,15 @@ class BlobRunner:
         pygame.display.set_icon(self.img)
         self.fps = FPS()
         self.stat_font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
-        self.blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
 
         # Get all the blobs ready to roll
-        self.blob_plotter = BlobPlotter(self.universe, self.display)
-        self.blob_plotter.plot_blobs()
+        self.blob_plotter = BlobPlotter(
+            self.universe.get_width(),
+            self.universe.get_height(),
+            self.display.get_width(),
+            self.display.get_height(),
+        )
+        self.blob_plotter.plot_blobs(self.universe)
 
         # Store keyboard events
         self.keyboard_events = self.load_keyboard_events()
@@ -116,7 +120,7 @@ class BlobRunner:
 
         def start_over():
             self.elapsed_time = 0
-            self.blob_plotter.start_over()
+            self.blob_plotter.start_over(self.universe)
 
         def toggle_square_grid():
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -192,10 +196,12 @@ class BlobRunner:
         self.display.fill(BACKGROUND_COLOR)
         self.universe.fill(BACKGROUND_COLOR)
 
-        self.blob_plotter.draw_blobs(self.blob_font)
+        self.blob_plotter.draw_blobs()
+
+        self.draw_universe()
 
         if self.show_stats:
-            self.blob_plotter.draw_stats(self.stat_font, self.message)
+            self.draw_stats(self.stat_font, self.message)
             if self.message_counter > 0:
                 self.message_counter -= 1
             else:
@@ -222,6 +228,92 @@ class BlobRunner:
 
         # ensure frame rate
         self.fps.clock.tick(FRAME_RATE)
+
+    def draw_universe(self):
+        self.display.blit(
+            self.universe,
+            (
+                (self.display.get_width() - self.universe.get_width()) / 2,
+                (self.display.get_height() - self.universe.get_height()) / 2,
+            ),
+        )
+
+    def draw_stats(self, stat_font, message=None):
+        if message is not None:
+            # Center, showing message, if any
+            message_center = stat_font.render(
+                message,
+                1,
+                (255, 255, 255),
+                BACKGROUND_COLOR,
+            )
+            self.display.blit(
+                message_center,
+                (
+                    (self.display.get_width() / 2) - (message_center.get_width() / 2),
+                    (self.display.get_height() / 2) - (message_center.get_height() / 2),
+                ),
+            )
+
+        # Top left, showing sun mass
+        stat_text_top_left = stat_font.render(
+            f"Sun mass: {self.blob_plotter.blobs[0].mass}",
+            1,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+        self.display.blit(
+            stat_text_top_left,
+            (
+                20,
+                20,
+            ),
+        )
+
+        # Top right, showing number of orbiting blobs
+        stat_text_top_right = stat_font.render(
+            f"Orbiting blobs: {self.blob_plotter.blobs.size - 1}",
+            1,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+        self.display.blit(
+            stat_text_top_right,
+            (
+                self.display.get_width() - stat_text_top_right.get_width() - 20,
+                20,
+            ),
+        )
+
+        # Bottom left, showing number of blobs swallowed by the sun
+        stat_text_bottom_left = stat_font.render(
+            f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swalled}",
+            1,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+        self.display.blit(
+            stat_text_bottom_left,
+            (
+                20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
+            ),
+        )
+
+        # Bottom right, showing number of blobs escaped the sun
+        stat_text_bottom_right = stat_font.render(
+            f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
+            1,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+        self.display.blit(
+            stat_text_bottom_right,
+            (
+                self.display.get_width() - stat_text_bottom_right.get_width() - 20,
+                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
+            ),
+        )
 
     def get_elapsed_time_in(self, divisor):
         return round((self.elapsed_time * TIMESCALE) / divisor, 2)

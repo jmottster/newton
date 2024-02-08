@@ -7,10 +7,11 @@ by Jason Mott, copyright 2024
 """
 
 import numpy as np
-import math
+import math, random
 import pygame
 
 from .globals import *
+from .resources import resource_path
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -28,7 +29,7 @@ class BlobSurface(pygame.Surface):
 
     Attributes
     ----------
-    radius : int
+    radius : float
         the size of the blob, by radius value
     color : tuple
         a three value tuple for RGB color value of blob
@@ -37,9 +38,12 @@ class BlobSurface(pygame.Surface):
 
     Methods
     -------
-    Except for the two below, all the methods are internal use only. Comment annotations explain what's going on
+    Except for the three below, all the methods are internal use only. Comment annotations explain what's going on
     as best they can. :)
 
+    resize(radius)
+        radius: float the new size
+        Sets a new radius for this blob
     get_rect()
         Get the Rect object for this Surface
     draw(screen, pos=None)
@@ -49,10 +53,12 @@ class BlobSurface(pygame.Surface):
     """
 
     __slots__ = (
+        "universe",
         "LIGHT_RADIUS_MULTI",
         "radius",
         "width_center",
         "height_center",
+        "blob_font",
         "position",
         "animation_scale_div",
         "animation_cache_size",
@@ -81,13 +87,15 @@ class BlobSurface(pygame.Surface):
     center_blob_y = UNIVERSE_SIZE_H / 2
     center_blob_z = UNIVERSE_SIZE_D / 2
 
-    def __init__(self, radius, color):
+    def __init__(self, radius, color, universe):
+        self.universe = universe
         self.LIGHT_RADIUS_MULTI = 6
         self.radius = radius
         # Double size of box, because radius can get twice the size
         self.width_center = radius + (radius)
         self.height_center = radius + (radius)
         pygame.Surface.__init__(self, (self.width_center * 2, self.height_center * 2))
+        self.blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
         self.position = (0, 0, 0)
         self.animation_scale_div = 0.15
         self.animation_cache_size = round(1 / self.animation_scale_div)
@@ -325,13 +333,13 @@ class BlobSurface(pygame.Surface):
 
         return (lx, ly, sx, sy)
 
-    def draw(self, screen, pos=None, lighting=True):
+    def draw(self, pos=None, lighting=True):
         # Draw the blob to the screen.
         if pos is not None:
             self.position = pos
 
         if lighting:
-            screen.blit(
+            self.universe.blit(
                 self.get_lighting_blob(),
                 (
                     self.position[0] - self.width_center,
@@ -339,10 +347,52 @@ class BlobSurface(pygame.Surface):
                 ),
             )
         else:
-            screen.blit(
+            self.universe.blit(
                 self,
                 (
                     self.position[0] - self.width_center,
                     self.position[1] - self.height_center,
                 ),
             )
+        # Uncomment for writting lables on blobs
+        # mass_text = blob_font.render(
+        #     f"{}",
+        #     1,
+        #     (255, 255, 255),
+        #     BACKGROUND_COLOR,
+        # )
+        # self.universe.blit(
+        #     mass_text,
+        #     (
+        #         (self.position[0]) - (mass_text.get_width() / 2),
+        #         (self.position[1])
+        #         - (self.radius)
+        #         - (mass_text.get_height()),
+        #     ),
+        # )
+
+    def draw_as_center_blob(self, pos=None, lighting=True):
+        if pos is not None:
+            self.position = pos
+
+        pygame.draw.circle(
+            self.universe, self.color, (self.position[0], self.position[1]), self.radius
+        )
+
+        if lighting:
+            glow_radius = self.radius + random.randint(1, 4)
+        else:
+            glow_radius = self.radius
+
+        surf = pygame.Surface((glow_radius * 2, glow_radius * 2))
+
+        pygame.draw.circle(surf, self.color, (glow_radius, glow_radius), glow_radius)
+
+        self.universe.blit(
+            surf,
+            (
+                self.position[0] - glow_radius,
+                self.position[1] - glow_radius,
+            ),
+            special_flags=pygame.BLEND_RGB_ADD,
+        )

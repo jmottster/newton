@@ -68,7 +68,7 @@ class MassiveBlob:
     """
 
     __slots__ = (
-        "universe",
+        "universe_size",
         "scaled_universe_width",
         "scaled_universe_height",
         "scaled_universe_size_squared_x",
@@ -101,10 +101,10 @@ class MassiveBlob:
     center_blob_y = UNIVERSE_SIZE_H / 2
     center_blob_z = UNIVERSE_SIZE_D / 2
 
-    def __init__(self, universe, name, color, radius, mass, x, y, z, vx, vy, vz):
-        self.universe = universe
-        self.scaled_universe_width = universe.get_width() * SCALE_UP
-        self.scaled_universe_height = universe.get_height() * SCALE_UP
+    def __init__(self, universe_size, name, blob_suface, mass, x, y, z, vx, vy, vz):
+        self.universe_size = universe_size
+        self.scaled_universe_width = universe_size * SCALE_UP
+        self.scaled_universe_height = universe_size * SCALE_UP
 
         self.scaled_universe_size_squared_x = self.scaled_universe_width * 2
         self.scaled_universe_size_squared_y = self.scaled_universe_height * 2
@@ -115,8 +115,9 @@ class MassiveBlob:
         self.GRAVITATIONAL_RANGE = self.scaled_universe_size_eighth_y * 6
 
         self.name = name
-        self.color = color
-        self.radius = radius
+        self.blob_suface = blob_suface
+        self.color = blob_suface.color
+        self.radius = blob_suface.radius
         self.scaled_radius = self.radius * SCALE_UP
         self.mass = mass
         self.x = x
@@ -132,7 +133,6 @@ class MassiveBlob:
         self.dead = False
         self.swallowed = False
         self.escaped = False
-        self.blob_suface = BlobSurface(radius, color)
         self.pause = False
 
         self.fake_blob_z()
@@ -169,30 +169,14 @@ class MassiveBlob:
         z = self.z * SCALE_DOWN
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_suface.draw(self.universe, (x, y, z), LIGHTING)
+            self.blob_suface.draw((x, y, z), LIGHTING)  # TODO fix
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y
             MassiveBlob.center_blob_z = z
             self.blob_suface.update_center_blob(x, y, z)
-
-            pygame.draw.circle(self.universe, self.color, (x, y), self.radius)
-
-            if not self.pause:
-                glow_radius = self.radius + random.randint(1, 4)
-            else:
-                glow_radius = self.radius
-            surf = pygame.Surface((glow_radius * 2, glow_radius * 2))
-            pygame.draw.circle(
-                surf, self.color, (glow_radius, glow_radius), glow_radius
-            )
-            self.universe.blit(
-                surf,
-                (
-                    x - glow_radius,
-                    y - glow_radius,
-                ),
-                special_flags=pygame.BLEND_RGB_ADD,
+            self.blob_suface.draw_as_center_blob(
+                (x, y, z), (LIGHTING and not self.pause)
             )
 
     def fake_blob_z(self):
@@ -234,8 +218,8 @@ class MassiveBlob:
 
         else:
             zero = 0
-            universe_size_w = self.universe.get_width()
-            universe_size_h = self.universe.get_height()
+            universe_size_w = self.universe_size
+            universe_size_h = self.universe_size
             scaled_universe_size_w = self.scaled_universe_width
             scaled_universe_size_h = self.scaled_universe_height
 

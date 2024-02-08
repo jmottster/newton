@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 import numpy as np
 import math, random
 from .globals import *
-from .massive_blob import MassiveBlob
+from .massive_blob import MassiveBlob, BlobSurface
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -45,7 +45,7 @@ class BlobPlotter:
 
     """
 
-    def __init__(self, universe, display):
+    def __init__(self, universe_w, universe_h, display_w, display_h):
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
@@ -61,24 +61,24 @@ class BlobPlotter:
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
         self.start_perfect_floor_bounce = START_PERFECT_FLOOR_BOUNCE
-        self.universe = universe
-        self.scaled_universe_width = universe.get_width() * SCALE_UP
-        self.scaled_universe_height = universe.get_height() * SCALE_UP
-        self.display = display
-        self.scaled_display_width = display.get_width() * SCALE_UP
-        self.scaled_display_height = display.get_height() * SCALE_UP
-        MassiveBlob.center_blob_x = universe.get_width() / 2
-        MassiveBlob.center_blob_y = universe.get_height() / 2
-        MassiveBlob.center_blob_z = universe.get_height() / 2
+        self.universe_size_w = universe_w
+        self.universe_size_h = universe_h
+        self.scaled_universe_width = universe_w * SCALE_UP
+        self.scaled_universe_height = universe_h * SCALE_UP
+        self.scaled_display_width = display_w * SCALE_UP
+        self.scaled_display_height = display_h * SCALE_UP
+        MassiveBlob.center_blob_x = universe_w / 2
+        MassiveBlob.center_blob_y = universe_h / 2
+        MassiveBlob.center_blob_z = universe_h / 2
 
-    def start_over(self):
+    def start_over(self, universe):
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
         self.blobs_swalled = 0
         self.blobs_escaped = 0
         self.z_axis = {}
-        self.plot_blobs()
+        self.plot_blobs(universe)
 
-    def plot_blobs(self):
+    def plot_blobs(self, universe):
         # TODO This function is getting unruly, clean it up
 
         # split the screen up into enough partitions for every blob
@@ -98,10 +98,9 @@ class BlobPlotter:
         z = half_universe_h
 
         sun_blob = MassiveBlob(
-            self.universe,
+            self.universe_size_h,
             CENTER_BLOB_NAME,
-            CENTER_BLOB_COLOR,
-            CENTER_BLOB_RADIUS,
+            BlobSurface(CENTER_BLOB_RADIUS, CENTER_BLOB_COLOR, universe),
             CENTER_BLOB_MASS,
             x,
             y,
@@ -262,10 +261,9 @@ class BlobPlotter:
 
             # Phew, let's instantiate this puppy . . .
             new_blob = MassiveBlob(
-                self.universe,
+                self.universe_size_h,
                 str(i + 1),
-                COLORS[color],
-                radius,
+                BlobSurface(radius, COLORS[color], universe),
                 mass,
                 x,
                 z,
@@ -281,7 +279,7 @@ class BlobPlotter:
             else:
                 self.z_axis[new_blob.z] = np.append(self.z_axis[new_blob.z], new_blob)
 
-    def draw_blobs(self, blob_font):
+    def draw_blobs(self):
         self.proximity_grid = np.empty(
             [
                 int(GRID_KEY_UPPER_BOUND),
@@ -307,22 +305,6 @@ class BlobPlotter:
                     self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
                     continue
                 blob.draw()
-                # Uncomment for writting lables on blobs
-                # mass_text = blob_font.render(
-                #     f"{round(blob.z * SCALE_DOWN)}",
-                #     1,
-                #     (255, 255, 255),
-                #     BACKGROUND_COLOR,
-                # )
-                # self.universe.blit(
-                #     mass_text,
-                #     (
-                #         (blob.x * SCALE_DOWN) - (mass_text.get_width() / 2),
-                #         (blob.y * SCALE_DOWN)
-                #         - (blob.radius)
-                #         - (mass_text.get_height()),
-                #     ),
-                # )
 
                 grid_key = blob.grid_key()
 
@@ -337,91 +319,6 @@ class BlobPlotter:
                             blob,
                         )
                     )
-
-        self.display.blit(
-            self.universe,
-            (
-                (self.display.get_width() - self.universe.get_width()) / 2,
-                (self.display.get_height() - self.universe.get_height()) / 2,
-            ),
-        )
-
-    def draw_stats(self, stat_font, message=None):
-        if message is not None:
-            # Center, showing message, if any
-            message_center = stat_font.render(
-                message,
-                1,
-                (255, 255, 255),
-                BACKGROUND_COLOR,
-            )
-            self.display.blit(
-                message_center,
-                (
-                    (self.display.get_width() / 2) - (message_center.get_width() / 2),
-                    (self.display.get_height() / 2) - (message_center.get_height() / 2),
-                ),
-            )
-
-        # Top left, showing sun mass
-        stat_text_top_left = stat_font.render(
-            f"Sun mass: {self.blobs[0].mass}",
-            1,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_top_left,
-            (
-                20,
-                20,
-            ),
-        )
-
-        # Top right, showing number of orbiting blobs
-        stat_text_top_right = stat_font.render(
-            f"Orbiting blobs: {self.blobs.size - 1}",
-            1,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_top_right,
-            (
-                self.display.get_width() - stat_text_top_right.get_width() - 20,
-                20,
-            ),
-        )
-
-        # Bottom left, showing number of blobs swallowed by the sun
-        stat_text_bottom_left = stat_font.render(
-            f"Blobs swallowed by Sun: {self.blobs_swalled}",
-            1,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_bottom_left,
-            (
-                20,
-                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
-            ),
-        )
-
-        # Bottom right, showing number of blobs escaped the sun
-        stat_text_bottom_right = stat_font.render(
-            f"Blobs escaped Sun: {self.blobs_escaped}",
-            1,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_bottom_right,
-            (
-                self.display.get_width() - stat_text_bottom_right.get_width() - 20,
-                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
-            ),
-        )
 
     def update_blobs(self):
         # set up hash to prevent double checking blob pairs for collision, so no
