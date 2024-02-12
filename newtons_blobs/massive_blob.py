@@ -1,13 +1,12 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Class file for blobs that will interact with each other (like planets and stars)
+Class file for the physics attributes of blobs that will interact with each other (like planets and stars)
 
 by Jason Mott, copyright 2024
 """
 
-import math, random
-import pygame
+import math
 from .globals import *
 from .blob_surface import BlobSurface
 
@@ -22,18 +21,18 @@ __status__ = "In Progress"
 
 class MassiveBlob:
     """
-    A class used to represent a massive space blob like a planet or a star
+    A class used to represent a massive space blob's physics related attributes
+
+    A massive blob is like a planet or a star
 
     Attributes
     ----------
-    screen : pygame.Surface
-        the main surface everything will be drawn on
+    universe_size : float
+        the size of the universe in pixles (this size is cubed for full environment size)
     name : str
         a string to identify the blob
-    color : tuple
-        a three value tuple for RGB color value of blob
-    radius : int
-        the size of the blob, by radius value
+    blob_surface : BlobSurface
+        the object responsible for drawing blob and maintaining visual attributes
     mass : float
         the mass of the object -- use planet scale kg values (see global min and max values)
     x : int
@@ -51,35 +50,36 @@ class MassiveBlob:
 
     Methods
     -------
+
+    grid_key()
+        Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)
+    draw()
+        Tells the instance to call draw on the BlobSurface instance
     advance()
-        applies velocity to blob, changing its x,y coordinates for next frame draw
+        Applies velocity to blob, changing its x,y coordinates for next frame draw
+        fake_blob_z()
+            Called by advance(), adjusts radius size to fake a near/close 3d effect according the the z position
 
     edge_detection(wrap)
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
 
     collision_detection(blob)
-        Check to see if this blob is coliding with provided blob, and adjusts velocity of each
+        Checks to see if this blob is coliding with provided blob, and adjusts velocity of each
         according to Newton's Laws
 
     gravitational_pull(blob, g)
-        Changes velocity of self in relation to gravitational pull with provided blob
+        Changes velocity of self and provided blob in relation to gravitational pull with each other.
         g is the Gravitational Constant to be applied to equation
     """
 
     __slots__ = (
-        "universe_size",
+        "universe_size_width",
+        "universe_size_height",
         "scaled_universe_width",
         "scaled_universe_height",
-        "scaled_universe_size_squared_x",
-        "scaled_universe_size_squared_y",
-        "scaled_universe_size_half_x",
-        "scaled_universe_size_half_y",
-        "scaled_universe_size_eighth_x",
-        "scaled_universe_size_eighth_y",
-        "GRAVITATIONAL_RANGE",
+        "scaled_universe_size_half_z",
         "name",
-        "color",
         "radius",
         "scaled_radius",
         "mass",
@@ -100,23 +100,19 @@ class MassiveBlob:
     center_blob_x = UNIVERSE_SIZE_W / 2
     center_blob_y = UNIVERSE_SIZE_H / 2
     center_blob_z = UNIVERSE_SIZE_D / 2
+    GRAVITATIONAL_RANGE = 0
 
     def __init__(self, universe_size, name, blob_suface, mass, x, y, z, vx, vy, vz):
-        self.universe_size = universe_size
+        self.universe_size_width = universe_size
+        self.universe_size_height = universe_size
         self.scaled_universe_width = universe_size * SCALE_UP
         self.scaled_universe_height = universe_size * SCALE_UP
-
-        self.scaled_universe_size_squared_x = self.scaled_universe_width * 2
-        self.scaled_universe_size_squared_y = self.scaled_universe_height * 2
-        self.scaled_universe_size_half_x = self.scaled_universe_width / 2
-        self.scaled_universe_size_half_y = self.scaled_universe_height / 2
-        self.scaled_universe_size_eighth_x = self.scaled_universe_width / 8
-        self.scaled_universe_size_eighth_y = self.scaled_universe_height / 8
-        self.GRAVITATIONAL_RANGE = self.scaled_universe_size_eighth_y * 6
+        self.scaled_universe_size_half_z = self.scaled_universe_height / 2
+        if MassiveBlob.GRAVITATIONAL_RANGE == 0:
+            MassiveBlob.GRAVITATIONAL_RANGE = (self.scaled_universe_height / 8) * 6
 
         self.name = name
         self.blob_suface = blob_suface
-        self.color = blob_suface.color
         self.radius = blob_suface.radius
         self.scaled_radius = self.radius * SCALE_UP
         self.mass = mass
@@ -138,6 +134,7 @@ class MassiveBlob:
         self.fake_blob_z()
 
     def grid_key(self):
+        """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
         x = int((self.x * SCALE_DOWN) / GRID_CELL_SIZE)
         y = int((self.y * SCALE_DOWN) / GRID_CELL_SIZE)
         z = int((self.z * SCALE_DOWN) / GRID_CELL_SIZE)
@@ -164,6 +161,7 @@ class MassiveBlob:
         )
 
     def draw(self):
+        """Tells the instance to call draw on the BlobSurface instance"""
         x = self.x * SCALE_DOWN
         y = self.y * SCALE_DOWN
         z = self.z * SCALE_DOWN
@@ -180,16 +178,19 @@ class MassiveBlob:
             )
 
     def fake_blob_z(self):
-        # alters viewed radius to show perspective (closer=bigger/further=smaller)
-        diff = self.scaled_universe_size_half_y - self.z
+        """Called by advance(), adjusts radius size to to show perspective
+        (closer=bigger/further=smaller), a 3d effect according the the z position"""
+        diff = self.scaled_universe_size_half_z - self.z
 
         self.scaled_radius = self.orig_radius[0] + (
-            self.orig_radius[1] * (diff / self.scaled_universe_size_half_y)
+            self.orig_radius[1] * (diff / self.scaled_universe_size_half_z)
         )
         self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_suface.resize(self.radius)
 
     def advance(self):
+        """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
+
         # Advace x by velocity (one frame, with TIMESTEP elapsed time)
         self.x += self.vx * TIMESCALE
 
@@ -202,6 +203,8 @@ class MassiveBlob:
         self.fake_blob_z()
 
     def edge_detection(self, wrap):
+        """Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
+        or it wraps to other end of screen if wrap==True (wrap currently not working)"""
         if wrap:
             # TODO fix wraping for scale
             # Move real x to other side of screen if it's gone off the edge
@@ -218,8 +221,8 @@ class MassiveBlob:
 
         else:
             zero = 0
-            universe_size_w = self.universe_size
-            universe_size_h = self.universe_size
+            universe_size_w = self.universe_size_width
+            universe_size_h = self.universe_size_height
             scaled_universe_size_w = self.scaled_universe_width
             scaled_universe_size_h = self.scaled_universe_height
 
@@ -261,6 +264,8 @@ class MassiveBlob:
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):
+        """Checks to see if this blob is coliding with provided blob, and adjusts velocity of each
+        according to Newton's Laws"""
         dd = self.orig_radius[0] + blob.orig_radius[0]
         if abs(blob.x - self.x) > dd:
             return
@@ -328,17 +333,16 @@ class MassiveBlob:
                     smaller_blob.swallowed = True
 
     def gravitational_pull(self, blob, g):
-        # Get distance between blobs, and cross over distance
-        # where gravity stops (to keep blobs from gluing to each other)
+        """Changes velocity of self and provided blob in relation to gravitational pull with each other.
+        g is the Gravitational Constant to be applied to equation"""
+
         dx = blob.x - self.x
         dy = blob.y - self.y
         dz = blob.z - self.z
         dd = (self.orig_radius[0] * 0.90) + blob.orig_radius[0]
         d = math.sqrt((dx**2) + (dy**2) + (dz**2))
 
-        # if two blobs are within gravitational range of each other,
-        # and not overlapping too much
-        if d < self.GRAVITATIONAL_RANGE and d > 0:
+        if d < MassiveBlob.GRAVITATIONAL_RANGE and d > 0:
             F = g * self.mass * blob.mass / d**2
 
             theta = math.acos(dz / d)
@@ -356,23 +360,7 @@ class MassiveBlob:
             blob.vy -= fdy / blob.mass * TIMESCALE
             blob.vz -= fdz / blob.mass * TIMESCALE
 
-        elif d > self.GRAVITATIONAL_RANGE and self.name == CENTER_BLOB_NAME:
+        elif d > MassiveBlob.GRAVITATIONAL_RANGE and self.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it
             blob.dead = True
             blob.escaped = True
-
-    def floor_gravity(self, g):
-        other_mass = FLOOR_MASS
-
-        # Get distance between blobs, and cross over distance
-        # where gravity stops (to keep blobs from gluing to each other)
-        # dx = self.scaled_screen_size_half_x - self.x
-        dy = self.scaled_universe_size_half_y - self.y
-        # dz = self.scaled_screen_size_half_y - self.z
-        d = dy
-
-        # if two blobs are within gravitational range of each other,
-        # and not overlapping too much
-        if d > self.orig_radius[0]:
-            F = g * self.mass * other_mass / d**2
-            self.vy += F / self.mass * TIMESCALE

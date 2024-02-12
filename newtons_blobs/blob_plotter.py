@@ -119,9 +119,11 @@ class BlobPlotter:
         # Blob placement grid, either square (if SQUARE_BLOB_PLOTTER True) or circular . . .
 
         # Interators for square grid placement
-        y_count = 0
+        y_count = 2
         y_turns = 0
         x_turns = 1
+        x += blob_partition
+        y -= blob_partition
 
         # Interators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
@@ -251,7 +253,7 @@ class BlobPlotter:
             phi = math.atan2(dy, dx)
 
             # Add some chaos to starting trajectory
-            theta = theta - (math.pi * 0.25)
+            # theta = theta - (math.pi * 0.15)
             # turn 90 degrees from pointing center for begining velocity (orbit)
             phi = phi - (math.pi * 0.5)
 
@@ -266,11 +268,11 @@ class BlobPlotter:
                 BlobSurface(radius, COLORS[color], universe),
                 mass,
                 x,
-                z,
                 y,
+                z,
                 velocityx,
-                velocityz,
                 velocityy,
+                velocityz,
             )
             self.blobs[i + 1] = new_blob
 
@@ -339,8 +341,6 @@ class BlobPlotter:
                     # These are not used, and probably out of date.
                     # Might just scrap them altogether.
                     # blob1.edge_detection(wrap)
-                    # Turn on floor gravity (experimental)
-                    # blob1.floor_gravity(G)
 
         # Do the center blob by itself because we want all blobs to be under its gravitational pull
         for i in range(1, len(self.blobs)):

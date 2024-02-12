@@ -8,7 +8,7 @@ by Jason Mott, copyright 2024
 
 import pygame
 
-from .resources import resource_path, FPS
+from .resources import resource_path
 from .blob_plotter import BlobPlotter
 from .globals import *
 
@@ -19,6 +19,27 @@ __version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
+
+
+class FPS:
+    def __init__(self):
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
+        self.text = self.font.render(
+            f"FPS {round(self.clock.get_fps(), 2)}",
+            True,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+
+    def render(self, display, x, y):
+        self.text = self.font.render(
+            f"FPS {round(self.clock.get_fps(), 2)}",
+            True,
+            (255, 255, 255),
+            BACKGROUND_COLOR,
+        )
+        display.blit(self.text, (x, y))
 
 
 class BlobRunner:

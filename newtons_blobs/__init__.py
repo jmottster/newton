@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-The class that runs the application
+Package init file
 
 by Jason Mott, copyright 2024
 """
@@ -16,7 +16,7 @@ __status__ = "In Progress"
 
 
 from .globals import *
-from .resources import resource_path, FPS
+from .resources import resource_path
 from .blob_runner import BlobRunner
 from .blob_plotter import BlobPlotter
 from .massive_blob import MassiveBlob
