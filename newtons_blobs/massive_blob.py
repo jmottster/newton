@@ -59,7 +59,8 @@ class MassiveBlob:
         Applies velocity to blob, changing its x,y coordinates for next frame draw
         fake_blob_z()
             Called by advance(), adjusts radius size to fake a near/close 3d effect according the the z position
-
+    update_pos_vel(x, y, z, vx, vy, vz)
+        direct way to update position and velocity values
     edge_detection(wrap)
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
@@ -199,6 +200,17 @@ class MassiveBlob:
 
         # Advace z by velocity (one frame, with TIMESTEP elapsed time)
         self.z += self.vz * TIMESCALE
+
+        self.fake_blob_z()
+
+    def update_pos_vel(self, x, y, z, vx, vy, vz):
+        """direct way to update position and velocity values"""
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
 
         self.fake_blob_z()
 

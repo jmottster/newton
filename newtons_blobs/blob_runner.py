@@ -129,7 +129,7 @@ class BlobRunner:
         # Store keyboard events
         self.keyboard_events = self.load_keyboard_events()
 
-        # Runtime behavior vars
+        # Runtime preferences/states
         self.running = True
         self.paused = False
         self.elapsed_time = 0
