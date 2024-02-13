@@ -22,6 +22,20 @@ __status__ = "In Progress"
 
 
 class FPS:
+    """
+    An encapsulation of the fps clock, with display output functionality added
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+    render(display, x, y)
+        Renders the fps to the display object at x,y coordinates
+
+
+    """
+
     def __init__(self):
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(resource_path(DISPLAY_FONT), STAT_FONT_SIZE)
@@ -33,6 +47,7 @@ class FPS:
         )
 
     def render(self, display, x, y):
+        """Renders the fps to the display object at x,y coordinates"""
         self.text = self.font.render(
             f"FPS {round(self.clock.get_fps(), 2)}",
             True,
@@ -53,16 +68,25 @@ class BlobRunner:
     Methods
     -------
     load_keyboard_events()
-        Populates a hash table that holds function references for key board events.
+        Creates and populates a hash table that holds function references for keyboard events (also creates the functions),
+        returns the hash table
 
-    getDisplay()
-        Returns a pygame display instance configured for the current monitor.
+    init_display()
+        Initiates and returns a pygame display instance configured for the current monitor.
 
     run()
-        Starts the application and maintains the while loop.
+        Starts the application and maintains the while loop. This is the only method that ever gets called
+        from an external source.
 
     render_frame()
         Calls all the draw methods to display a frame on the screen/monitor
+
+    draw_universe()
+        Draws the universe surface onto the display surface, for a frame of actual display to monitor.
+
+    draw_stats(stat_font, message=None)
+        Draws statistical information to the display instance, and if message is sent, will also draw that
+        text in the middle of the display instance.
 
     get_elapsed_time_in(divisor)
         divisor: float number of seconds to divide clocked frames by (see constants)
@@ -70,7 +94,7 @@ class BlobRunner:
         returns number of years elapsed since last start.
 
     display_elapsed_time()
-        Draws the elapsed time to the screen/monitor
+        Draws the elapsed time to the display instance
 
 
     """
@@ -86,7 +110,7 @@ class BlobRunner:
 
         # Set up the window, frame rate clock, and fonts
         self.universe = pygame.Surface([UNIVERSE_SIZE_W, UNIVERSE_SIZE_H])
-        self.display = self.getDisplay()
+        self.display = self.init_display()
         pygame.display.set_caption("Newton's Blobs")
         self.img = pygame.image.load(resource_path(WINDOW_ICON))
         pygame.display.set_icon(self.img)
@@ -115,21 +139,26 @@ class BlobRunner:
         self.fullscreen = False
         self.fullscreen_save_w = self.display.get_width()
         self.fullscreen_save_h = self.display.get_height()
+
+        # Display text for option changes
         self.toggle_start_square_t = f"Toggled starting formation to square"
         self.toggle_start_circular_t = f"Toggled starting formation to circular"
-
-        self.toggle_start_perfect_orbit = (
+        self.toggle_start_perfect_orbit_t = (
             f"Toggled starting orbit to perfect velocities"
         )
-        self.toggle_start_random_orbit = f"Toggled starting orbit to random velocities"
+        self.toggle_start_random_orbit_t = (
+            f"Toggled starting orbit to random velocities"
+        )
 
     def load_keyboard_events(self):
+        """Creates and populates a hash table that holds function references for keyboard events (also creates the functions),
+        returns the hash table"""
         keyboard_events = {}
 
         def quit_game():
             self.running = False
 
-        def psuse_game():
+        def pause_game():
             self.paused = not self.paused
             if self.paused:
                 self.blob_plotter.blobs[0].pause = True
@@ -156,9 +185,9 @@ class BlobRunner:
                 not self.blob_plotter.start_perfect_orbit
             )
             if self.blob_plotter.start_perfect_orbit:
-                self.message = self.toggle_start_perfect_orbit
+                self.message = self.toggle_start_perfect_orbit_t
             else:
-                self.message = self.toggle_start_random_orbit
+                self.message = self.toggle_start_random_orbit_t
             self.message_counter = 60 * 3
 
         def toggle_fullscreen():
@@ -175,7 +204,7 @@ class BlobRunner:
                 self.fullscreen = True
 
         keyboard_events[pygame.K_q] = quit_game
-        keyboard_events[pygame.K_SPACE] = psuse_game
+        keyboard_events[pygame.K_SPACE] = pause_game
         keyboard_events[pygame.K_d] = toggle_stats
         keyboard_events[pygame.K_s] = start_over
         keyboard_events[pygame.K_a] = toggle_square_grid
@@ -184,7 +213,8 @@ class BlobRunner:
 
         return keyboard_events
 
-    def getDisplay(self):
+    def init_display(self):
+        """Initiates and returns a pygame display instance configured for the current monitor."""
         current_height = pygame.display.get_desktop_sizes()[0][1]
 
         if current_height < DISPLAY_SIZE_H:
@@ -197,6 +227,10 @@ class BlobRunner:
         )
 
     def run(self):
+        """
+        Starts the application and maintains the while loop. This is the only method that ever gets called
+        from an external source.
+        """
         while self.running:
             # Check for events
             for event in pygame.event.get():
@@ -212,6 +246,7 @@ class BlobRunner:
         pygame.quit()
 
     def render_frame(self):
+        """Calls all the draw methods to display a frame on the screen/monitor"""
 
         # Fill the background, then draw stuff
         self.display.fill(BACKGROUND_COLOR)
@@ -251,6 +286,7 @@ class BlobRunner:
         self.fps.clock.tick(FRAME_RATE)
 
     def draw_universe(self):
+        """Draws the universe surface onto the display surface, for a frame of actual display to monitor."""
         self.display.blit(
             self.universe,
             (
@@ -260,6 +296,10 @@ class BlobRunner:
         )
 
     def draw_stats(self, stat_font, message=None):
+        """
+        Draws statistical information to the display instance, and if message is sent, will also draw that
+        text in the middle of the display instance.
+        """
         if message is not None:
             # Center, showing message, if any
             message_center = stat_font.render(
@@ -337,9 +377,15 @@ class BlobRunner:
         )
 
     def get_elapsed_time_in(self, divisor):
+        """
+        divisor: float number of seconds to divide clocked frames by (see constants)
+        Returns int number of units determined by divisor. E.g., if YEARS is divisor,
+        returns number of years elapsed since last start.
+        """
         return round((self.elapsed_time * TIMESCALE) / divisor, 2)
 
     def display_elapsed_time(self):
+        """Draws the elapsed time to the display instance"""
 
         self.time_text = self.stat_font.render(
             f"Years elapsed: {self.get_elapsed_time_in(self.YEARS)}",

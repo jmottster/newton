@@ -22,10 +22,9 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-class BlobSurface(pygame.Surface):
+class BlobSurface:
     """
-    A class used to draw blobs that have shadows from the center blob glow. It is a
-    sub class of pygame.Surface
+    A class used to draw blobs that have shadows from the center blob glow.
 
     Attributes
     ----------
@@ -33,6 +32,7 @@ class BlobSurface(pygame.Surface):
         the size of the blob, by radius value
     color : tuple
         a three value tuple for RGB color value of blob
+    universe : A pygame.Surface object representing the universe space to draw blobs onto
 
 
 
@@ -44,6 +44,8 @@ class BlobSurface(pygame.Surface):
     resize(radius)
         radius: float
         Sets a new radius for this blob
+    get_size()
+        Returns the largest possible size for this instance (not affected by resize())
     update_center_blob
         Sets the x,y,z of the center blob for reference
     draw(pos=None, lighting=True)
@@ -61,6 +63,7 @@ class BlobSurface(pygame.Surface):
         "radius",
         "width_center",
         "height_center",
+        "size",
         "blob_font",
         "position",
         "animation_scale_div",
@@ -92,7 +95,7 @@ class BlobSurface(pygame.Surface):
         # Double size of box, because radius can get twice the size
         self.width_center = radius + (radius)
         self.height_center = radius + (radius)
-        pygame.Surface.__init__(self, (self.width_center * 2, self.height_center * 2))
+        self.size = (self.width_center * 2, self.height_center * 2)
         self.blob_font = pygame.font.Font(resource_path(DISPLAY_FONT), BLOB_FONT_SIZE)
         self.position = (0, 0, 0)
         self.animation_scale_div = 0.15
@@ -118,6 +121,10 @@ class BlobSurface(pygame.Surface):
         """Update the radius"""
         self.radius = radius
 
+    def get_size(self):
+        """Returns the largest possible size for this instance (not affected by resize())"""
+        return self.size
+
     def update_center_blob(self, x, y, z):
         """Update the x,y,z of the center blob (the blob all other blobs get lighting from)"""
         BlobSurface.center_blob_x = x
@@ -130,9 +137,7 @@ class BlobSurface(pygame.Surface):
         Created the first time it's called, just a fill and draw every time after."""
 
         if self.alpha_image is None:
-            self.alpha_image = self.subsurface(
-                pygame.Rect(0, 0, self.width_center * 2, self.height_center * 2)
-            ).convert_alpha()
+            self.alpha_image = pygame.Surface(self.get_size()).convert_alpha()
             self.alpha_image.set_colorkey(self.colorkey)
 
         self.alpha_image.fill(self.color)
