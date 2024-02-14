@@ -41,26 +41,41 @@ class BlobPlotter:
 
     Methods
     -------
+    get_prefs(data)
+        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+
+    set_prefs(data, universe)
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it and writing to the universe instance for display
+
     add_z_axis(blob)
-        Adds the given blob to the z_axis hash table according to it z posision
+        Adds the given blob to the z_axis dict according to it z posision
+
     plot_center_blob(universe)
         Creates and places the center blob and adds it to self.blobs[0]
+
     add_pos_vel(blob, x, y, z)
         Adds z,y,z to given blob, and configures velocity for orbit around center blob
+
     plot_square_grid()
         Iterates through blobs and plots them in a square grid configuration around the center blob
+
     plot_circular_grid()
         Iterates through blobs and plots them in a circular grid configuration around the center blob
+
     start_over(universe)
         Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)
+
     plot_blobs(universe)
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
         universe is the object reference needed to instantiate a MassiveBlob
+
     draw_blobs()
         Interates the blobs according z_axis keys, deletes the ones flaged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
+
     update_blobs()
-        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis hash table
+        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
 
@@ -80,7 +95,7 @@ class BlobPlotter:
 
         # Preferences/states
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
-        self.blobs_swalled = 0
+        self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis = {}
         self.proximity_grid = np.empty(
@@ -94,8 +109,58 @@ class BlobPlotter:
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
 
+    def get_prefs(self, data):
+        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        data["universe_size_w"] = self.universe_size_w
+        data["universe_size_h"] = self.universe_size_h
+        data["scaled_universe_width"] = self.scaled_universe_width
+        data["scaled_universe_height"] = self.scaled_universe_height
+        data["blobs_swallowed"] = self.blobs_swallowed
+        data["blobs_escaped"] = self.blobs_escaped
+        data["square_grid"] = self.square_grid
+        data["start_perfect_orbit"] = self.start_perfect_orbit
+        data["blobs"] = []
+
+        for blob in self.blobs:
+            blob_data = {}
+            blob.get_prefs(blob_data)
+            data["blobs"].append(blob_data)
+
+    def set_prefs(self, data, universe):
+        """
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it and writing to the universe instance for display
+        """
+        self.universe_size_w = data["universe_size_w"]
+        self.universe_size_h = data["universe_size_h"]
+        self.scaled_universe_width = data["scaled_universe_width"]
+        self.scaled_universe_height = data["scaled_universe_height"]
+        self.blobs_swallowed = data["blobs_swallowed"]
+        self.blobs_escaped = data["blobs_escaped"]
+        self.square_grid = data["square_grid"]
+        self.start_perfect_orbit = data["start_perfect_orbit"]
+        self.blobs = np.empty([len(data["blobs"])], dtype=object)
+        self.z_axis = {}
+        i = 0
+        for blob_pref in data["blobs"]:
+            self.blobs[i] = MassiveBlob(
+                self.universe_size_h,
+                blob_pref["name"],
+                BlobSurface(blob_pref["radius"], blob_pref["color"], universe),
+                blob_pref["mass"],
+                blob_pref["x"],
+                blob_pref["y"],
+                blob_pref["z"],
+                blob_pref["vx"],
+                blob_pref["vy"],
+                blob_pref["vz"],
+            )
+
+            self.add_z_axis(self.blobs[i])
+            i += 1
+
     def add_z_axis(self, blob):
-        """Adds the given blob to the z_axis hash table according to it z posision"""
+        """Adds the given blob to the z_axis dict according to it z posision"""
         if self.z_axis.get(blob.z) is None:
             self.z_axis[blob.z] = np.array([blob], dtype=object)
         else:
@@ -157,11 +222,11 @@ class BlobPlotter:
         # Phew, let's instantiate this puppy . . .
         blob.update_pos_vel(
             x,
-            y,
             z,
+            y,
             velocityx,
-            velocityy,
             velocityz,
+            velocityy,
         )
 
         self.add_z_axis(blob)
@@ -282,7 +347,7 @@ class BlobPlotter:
     def start_over(self, universe):
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
-        self.blobs_swalled = 0
+        self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis = {}
         self.plot_blobs(universe)
@@ -362,7 +427,7 @@ class BlobPlotter:
                 # get rid of dead blobs
                 if blob.dead:
                     if blob.swallowed:
-                        self.blobs_swalled += 1
+                        self.blobs_swallowed += 1
                     elif blob.escaped:
                         self.blobs_escaped += 1
                     self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
@@ -385,7 +450,7 @@ class BlobPlotter:
 
     def update_blobs(self):
         """
-        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis hash table
+        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
         """

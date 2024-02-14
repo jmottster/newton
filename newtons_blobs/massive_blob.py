@@ -50,6 +50,8 @@ class MassiveBlob:
 
     Methods
     -------
+    get_prefs(data)
+        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
 
     grid_key()
         Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)
@@ -120,10 +122,7 @@ class MassiveBlob:
         self.x = x
         self.y = y
         self.z = z
-        self.orig_radius = (
-            self.scaled_radius,
-            self.scaled_radius / 2,
-        )
+        self.orig_radius = (self.scaled_radius, self.scaled_radius / 2, self.radius)
         self.vx = vx  # x velocity per frame
         self.vy = vy  # y velocity per frame
         self.vz = vz  # z velocity per frame
@@ -133,6 +132,19 @@ class MassiveBlob:
         self.pause = False
 
         self.fake_blob_z()
+
+    def get_prefs(self, data):
+        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        data["name"] = self.name
+        data["radius"] = self.orig_radius[2]
+        data["color"] = self.blob_suface.color
+        data["mass"] = self.mass
+        data["x"] = self.x
+        data["y"] = self.y
+        data["z"] = self.z
+        data["vx"] = self.vx
+        data["vy"] = self.vy
+        data["vz"] = self.vz
 
     def grid_key(self):
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""

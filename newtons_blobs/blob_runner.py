@@ -10,6 +10,7 @@ import pygame
 
 from .resources import resource_path
 from .blob_plotter import BlobPlotter
+from .blob_save_load import BlobSaveLoad
 from .globals import *
 
 __author__ = "Jason Mott"
@@ -67,9 +68,16 @@ class BlobRunner:
 
     Methods
     -------
+    get_prefs(data)
+        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+
+    set_prefs(data)
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it
+
     load_keyboard_events()
-        Creates and populates a hash table that holds function references for keyboard events (also creates the functions),
-        returns the hash table
+        Creates and populates a dict that holds function references for keyboard events (also creates the functions),
+        returns the dict
 
     init_display()
         Initiates and returns a pygame display instance configured for the current monitor.
@@ -124,7 +132,7 @@ class BlobRunner:
             self.display.get_width(),
             self.display.get_height(),
         )
-        self.blob_plotter.plot_blobs(self.universe)
+        self.blob_save_load = BlobSaveLoad(self, self.blob_plotter)
 
         # Store keyboard events
         self.keyboard_events = self.load_keyboard_events()
@@ -150,9 +158,36 @@ class BlobRunner:
             f"Toggled starting orbit to random velocities"
         )
 
+    def get_prefs(self, data):
+        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        data["running"] = self.running
+        data["paused"] = self.paused
+        data["elapsed_time"] = self.elapsed_time
+        data["show_stats"] = self.show_stats
+        data["fullscreen"] = self.fullscreen
+        data["fullscreen_save_w"] = self.fullscreen_save_w
+        data["fullscreen_save_h"] = self.fullscreen_save_h
+
+    def set_prefs(self, data):
+        """
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it
+        """
+        self.running = data["running"]
+        self.paused = data["paused"]
+        self.elapsed_time = data["elapsed_time"]
+        self.show_stats = data["show_stats"]
+        self.fullscreen = data["fullscreen"]
+        self.fullscreen_save_w = data["fullscreen_save_w"]
+        self.fullscreen_save_h = data["fullscreen_save_h"]
+
+        if self.fullscreen:
+            self.fullscreen = False
+            self.keyboard_events[pygame.K_f]()
+
     def load_keyboard_events(self):
-        """Creates and populates a hash table that holds function references for keyboard events (also creates the functions),
-        returns the hash table"""
+        """Creates and populates a dict that holds function references for keyboard events (also creates the functions),
+        returns the dict"""
         keyboard_events = {}
 
         def quit_game():
@@ -231,6 +266,9 @@ class BlobRunner:
         Starts the application and maintains the while loop. This is the only method that ever gets called
         from an external source.
         """
+        if not self.blob_save_load.load(self.universe):
+            self.blob_plotter.plot_blobs(self.universe)
+
         while self.running:
             # Check for events
             for event in pygame.event.get():
@@ -243,6 +281,8 @@ class BlobRunner:
             self.render_frame()
 
         # While loop broke! Time to quit.
+        self.running = True
+        self.blob_save_load.save()
         pygame.quit()
 
     def render_frame(self):
@@ -348,7 +388,7 @@ class BlobRunner:
 
         # Bottom left, showing number of blobs swallowed by the sun
         stat_text_bottom_left = stat_font.render(
-            f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swalled}",
+            f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swallowed}",
             1,
             (255, 255, 255),
             BACKGROUND_COLOR,

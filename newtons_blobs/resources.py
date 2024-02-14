@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import sys
-from os import path
+from pathlib import Path
 from .globals import *
 
 __author__ = "Jason Mott"
@@ -20,11 +20,26 @@ __status__ = "In Progress"
 
 
 def resource_path(relative_path):
+    mypath = Path()
     # Get absolute path to resource, works for dev and for PyInstaller
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = path.abspath(".")
+        base_path = mypath.absolute()
 
-    return path.join(base_path, relative_path)
+    return mypath.joinpath(base_path, relative_path)
+
+
+def home_path_plus(path_tuple, file, create_if_not_exists=True):
+    mypath = Path()
+    full_path = mypath.joinpath(mypath.home())
+    for item in path_tuple:
+        full_path = mypath.joinpath(full_path, item)
+        if create_if_not_exists and not full_path.exists():
+            full_path.mkdir()
+    full_path = mypath.joinpath(full_path, file)
+    if create_if_not_exists and not full_path.exists():
+        full_path.touch()
+
+    return full_path
