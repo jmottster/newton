@@ -1,12 +1,14 @@
 # Newton's Blobs
 
-### Version 0.0.2 Alpha Prototype 3D
+### Version 0.0.3 Alpha Prototype 3D
 
 *A simulator of Newton's laws of physics, using space scale objects*
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.2! This is the prototype 3d version! In this version there are many improvements: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
+Alpha release 0.0.3! This is the prototype 3d version with auto save and load! In this version the feature of auto save and load is added, on top of the many improvements from 0.0.2: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
+
+To toggle auto save and load, just press the E key.
 
 #### Installation
 
@@ -15,7 +17,7 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 ###### The easy way (Windows only)
 
 1. Download Windows executalbe here:
-   1. [Release 0.0.2](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.2/newton.exe)
+   1. [Release 0.0.3](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.3/newton.exe)
 2. Save where you want to store it
 3. Double click and enjoy (runs as is, no system installation)
 
@@ -44,6 +46,7 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
 * D - Toggle stat displays
 * A - Toggle Start pattern between square and circular (see below)
 * W - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+* E - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
 * S - Start over based on W and A options!
 
 Some screen shots:
