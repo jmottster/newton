@@ -41,24 +41,61 @@ class BlobPlotter:
 
     Methods
     -------
+    get_prefs(data)
+        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+
+    set_prefs(data, universe)
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it and writing to the universe instance for display
+
+    add_z_axis(blob)
+        Adds the given blob to the z_axis dict according to it z posision
+
+    plot_center_blob(universe)
+        Creates and places the center blob and adds it to self.blobs[0]
+
+    add_pos_vel(blob, x, y, z)
+        Adds z,y,z to given blob, and configures velocity for orbit around center blob
+
+    plot_square_grid()
+        Iterates through blobs and plots them in a square grid configuration around the center blob
+
+    plot_circular_grid()
+        Iterates through blobs and plots them in a circular grid configuration around the center blob
+
     start_over(universe)
         Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)
+
     plot_blobs(universe)
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
         universe is the object reference needed to instantiate a MassiveBlob
+
     draw_blobs()
         Interates the blobs according z_axis keys, deletes the ones flaged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
+
     update_blobs()
-        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis hash table
+        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
 
     """
 
     def __init__(self, universe_w, universe_h, display_w, display_h):
+
+        self.universe_size_w = universe_w
+        self.universe_size_h = universe_h
+        self.scaled_universe_width = universe_w * SCALE_UP
+        self.scaled_universe_height = universe_h * SCALE_UP
+        self.scaled_display_width = display_w * SCALE_UP
+        self.scaled_display_height = display_h * SCALE_UP
+        MassiveBlob.center_blob_x = universe_w / 2
+        MassiveBlob.center_blob_y = universe_h / 2
+        MassiveBlob.center_blob_z = universe_h / 2
+
+        # Preferences/states
         self.blobs = np.empty([NUM_BLOBS], dtype=object)
-        self.blobs_swalled = 0
+        self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis = {}
         self.proximity_grid = np.empty(
@@ -71,50 +108,75 @@ class BlobPlotter:
         )
         self.square_grid = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit = START_PERFECT_ORBIT
-        self.universe_size_w = universe_w
-        self.universe_size_h = universe_h
-        self.scaled_universe_width = universe_w * SCALE_UP
-        self.scaled_universe_height = universe_h * SCALE_UP
-        self.scaled_display_width = display_w * SCALE_UP
-        self.scaled_display_height = display_h * SCALE_UP
-        MassiveBlob.center_blob_x = universe_w / 2
-        MassiveBlob.center_blob_y = universe_h / 2
-        MassiveBlob.center_blob_z = universe_h / 2
 
-    def start_over(self, universe):
-        """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
-        self.blobs = np.empty([NUM_BLOBS], dtype=object)
-        self.blobs_swalled = 0
-        self.blobs_escaped = 0
+    def get_prefs(self, data):
+        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        data["universe_size_w"] = self.universe_size_w
+        data["universe_size_h"] = self.universe_size_h
+        data["scaled_universe_width"] = self.scaled_universe_width
+        data["scaled_universe_height"] = self.scaled_universe_height
+        data["blobs_swallowed"] = self.blobs_swallowed
+        data["blobs_escaped"] = self.blobs_escaped
+        data["square_grid"] = self.square_grid
+        data["start_perfect_orbit"] = self.start_perfect_orbit
+        data["blobs"] = []
+
+        for blob in self.blobs:
+            blob_data = {}
+            blob.get_prefs(blob_data)
+            data["blobs"].append(blob_data)
+
+    def set_prefs(self, data, universe):
+        """
+        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it and writing to the universe instance for display
+        """
+        self.universe_size_w = data["universe_size_w"]
+        self.universe_size_h = data["universe_size_h"]
+        self.scaled_universe_width = data["scaled_universe_width"]
+        self.scaled_universe_height = data["scaled_universe_height"]
+        self.blobs_swallowed = data["blobs_swallowed"]
+        self.blobs_escaped = data["blobs_escaped"]
+        self.square_grid = data["square_grid"]
+        self.start_perfect_orbit = data["start_perfect_orbit"]
+        self.blobs = np.empty([len(data["blobs"])], dtype=object)
         self.z_axis = {}
-        self.plot_blobs(universe)
-
-    def plot_blobs(self, universe):
-        """
-        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
-        universe is the object reference needed to instantiate a MassiveBlob
-        """
-        # TODO This function is getting unruly, clean it up
-
-        orbiting_blobs = NUM_BLOBS - 1
-
-        # split the screen up into enough partitions for every blob
-        if NUM_BLOBS > 5:
-            blob_partition = round(
-                ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
+        i = 0
+        for blob_pref in data["blobs"]:
+            self.blobs[i] = MassiveBlob(
+                self.universe_size_h,
+                blob_pref["name"],
+                BlobSurface(blob_pref["radius"], blob_pref["color"], universe),
+                blob_pref["mass"],
+                blob_pref["x"],
+                blob_pref["y"],
+                blob_pref["z"],
+                blob_pref["vx"],
+                blob_pref["vy"],
+                blob_pref["vz"],
             )
-        else:
-            blob_partition = self.scaled_display_height / 4
 
-        half_universe_h = self.scaled_universe_height / 2
-        half_universe_w = self.scaled_universe_width / 2
+            self.add_z_axis(self.blobs[i])
+            i += 1
+
+    def add_z_axis(self, blob):
+        """Adds the given blob to the z_axis dict according to it z posision"""
+        if self.z_axis.get(blob.z) is None:
+            self.z_axis[blob.z] = np.array([blob], dtype=object)
+        else:
+            self.z_axis[blob.z] = np.append(self.z_axis[blob.z], blob)
+
+    def plot_center_blob(self, universe):
+        """Creates and places the center blob and adds it to self.blobs[0]"""
+        scaled_half_universe_h = self.scaled_universe_height / 2
+        scaled_half_universe_w = self.scaled_universe_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = half_universe_w
-        y = half_universe_h
-        z = half_universe_h
+        x = scaled_half_universe_w
+        y = scaled_half_universe_h
+        z = scaled_half_universe_h
 
-        sun_blob = MassiveBlob(
+        self.blobs[0] = MassiveBlob(
             self.universe_size_h,
             CENTER_BLOB_NAME,
             BlobSurface(CENTER_BLOB_RADIUS, CENTER_BLOB_COLOR, universe),
@@ -126,22 +188,106 @@ class BlobPlotter:
             0,
             0,
         )
-        self.blobs[0] = sun_blob
 
-        if self.z_axis.get(sun_blob.z) is None:
-            self.z_axis[sun_blob.z] = np.array([sun_blob], dtype=object)
+        self.add_z_axis(self.blobs[0])
+
+    def add_pos_vel(self, blob, x, y, z):
+        """Adds z,y,z to given blob, and configures velocity for orbit around center blob"""
+        velocity = 0
+        # Figure out velocity for this blob
+        dx = self.blobs[0].x - x
+        dy = self.blobs[0].y - y
+        dz = self.blobs[0].z - z
+        d = math.sqrt(dx**2 + dy**2 + dz**2)
+
+        if self.start_perfect_orbit:
+            # get velocity for a perfect orbit around center blob
+            velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
         else:
-            self.z_axis[sun_blob.z] = np.append(self.z_axis[sun_blob.z], sun_blob)
+            # Generate a random velocity within provided boundaries
+            velocity = (random.random() * (MAX_VELOCITY - MIN_VELOCITY)) + MIN_VELOCITY
 
-        # Blob placement grid, either square (if SQUARE_BLOB_PLOTTER True) or circular . . .
+        theta = math.acos(dz / d)
+        phi = math.atan2(dy, dx)
 
-        # Interators for square grid placement
+        # Add some chaos to starting trajectory
+        theta = theta - (math.pi * 0.15)
+        # turn 90 degrees from pointing center for begining velocity (orbit)
+        phi = phi - (math.pi * 0.5)
+
+        velocityx = velocity * math.sin(theta) * math.cos(phi)
+        velocityy = velocity * math.sin(theta) * math.sin(phi)
+        velocityz = velocity * math.cos(theta)
+
+        # Phew, let's instantiate this puppy . . .
+        blob.update_pos_vel(
+            x,
+            z,
+            y,
+            velocityx,
+            velocityz,
+            velocityy,
+        )
+
+        self.add_z_axis(blob)
+
+    def plot_square_grid(self):
+        """Iterates through blobs and plots them in a square grid configuration around the center blob"""
+        x = self.blobs[0].x
+        y = self.blobs[0].y
+        z = self.blobs[0].z
+        scaled_half_universe_w = self.blobs[0].x
+        scaled_half_universe_h = self.blobs[0].y
+
+        # split the screen up into enough partitions for every blob
+        if NUM_BLOBS > 5:
+            blob_partition = round(
+                ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
+            )
+        else:
+            blob_partition = self.scaled_display_height / 4
+
+        # Interators grid placement
         y_count = 2
         y_turns = 0
         x_turns = 1
         x += blob_partition
         y -= blob_partition
 
+        for i in range(1, NUM_BLOBS):
+            # Get x and y coordinates for this blob
+            # x and y take turns moving, each turn gives the other one more turn than
+            # last time, which we need to do to spiral around in a square grid
+            if y_turns == 0:
+                x_turns -= 1
+                if x_turns == 0:
+                    y_turns = y_count + 1
+                    y_count = 0
+
+                if y <= scaled_half_universe_h:
+                    x += blob_partition
+                elif y > scaled_half_universe_h:
+                    x -= blob_partition
+            else:
+                y_count += 1
+                y_turns -= 1
+                if y_turns == 0:
+                    x_turns = y_count + 1
+
+                if x >= scaled_half_universe_w:
+                    y += blob_partition
+                elif x < scaled_half_universe_w:
+                    y -= blob_partition
+
+            self.add_pos_vel(self.blobs[i], x, y, z)
+
+    def plot_circular_grid(self):
+        """Iterates through blobs and plots them in a circular grid configuration around the center blob"""
+
+        scaled_half_universe_w = self.blobs[0].x
+        scaled_half_universe_h = self.blobs[0].y
+
+        orbiting_blobs = NUM_BLOBS - 1
         # Interators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
         plot_phi = 0.0
@@ -165,11 +311,59 @@ class BlobPlotter:
 
             pi_inc = (math.pi * 2) / (orbiting_blobs)
 
-        # Now, for each blob . . .
+        for i in range(1, NUM_BLOBS):
+
+            # Circular grid x,y plot for this blob
+            # Get x and y for this blob, vars set up from last interation or initial setting
+            x = scaled_half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
+                plot_phi
+            )
+            y = scaled_half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
+                plot_phi
+            )
+            z = scaled_half_universe_h + plot_radius * math.cos(plot_theta)
+
+            blobs_left = orbiting_blobs - i
+            # Set up vars for next interation, move the "clock dial" another notch,
+            # or make it longer by plot_radius_partition if we've gone around 360 degrees
+            if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
+                plot_phi = 0.0
+                # Increase the radius for the next go around the center blob
+                plot_radius += plot_radius_partition
+                # How many radians to increase for each blob around the circumference (such that
+                # we get chord_scaled length between each blob center)
+                pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+                # Divy up the remainder for a more even distribution
+                pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
+
+                if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
+                    pi_inc = (math.pi * 2) / blobs_left
+
+            else:
+                plot_phi += pi_inc
+
+            self.add_pos_vel(self.blobs[i], x, y, z)
+
+    def start_over(self, universe):
+        """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
+        self.blobs = np.empty([NUM_BLOBS], dtype=object)
+        self.blobs_swallowed = 0
+        self.blobs_escaped = 0
+        self.z_axis = {}
+        self.plot_blobs(universe)
+
+    def plot_blobs(self, universe):
+        """
+        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
+        universe is the object reference needed to instantiate a MassiveBlob
+        """
+
+        self.plot_center_blob(universe)
+
+        # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
             # Set up some random values for this blob
             color = round(random.random() * (len(COLORS) - 1))
-            velocity = 0
             radius = 0
             mass = 0
             # Divide mass and radius ranges in half, put smaller masses with
@@ -190,105 +384,24 @@ class BlobPlotter:
                 )
                 mass = (random.random() * (MAX_MASS - max_mass_delta)) + max_mass_delta
 
-            if self.square_grid:  # Square grid x,y plot for this blob
-                # Get x and y coordinates for this blob
-                # x and y take turns moving, each turn gives the other one more turn than
-                # last time, which we need to do to spiral around in a square grid
-                if y_turns == 0:
-                    x_turns -= 1
-                    if x_turns == 0:
-                        y_turns = y_count + 1
-                        y_count = 0
-
-                    if y <= half_universe_h:
-                        x += blob_partition
-                    elif y > half_universe_h:
-                        x -= blob_partition
-                else:
-                    y_count += 1
-                    y_turns -= 1
-                    if y_turns == 0:
-                        x_turns = y_count + 1
-
-                    if x >= half_universe_w:
-                        y += blob_partition
-                    elif x < half_universe_w:
-                        y -= blob_partition
-            else:  # Circular grid x,y plot for this blob
-                # Get x and y for this blob, vars set up from last interation or initial setting
-                x = half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
-                    plot_phi
-                )
-                y = half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
-                    plot_phi
-                )
-                z = half_universe_h + plot_radius * math.cos(plot_theta)
-
-                blobs_left = orbiting_blobs - i
-                # Set up vars for next interation, move the "clock dial" another notch,
-                # or make it longer by plot_radius_partition if we've gone around 360 degrees
-                if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
-                    plot_phi = 0.0
-                    # Increase the radius for the next go around the center blob
-                    plot_radius += plot_radius_partition
-                    # How many radians to increase for each blob around the circumference (such that
-                    # we get chord_scaled length between each blob center)
-                    pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
-                    # Divy up the remainder for a more even distribution
-                    pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
-
-                    if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
-                        pi_inc = (math.pi * 2) / blobs_left
-
-                else:
-                    plot_phi += pi_inc
-
-            # Figure out velocity for this blob
-            dx = half_universe_w - x
-            dy = half_universe_h - y
-            dz = half_universe_h - z
-            d = math.sqrt(dx**2 + dy**2 + dz**2)
-
-            if self.start_perfect_orbit:
-                # get velocity for a perfect orbit around center blob
-                velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
-            else:
-                # Generate a random velocity within provided boundaries
-                velocity = (
-                    random.random() * (MAX_VELOCITY - MIN_VELOCITY)
-                ) + MIN_VELOCITY
-
-            theta = math.acos(dz / d)
-            phi = math.atan2(dy, dx)
-
-            # Add some chaos to starting trajectory
-            theta = theta - (math.pi * 0.15)
-            # turn 90 degrees from pointing center for begining velocity (orbit)
-            phi = phi - (math.pi * 0.5)
-
-            velocityx = velocity * math.sin(theta) * math.cos(phi)
-            velocityy = velocity * math.sin(theta) * math.sin(phi)
-            velocityz = velocity * math.cos(theta)
-
             # Phew, let's instantiate this puppy . . .
-            new_blob = MassiveBlob(
+            self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
                 str(i),
                 BlobSurface(radius, COLORS[color], universe),
                 mass,
-                x,
-                y,
-                z,
-                velocityx,
-                velocityy,
-                velocityz,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
             )
-            self.blobs[i] = new_blob
 
-            if self.z_axis.get(new_blob.z) is None:
-                self.z_axis[new_blob.z] = np.array([new_blob], dtype=object)
-            else:
-                self.z_axis[new_blob.z] = np.append(self.z_axis[new_blob.z], new_blob)
+        if self.square_grid:
+            self.plot_square_grid()
+        else:
+            self.plot_circular_grid()
 
     def draw_blobs(self):
         """
@@ -314,7 +427,7 @@ class BlobPlotter:
                 # get rid of dead blobs
                 if blob.dead:
                     if blob.swallowed:
-                        self.blobs_swalled += 1
+                        self.blobs_swallowed += 1
                     elif blob.escaped:
                         self.blobs_escaped += 1
                     self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
@@ -337,7 +450,7 @@ class BlobPlotter:
 
     def update_blobs(self):
         """
-        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis hash table
+        Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
         """
@@ -408,14 +521,11 @@ class BlobPlotter:
         check_grid(self.blobs[0])
 
         for i in range(0, len(self.blobs)):
-            blob = self.blobs[i]
-            check_grid(blob)
 
-            blob.advance()
+            check_grid(self.blobs[i])
 
-            if self.z_axis.get(blob.z) is None:
-                self.z_axis[blob.z] = np.array([blob], dtype=object)
-            else:
-                self.z_axis[blob.z] = np.append(self.z_axis[blob.z], blob)
+            self.blobs[i].advance()
 
-            checked[id(blob)] = 1
+            self.add_z_axis(self.blobs[i])
+
+            checked[id(self.blobs[i])] = 1
