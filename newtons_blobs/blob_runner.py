@@ -138,6 +138,7 @@ class BlobRunner:
         self.keyboard_events = self.load_keyboard_events()
 
         # Runtime preferences/states
+        self.auto_save_load = AUTO_SAVE_LOAD
         self.running = True
         self.paused = False
         self.elapsed_time = 0
@@ -157,9 +158,12 @@ class BlobRunner:
         self.toggle_start_random_orbit_t = (
             f"Toggled starting orbit to random velocities"
         )
+        self.toggle_save_load_on = f"Toggled auto save/load to on"
+        self.toggle_save_load_off = f"Toggled auto save/load to off"
 
     def get_prefs(self, data):
         """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        data["auto_save_load"] = self.auto_save_load
         data["running"] = self.running
         data["paused"] = self.paused
         data["elapsed_time"] = self.elapsed_time
@@ -173,6 +177,7 @@ class BlobRunner:
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it
         """
+        self.auto_save_load = data["auto_save_load"]
         self.running = data["running"]
         self.paused = data["paused"]
         self.elapsed_time = data["elapsed_time"]
@@ -238,6 +243,16 @@ class BlobRunner:
                 pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 self.fullscreen = True
 
+        def toggle_auto_save_load():
+            self.auto_save_load = not self.auto_save_load
+
+            if self.auto_save_load:
+                self.message = self.toggle_save_load_on
+            else:
+                self.message = self.toggle_save_load_off
+            self.message_counter = 60 * 3
+
+        keyboard_events[pygame.K_e] = toggle_auto_save_load
         keyboard_events[pygame.K_q] = quit_game
         keyboard_events[pygame.K_SPACE] = pause_game
         keyboard_events[pygame.K_d] = toggle_stats
@@ -266,7 +281,13 @@ class BlobRunner:
         Starts the application and maintains the while loop. This is the only method that ever gets called
         from an external source.
         """
-        if not self.blob_save_load.load(self.universe):
+
+        self.auto_save_load = self.blob_save_load.load_value("auto_save_load")
+
+        if self.auto_save_load:
+            if not self.blob_save_load.load(self.universe):
+                self.blob_plotter.plot_blobs(self.universe)
+        else:
             self.blob_plotter.plot_blobs(self.universe)
 
         while self.running:
@@ -281,8 +302,11 @@ class BlobRunner:
             self.render_frame()
 
         # While loop broke! Time to quit.
-        self.running = True
-        self.blob_save_load.save()
+        if self.auto_save_load:
+            self.running = True
+            self.blob_save_load.save()
+        else:
+            self.blob_save_load.save_value("auto_save_load", False)
         pygame.quit()
 
     def render_frame(self):

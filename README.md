@@ -44,6 +44,7 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
 * D - Toggle stat displays
 * A - Toggle Start pattern between square and circular (see below)
 * W - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+* E - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
 * S - Start over based on W and A options!
 
 Some screen shots:

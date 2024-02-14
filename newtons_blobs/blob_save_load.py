@@ -39,6 +39,12 @@ class BlobSaveLoad:
         Loads the saved json file (if exists) and sends to the set_prefs() of the objects. The blob_plotter object needs to implement
         set_prefs(universe), which provides the drawing canvas needed for display of blobs
 
+    load_value(key)
+        Returns the value of the single key in the json_data file, has no effect on blob_runner, blob_plotter
+
+    save_value(key,value)
+        Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter
+
     """
 
     def __init__(self, blob_runner, blob_plotter):
@@ -53,7 +59,7 @@ class BlobSaveLoad:
         with open(home_path_plus((".newton",), "saved.json"), "w") as json_file:
             json.dump(self.json_data, json_file, indent=3)
 
-    def load(self, universe):
+    def load(self, universe, set_prefs=True):
         """
         Loads the saved json file (if exists) and sends to the set_prefs() of the objects. The blob_plotter object needs to implement
         set_prefs(universe), which provides the drawing canvas needed for display of blobs
@@ -65,6 +71,20 @@ class BlobSaveLoad:
             print("No such file")
             return False
 
-        self.blob_runner.set_prefs(self.json_data)
-        self.blob_plotter.set_prefs(self.json_data, universe)
+        if set_prefs:
+            self.blob_runner.set_prefs(self.json_data)
+            self.blob_plotter.set_prefs(self.json_data, universe)
         return True
+
+    def load_value(self, key):
+        """Returns the value of the single key in the json_data file, has no effect on blob_runner, blob_plotter"""
+        if self.load(None, False):
+            return self.json_data[key]
+
+        return None
+
+    def save_value(self, key, value):
+        """Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter"""
+        if self.load(None, False):
+            self.json_data[key] = value
+            self.save()

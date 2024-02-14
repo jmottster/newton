@@ -25,6 +25,7 @@ VERSION = __version__
 G = 6.67428e-11  # Gravitational constant
 AU = 149.6e6 * 1000  # 1 Astronomical Unit
 
+AUTO_SAVE_LOAD = True
 # Change to scale the size of universe (thus window)
 CLOCK_FPS = False
 LIGHTING = True
