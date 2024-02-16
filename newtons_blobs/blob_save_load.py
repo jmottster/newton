@@ -53,7 +53,7 @@ class BlobSaveLoad:
         self.json_data = {}
 
     def save(self, get_prefs=True):
-        """Saves the objects to a json file for later retrival"""
+        """Saves the objects to a json file for later retrieval"""
         if get_prefs:
             self.blob_runner.get_prefs(self.json_data)
             self.blob_plotter.get_prefs(self.json_data)
