@@ -33,7 +33,7 @@ def resource_path(relative_path):
 
 def home_path_plus(path_tuple, file, create_if_not_exists=True):
     mypath = Path()
-    full_path = mypath.joinpath(mypath.home())
+    full_path = mypath.home()
     for item in path_tuple:
         full_path = mypath.joinpath(full_path, item)
         if create_if_not_exists and not full_path.exists():

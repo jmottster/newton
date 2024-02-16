@@ -33,7 +33,7 @@ class BlobSaveLoad:
     Methods
     -------
     save()
-        Saves the objects to a json file for later retrival
+        Saves the objects to a json file for later retrieval
 
     load(universe)
         Loads the saved json file (if exists) and sends to the set_prefs() of the objects. The blob_plotter object needs to implement
@@ -52,10 +52,11 @@ class BlobSaveLoad:
         self.blob_plotter = blob_plotter
         self.json_data = {}
 
-    def save(self):
+    def save(self, get_prefs=True):
         """Saves the objects to a json file for later retrival"""
-        self.blob_runner.get_prefs(self.json_data)
-        self.blob_plotter.get_prefs(self.json_data)
+        if get_prefs:
+            self.blob_runner.get_prefs(self.json_data)
+            self.blob_plotter.get_prefs(self.json_data)
         with open(home_path_plus((".newton",), "saved.json"), "w") as json_file:
             json.dump(self.json_data, json_file, indent=3)
 
@@ -87,4 +88,4 @@ class BlobSaveLoad:
         """Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter"""
         if self.load(None, False):
             self.json_data[key] = value
-            self.save()
+            self.save(False)

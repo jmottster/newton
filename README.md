@@ -16,14 +16,14 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 ###### The easy way (Windows only)
 
-1. Download Windows executalbe here:
+1. Download Windows executable here:
    1. [Release 0.0.3](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.3/newton.exe)
 2. Save where you want to store it
 3. Double click and enjoy (runs as is, no system installation)
 
 ###### The nerdy way
 
-1. **Requrments:**
+1. **Requirements:**
    1. git and github account
    2. python 3.11.5
       1. Pygame-CE 2.4.0
@@ -41,7 +41,7 @@ This is a space-level gravity and collision simulator. At the center is a sun ma
 
 This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are a few controls here while you watch it go.
 
-* SPACEBAR - Puase/Unpause
+* SPACEBAR - Pause/Unpause
 * F - Toggle fullscreen/windowed mode
 * D - Toggle stat displays
 * A - Toggle Start pattern between square and circular (see below)

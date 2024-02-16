@@ -69,7 +69,7 @@ class BlobRunner:
     Methods
     -------
     get_prefs(data)
-        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+        Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
     set_prefs(data)
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
@@ -162,7 +162,7 @@ class BlobRunner:
         self.toggle_save_load_off = f"Toggled auto save/load to off"
 
     def get_prefs(self, data):
-        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["auto_save_load"] = self.auto_save_load
         data["running"] = self.running
         data["paused"] = self.paused
