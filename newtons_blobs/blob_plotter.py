@@ -473,51 +473,22 @@ class BlobPlotter:
             # Using the grid approach for optimization. Instead of every blob checking every blob,
             # every blob only checks the blobs in their own grid cell and the grid cells surrounding them.
 
-            check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2]])
-            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2]])
-            check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2]])
-
-            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2]])
-            check_blobs(blob, pg[gk[0]][gk[1]][gk[2]])
-            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2]])
-
-            check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2]])
-            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2]])
-            check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2]])
-
-            # ---------------------------------------------------#
-
-            # check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2] + 1])
-            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2] + 1])
-            # check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2] + 1])
-
-            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2] + 1])
-            check_blobs(blob, pg[gk[0]][gk[1]][gk[2] + 1])
-            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2] + 1])
-
-            # check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2] + 1])
-            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2] + 1])
-            # check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2] + 1])
-
-            # ---------------------------------------------------#
-
-            # check_blobs(blob, pg[gk[0] + 1][gk[1] + 1][gk[2] - 1])
-            check_blobs(blob, pg[gk[0] + 1][gk[1]][gk[2] - 1])
-            # check_blobs(blob, pg[gk[0] + 1][gk[1] - 1][gk[2] - 1])
-
-            check_blobs(blob, pg[gk[0]][gk[1] + 1][gk[2] - 1])
-            check_blobs(blob, pg[gk[0]][gk[1]][gk[2] - 1])
-            check_blobs(blob, pg[gk[0]][gk[1] - 1][gk[2] - 1])
-
-            # check_blobs(blob, pg[gk[0] - 1][gk[1] + 1][gk[2] - 1])
-            check_blobs(blob, pg[gk[0] - 1][gk[1]][gk[2] - 1])
-            # check_blobs(blob, pg[gk[0] - 1][gk[1] - 1][gk[2] - 1])
+            for z_offset in range(-1, 2):
+                for x_offset in range(-1, 2):
+                    for y_offset in range(-1, 2):
+                        # Skip the corners of the cube, worth risking the occasional miss for the performance boost
+                        if x_offset != 0 and y_offset != 0 and z_offset != 0:
+                            continue
+                        check_blobs(
+                            blob,
+                            pg[gk[0] + x_offset][gk[1] + y_offset][gk[2] + z_offset],
+                        )
 
         for i in range(1, len(self.blobs)):
             self.blobs[0].gravitational_pull(self.blobs[i], G)
 
         # dirty hack to minimize bouncing off center blob (i.e., since this will run again in loop, that double
-        #   check of collision makes getting sucked into center blob more likely)
+        #   check of collision with center blob makes getting sucked into center blob more likely)
         check_grid(self.blobs[0])
 
         for i in range(0, len(self.blobs)):
