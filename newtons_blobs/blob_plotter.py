@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Class file for setting up initial posisions and velocities of blobs and maintaining them
+Class file for setting up initial positions and velocities of blobs and maintaining them
 
 by Jason Mott, copyright 2024
 """
@@ -42,14 +42,14 @@ class BlobPlotter:
     Methods
     -------
     get_prefs(data)
-        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+        Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
     set_prefs(data, universe)
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it and writing to the universe instance for display
 
     add_z_axis(blob)
-        Adds the given blob to the z_axis dict according to it z posision
+        Adds the given blob to the z_axis dict according to it z position
 
     plot_center_blob(universe)
         Creates and places the center blob and adds it to self.blobs[0]
@@ -71,7 +71,7 @@ class BlobPlotter:
         universe is the object reference needed to instantiate a MassiveBlob
 
     draw_blobs()
-        Interates the blobs according z_axis keys, deletes the ones flaged as dead, calls draw() on the live ones, and repopulates
+        Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
 
     update_blobs()
@@ -110,7 +110,7 @@ class BlobPlotter:
         self.start_perfect_orbit = START_PERFECT_ORBIT
 
     def get_prefs(self, data):
-        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["universe_size_w"] = self.universe_size_w
         data["universe_size_h"] = self.universe_size_h
         data["scaled_universe_width"] = self.scaled_universe_width
@@ -160,7 +160,7 @@ class BlobPlotter:
             i += 1
 
     def add_z_axis(self, blob):
-        """Adds the given blob to the z_axis dict according to it z posision"""
+        """Adds the given blob to the z_axis dict according to it z position"""
         if self.z_axis.get(blob.z) is None:
             self.z_axis[blob.z] = np.array([blob], dtype=object)
         else:
@@ -212,7 +212,7 @@ class BlobPlotter:
 
         # Add some chaos to starting trajectory
         theta = theta - (math.pi * 0.15)
-        # turn 90 degrees from pointing center for begining velocity (orbit)
+        # turn 90 degrees from pointing center for beginning velocity (orbit)
         phi = phi - (math.pi * 0.5)
 
         velocityx = velocity * math.sin(theta) * math.cos(phi)
@@ -247,7 +247,7 @@ class BlobPlotter:
         else:
             blob_partition = self.scaled_display_height / 4
 
-        # Interators grid placement
+        # Iterators grid placement
         y_count = 2
         y_turns = 0
         x_turns = 1
@@ -288,7 +288,7 @@ class BlobPlotter:
         scaled_half_universe_h = self.blobs[0].y
 
         orbiting_blobs = NUM_BLOBS - 1
-        # Interators for circular grid placement, blobs will be placed in ever
+        # Iterators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
         plot_phi = 0.0
         plot_theta = math.pi * 0.5
@@ -296,7 +296,7 @@ class BlobPlotter:
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
         plot_radius_partition = ((MAX_RADIUS * 4)) * SCALE_UP
-        # How far apart each blob will be on each circumferance
+        # How far apart each blob will be on each circumference
         chord_scaled = (MAX_RADIUS * 3) * SCALE_UP
         # The start radius (smallest circle around center blob)
         plot_radius = ((MAX_RADIUS * 3) + (CENTER_BLOB_RADIUS * 2)) * SCALE_UP
@@ -314,7 +314,7 @@ class BlobPlotter:
         for i in range(1, NUM_BLOBS):
 
             # Circular grid x,y plot for this blob
-            # Get x and y for this blob, vars set up from last interation or initial setting
+            # Get x and y for this blob, vars set up from last iteration or initial setting
             x = scaled_half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
                 plot_phi
             )
@@ -324,7 +324,7 @@ class BlobPlotter:
             z = scaled_half_universe_h + plot_radius * math.cos(plot_theta)
 
             blobs_left = orbiting_blobs - i
-            # Set up vars for next interation, move the "clock dial" another notch,
+            # Set up vars for next iteration, move the "clock dial" another notch,
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0
@@ -405,7 +405,7 @@ class BlobPlotter:
 
     def draw_blobs(self):
         """
-        Interates the blobs according z_axis keys, deletes the ones flaged as dead, calls draw() on the live ones, and repopulates
+        Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
         """
         self.proximity_grid = np.empty(

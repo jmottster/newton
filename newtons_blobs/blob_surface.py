@@ -49,7 +49,7 @@ class BlobSurface:
     update_center_blob
         Sets the x,y,z of the center blob for reference
     draw(pos=None, lighting=True)
-        Draws this blob to the universe surface, with the given posision (or uses posision already set),
+        Draws this blob to the universe surface, with the given position (or uses position already set),
         send (pos,False) to turn off lighting effects
     draw_as_center_blob((pos=None,lighting=True)
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
@@ -208,8 +208,8 @@ class BlobSurface:
         self.shade_radius = self.shade_cache[self.shade_index].get_width() / 2
 
     def get_lighting_blob(self):
-        """Create the final package for drawing. This puts all the peices together. Everything
-        is cached for every call, it just does a fill/draw on all the peices. This is called
+        """Create the final package for drawing. This puts all the pieces together. Everything
+        is cached for every call, it just does a fill/draw on all the pieces. This is called
         by the draw() method."""
 
         self.draw_alpha_image()
@@ -245,7 +245,7 @@ class BlobSurface:
     def check_animation_radius(self, z):
         """This points the lighted up side of the blob toward the center
         blob, the shade side opposite of the center blob, and ensures
-        radius is honering z depth and realistic curvature."""
+        radius is honoring z depth and realistic curvature."""
         scale_zone_start = BlobSurface.center_blob_z * 0.95
         scale_zone = scale_zone_start * 0.2
         scale_zone_stop = scale_zone_start - scale_zone
@@ -337,7 +337,7 @@ class BlobSurface:
                     self.position[1] - self.height_center,
                 ),
             )
-        # Uncomment for writting lables on blobs
+        # Uncomment for writing labels on blobs
         # mass_text = blob_font.render(
         #     f"{}",
         #     1,

@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Global contants
+Global constants
 
 by Jason Mott, copyright 2024
 """
@@ -30,12 +30,12 @@ AUTO_SAVE_LOAD = True
 CLOCK_FPS = False
 LIGHTING = True
 SCALE_PERCENT = 1
-AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixles to equal 1 AU
+AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixels to equal 1 AU
 TIMESCALE = 3600 * 10 * SCALE_PERCENT  # elapsed time per frame, in seconds
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000
-# Cube size of Universe in pixles
+# Cube size of Universe in pixels
 UNIVERSE_SIZE = 2000 * SCALE_PERCENT
 UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
@@ -65,7 +65,7 @@ MIN_MASS = 7.34767309 * 10**22  # Mass of Moon
 # 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 6.9742 * 10**24  # currently set slightly larger than mass of Earth
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
-# 8.54 * 10**36 <-- black hole, don't do it, your machine will colapse into itself!
+# 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
 CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"

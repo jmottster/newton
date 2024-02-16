@@ -28,7 +28,7 @@ class MassiveBlob:
     Attributes
     ----------
     universe_size : float
-        the size of the universe in pixles (this size is cubed for full environment size)
+        the size of the universe in pixels (this size is cubed for full environment size)
     name : str
         a string to identify the blob
     blob_surface : BlobSurface
@@ -51,7 +51,7 @@ class MassiveBlob:
     Methods
     -------
     get_prefs(data)
-        Loads the provided dict with all the neccessary key/value pairs to save the state of the instance.
+        Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
     grid_key()
         Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)
@@ -68,7 +68,7 @@ class MassiveBlob:
         or it wraps to other end of screen if wrap==True (wrap currently not working)
 
     collision_detection(blob)
-        Checks to see if this blob is coliding with provided blob, and adjusts velocity of each
+        Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
         according to Newton's Laws
 
     gravitational_pull(blob, g)
@@ -96,7 +96,7 @@ class MassiveBlob:
         "dead",
         "swallowed",
         "escaped",
-        "blob_suface",
+        "blob_surface",
         "pause",
     )
 
@@ -105,7 +105,7 @@ class MassiveBlob:
     center_blob_z = UNIVERSE_SIZE_D / 2
     GRAVITATIONAL_RANGE = 0
 
-    def __init__(self, universe_size, name, blob_suface, mass, x, y, z, vx, vy, vz):
+    def __init__(self, universe_size, name, blob_surface, mass, x, y, z, vx, vy, vz):
         self.universe_size_width = universe_size
         self.universe_size_height = universe_size
         self.scaled_universe_width = universe_size * SCALE_UP
@@ -115,8 +115,8 @@ class MassiveBlob:
             MassiveBlob.GRAVITATIONAL_RANGE = (self.scaled_universe_height / 8) * 6
 
         self.name = name
-        self.blob_suface = blob_suface
-        self.radius = blob_suface.radius
+        self.blob_surface = blob_surface
+        self.radius = blob_surface.radius
         self.scaled_radius = self.radius * SCALE_UP
         self.mass = mass
         self.x = x
@@ -134,10 +134,10 @@ class MassiveBlob:
         self.fake_blob_z()
 
     def get_prefs(self, data):
-        """Loads the provided dict with all the neccessary key/value pairs to save the state of the instance."""
+        """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
         data["radius"] = self.orig_radius[2]
-        data["color"] = self.blob_suface.color
+        data["color"] = self.blob_surface.color
         data["mass"] = self.mass
         data["x"] = self.x
         data["y"] = self.y
@@ -180,13 +180,13 @@ class MassiveBlob:
         z = self.z * SCALE_DOWN
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_suface.draw((x, y, z), LIGHTING)  # TODO fix
+            self.blob_surface.draw((x, y, z), LIGHTING)  # TODO fix
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y
             MassiveBlob.center_blob_z = z
-            self.blob_suface.update_center_blob(x, y, z)
-            self.blob_suface.draw_as_center_blob(
+            self.blob_surface.update_center_blob(x, y, z)
+            self.blob_surface.draw_as_center_blob(
                 (x, y, z), (LIGHTING and not self.pause)
             )
 
@@ -199,7 +199,7 @@ class MassiveBlob:
             self.orig_radius[1] * (diff / self.scaled_universe_size_half_z)
         )
         self.radius = round(self.scaled_radius * SCALE_DOWN)
-        self.blob_suface.resize(self.radius)
+        self.blob_surface.resize(self.radius)
 
     def advance(self):
         """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
@@ -288,7 +288,7 @@ class MassiveBlob:
                 self.vz = self.vz * 0.995
 
     def collision_detection(self, blob):
-        """Checks to see if this blob is coliding with provided blob, and adjusts velocity of each
+        """Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
         according to Newton's Laws"""
         dd = self.orig_radius[0] + blob.orig_radius[0]
         if abs(blob.x - self.x) > dd:
@@ -344,7 +344,7 @@ class MassiveBlob:
             blob.vz = blob.vz * 0.995
 
             # To prevent (or reduce) cling-ons, we have the center blob swallow blobs
-            # that cross the collision boundry too far
+            # that cross the collision boundary too far
             if self.name == CENTER_BLOB_NAME or blob.name == CENTER_BLOB_NAME:
                 smaller_blob = self
                 larger_blob = blob
