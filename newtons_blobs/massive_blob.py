@@ -7,6 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import math
+from typing import Any, Tuple
 from .globals import *
 from .blob_surface import BlobSurface
 
@@ -35,11 +36,11 @@ class MassiveBlob:
         the object responsible for drawing blob and maintaining visual attributes
     mass : float
         the mass of the object -- use planet scale kg values (see global min and max values)
-    x : int
+    x : float
         initial x coordinate for center of blob
-    y : int
+    y : float
         initial y coordinate for center of blob
-    z : int
+    z : float
         initial z coordinate for center of blob
     vx : float
         initial x direction velocity in meters per second
@@ -50,28 +51,34 @@ class MassiveBlob:
 
     Methods
     -------
-    get_prefs(data)
+    get_prefs(data: dict) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
-    grid_key()
+    grid_key() -> Tuple[int]
         Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)
-    draw()
+
+    draw() -> None
         Tells the instance to call draw on the BlobSurface instance
-    advance()
+
+    fake_blob_z() -> None
+        Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
+        (closer=bigger/further=smaller), a 3d effect according the the z position
+
+    advance() -> None
         Applies velocity to blob, changing its x,y coordinates for next frame draw
-        fake_blob_z()
-            Called by advance(), adjusts radius size to fake a near/close 3d effect according the the z position
-    update_pos_vel(x, y, z, vx, vy, vz)
+
+    update_pos_vel(x: float, y: float, z: float, vx: float, vy: float, vz: float) -> None
         direct way to update position and velocity values
-    edge_detection(wrap)
+
+    edge_detection(wrap: bool) -> None
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
 
-    collision_detection(blob)
+    collision_detection(blob: Any) -> None
         Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
         according to Newton's Laws
 
-    gravitational_pull(blob, g)
+    gravitational_pull(blob: Any, g: float) -> None
         Changes velocity of self and provided blob in relation to gravitational pull with each other.
         g is the Gravitational Constant to be applied to equation
     """
@@ -100,40 +107,56 @@ class MassiveBlob:
         "pause",
     )
 
-    center_blob_x = UNIVERSE_SIZE_W / 2
-    center_blob_y = UNIVERSE_SIZE_H / 2
-    center_blob_z = UNIVERSE_SIZE_D / 2
-    GRAVITATIONAL_RANGE = 0
+    center_blob_x: float = UNIVERSE_SIZE_W / 2
+    center_blob_y: float = UNIVERSE_SIZE_H / 2
+    center_blob_z: float = UNIVERSE_SIZE_D / 2
+    GRAVITATIONAL_RANGE: float = 0
 
-    def __init__(self, universe_size, name, blob_surface, mass, x, y, z, vx, vy, vz):
-        self.universe_size_width = universe_size
-        self.universe_size_height = universe_size
-        self.scaled_universe_width = universe_size * SCALE_UP
-        self.scaled_universe_height = universe_size * SCALE_UP
-        self.scaled_universe_size_half_z = self.scaled_universe_height / 2
+    def __init__(
+        self,
+        universe_size: float,
+        name: str,
+        blob_surface: BlobSurface,
+        mass: float,
+        x: float,
+        y: float,
+        z: float,
+        vx: float,
+        vy: float,
+        vz: float,
+    ):
+        self.universe_size_width: float = universe_size
+        self.universe_size_height: float = universe_size
+        self.scaled_universe_width: float = universe_size * SCALE_UP
+        self.scaled_universe_height: float = universe_size * SCALE_UP
+        self.scaled_universe_size_half_z: float = self.scaled_universe_height / 2
         if MassiveBlob.GRAVITATIONAL_RANGE == 0:
             MassiveBlob.GRAVITATIONAL_RANGE = (self.scaled_universe_height / 8) * 6
 
-        self.name = name
-        self.blob_surface = blob_surface
-        self.radius = blob_surface.radius
-        self.scaled_radius = self.radius * SCALE_UP
-        self.mass = mass
-        self.x = x
-        self.y = y
-        self.z = z
-        self.orig_radius = (self.scaled_radius, self.scaled_radius / 2, self.radius)
-        self.vx = vx  # x velocity per frame
-        self.vy = vy  # y velocity per frame
-        self.vz = vz  # z velocity per frame
-        self.dead = False
-        self.swallowed = False
-        self.escaped = False
-        self.pause = False
+        self.name: str = name
+        self.blob_surface: BlobSurface = blob_surface
+        self.radius: float = blob_surface.radius
+        self.scaled_radius: float = self.radius * SCALE_UP
+        self.mass: float = mass
+        self.x: float = x
+        self.y: float = y
+        self.z: float = z
+        self.orig_radius: Tuple[float] = (
+            self.scaled_radius,
+            self.scaled_radius / 2,
+            self.radius,
+        )
+        self.vx: float = vx  # x velocity per frame
+        self.vy: float = vy  # y velocity per frame
+        self.vz: float = vz  # z velocity per frame
+        self.dead: bool = False
+        self.swallowed: bool = False
+        self.escaped: bool = False
+        self.pause: bool = False
 
         self.fake_blob_z()
 
-    def get_prefs(self, data):
+    def get_prefs(self, data: dict) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
         data["radius"] = self.orig_radius[2]
@@ -146,7 +169,7 @@ class MassiveBlob:
         data["vy"] = self.vy
         data["vz"] = self.vz
 
-    def grid_key(self):
+    def grid_key(self) -> Tuple[int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
         x = int((self.x * SCALE_DOWN) / GRID_CELL_SIZE)
         y = int((self.y * SCALE_DOWN) / GRID_CELL_SIZE)
@@ -173,7 +196,7 @@ class MassiveBlob:
             z,
         )
 
-    def draw(self):
+    def draw(self) -> None:
         """Tells the instance to call draw on the BlobSurface instance"""
         x = self.x * SCALE_DOWN
         y = self.y * SCALE_DOWN
@@ -190,9 +213,11 @@ class MassiveBlob:
                 (x, y, z), (LIGHTING and not self.pause)
             )
 
-    def fake_blob_z(self):
-        """Called by advance(), adjusts radius size to to show perspective
-        (closer=bigger/further=smaller), a 3d effect according the the z position"""
+    def fake_blob_z(self) -> None:
+        """
+        Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
+        (closer=bigger/further=smaller), a 3d effect according the the z position
+        """
         diff = self.scaled_universe_size_half_z - self.z
 
         self.scaled_radius = self.orig_radius[0] + (
@@ -201,21 +226,23 @@ class MassiveBlob:
         self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_surface.resize(self.radius)
 
-    def advance(self):
+    def advance(self) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
 
-        # Advace x by velocity (one frame, with TIMESTEP elapsed time)
+        # Advance x by velocity (one frame, with TIMESCALE elapsed time)
         self.x += self.vx * TIMESCALE
 
-        # Advace y by velocity (one frame, with TIMESTEP elapsed time)
+        # Advance y by velocity (one frame, with TIMESCALE elapsed time)
         self.y += self.vy * TIMESCALE
 
-        # Advace z by velocity (one frame, with TIMESTEP elapsed time)
+        # Advance z by velocity (one frame, with TIMESCALE elapsed time)
         self.z += self.vz * TIMESCALE
 
         self.fake_blob_z()
 
-    def update_pos_vel(self, x, y, z, vx, vy, vz):
+    def update_pos_vel(
+        self, x: float, y: float, z: float, vx: float, vy: float, vz: float
+    ) -> None:
         """direct way to update position and velocity values"""
         self.x = x
         self.y = y
@@ -226,11 +253,13 @@ class MassiveBlob:
 
         self.fake_blob_z()
 
-    def edge_detection(self, wrap):
-        """Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
-        or it wraps to other end of screen if wrap==True (wrap currently not working)"""
+    def edge_detection(self, wrap: bool) -> None:
+        """
+        Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
+        or it wraps to other end of screen if wrap==True (wrap currently not working)
+        """
         if wrap:
-            # TODO fix wraping for scale
+            # TODO fix wrapping for scale
             # Move real x to other side of screen if it's gone off the edge
             if self.vx < 0 and self.x < 0:
                 self.x = self.scaled_universe_width
@@ -287,9 +316,11 @@ class MassiveBlob:
                 self.z = scaled_universe_size_h - self.scaled_radius
                 self.vz = self.vz * 0.995
 
-    def collision_detection(self, blob):
-        """Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
-        according to Newton's Laws"""
+    def collision_detection(self, blob: Any) -> None:
+        """
+        Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
+        according to Newton's Laws
+        """
         dd = self.orig_radius[0] + blob.orig_radius[0]
         if abs(blob.x - self.x) > dd:
             return
@@ -298,7 +329,6 @@ class MassiveBlob:
         dy = blob.y - self.y
         dz = blob.z - self.z
         d = math.sqrt((dx**2) + (dy**2) + (dz**2))
-        dd = self.orig_radius[0] + blob.orig_radius[0]
 
         # Check if the two blobs are touching
         if d <= dd:
@@ -356,7 +386,7 @@ class MassiveBlob:
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True
 
-    def gravitational_pull(self, blob, g):
+    def gravitational_pull(self, blob: Any, g: float) -> None:
         """Changes velocity of self and provided blob in relation to gravitational pull with each other.
         g is the Gravitational Constant to be applied to equation"""
 

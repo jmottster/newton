@@ -8,6 +8,7 @@ by Jason Mott, copyright 2024
 
 import sys
 from pathlib import Path
+from typing import Tuple
 from .globals import *
 
 __author__ = "Jason Mott"
@@ -19,9 +20,10 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-def resource_path(relative_path):
+def resource_path(relative_path: str) -> Path:
+    """Get absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
     mypath = Path()
-    # Get absolute path to resource, works for dev and for PyInstaller
+
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -31,7 +33,9 @@ def resource_path(relative_path):
     return mypath.joinpath(base_path, relative_path)
 
 
-def home_path_plus(path_tuple, file, create_if_not_exists=True):
+def home_path_plus(
+    path_tuple: Tuple[str], file: str, create_if_not_exists: bool = True
+) -> Path:
     mypath = Path()
     full_path = mypath.home()
     for item in path_tuple:
