@@ -6,7 +6,7 @@ Class file for the physics attributes of blobs that will interact with each othe
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Self
 from .globals import *
 from .blob_surface import BlobSurface
 
@@ -99,7 +99,7 @@ class MassiveBlob:
     center_blob_z: float = UNIVERSE_SIZE_D / 2
 
     def __init__(
-        self,
+        self: Self,
         universe_size: float,
         name: str,
         blob_surface: BlobSurface,
@@ -125,7 +125,7 @@ class MassiveBlob:
         self.x: float = x
         self.y: float = y
         self.z: float = z
-        self.orig_radius: Tuple[float] = (
+        self.orig_radius: Tuple[float, float, float] = (
             self.scaled_radius,
             self.scaled_radius / 2,
             self.radius,
@@ -140,7 +140,7 @@ class MassiveBlob:
 
         self.fake_blob_z()
 
-    def get_prefs(self, data: Dict[str, Any]) -> None:
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
         data["radius"] = self.orig_radius[2]
@@ -153,7 +153,7 @@ class MassiveBlob:
         data["vy"] = self.vy
         data["vz"] = self.vz
 
-    def grid_key(self) -> Tuple[int]:
+    def grid_key(self: Self) -> Tuple[int, int, int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
         x = int((self.x * SCALE_DOWN) / GRID_CELL_SIZE)
         y = int((self.y * SCALE_DOWN) / GRID_CELL_SIZE)
@@ -180,7 +180,7 @@ class MassiveBlob:
             z,
         )
 
-    def draw(self) -> None:
+    def draw(self: Self) -> None:
         """Tells the instance to call draw on the BlobSurface instance"""
         x = self.x * SCALE_DOWN
         y = self.y * SCALE_DOWN
@@ -197,7 +197,7 @@ class MassiveBlob:
                 (x, y, z), (LIGHTING and not self.pause)
             )
 
-    def fake_blob_z(self) -> None:
+    def fake_blob_z(self: Self) -> None:
         """
         Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
         (closer=bigger/further=smaller), a 3d effect according the the z position
@@ -210,7 +210,7 @@ class MassiveBlob:
         self.radius = round(self.scaled_radius * SCALE_DOWN)
         self.blob_surface.resize(self.radius)
 
-    def advance(self) -> None:
+    def advance(self: Self) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
 
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
@@ -225,7 +225,7 @@ class MassiveBlob:
         self.fake_blob_z()
 
     def update_pos_vel(
-        self, x: float, y: float, z: float, vx: float, vy: float, vz: float
+        self: Self, x: float, y: float, z: float, vx: float, vy: float, vz: float
     ) -> None:
         """direct way to update position and velocity values"""
         self.x = x

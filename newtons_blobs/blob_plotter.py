@@ -6,9 +6,10 @@ Class file for setting up initial positions and velocities of blobs and maintain
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Tuple, Self
 import pygame
 import numpy as np
+import numpy.typing as npt
 import math, random
 from .globals import *
 from .massive_blob import MassiveBlob
@@ -86,7 +87,11 @@ class BlobPlotter:
     """
 
     def __init__(
-        self, universe_w: float, universe_h: float, display_w: float, display_h: float
+        self: Self,
+        universe_w: float,
+        universe_h: float,
+        display_w: float,
+        display_h: float,
     ):
 
         self.universe_size_w: float = universe_w
@@ -102,11 +107,11 @@ class BlobPlotter:
         bp.set_gravitational_range(self.scaled_universe_height)
 
         # Preferences/states
-        self.blobs: np.ndarray[MassiveBlob] = np.empty([NUM_BLOBS], dtype=MassiveBlob)
+        self.blobs: npt.NDArray = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed: int = 0
         self.blobs_escaped: int = 0
         self.z_axis: Dict[float, np.ndarray[MassiveBlob]] = {}
-        self.proximity_grid: np.ndarray[MassiveBlob] = np.empty(
+        self.proximity_grid: npt.NDArray = np.empty(
             [
                 int(GRID_KEY_UPPER_BOUND),
                 int(GRID_KEY_UPPER_BOUND),
@@ -117,7 +122,7 @@ class BlobPlotter:
         self.square_grid: bool = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit: bool = START_PERFECT_ORBIT
 
-    def get_prefs(self, data: Dict[str, Any]) -> None:
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["universe_size_w"] = self.universe_size_w
         data["universe_size_h"] = self.universe_size_h
@@ -130,11 +135,13 @@ class BlobPlotter:
         data["blobs"] = []
 
         for blob in self.blobs:
-            blob_data = {}
+            blob_data: Dict[str, Any] = {}
             blob.get_prefs(blob_data)
             data["blobs"].append(blob_data)
 
-    def set_prefs(self, data: Dict[str, Any], universe: pygame.Surface) -> None:
+    def set_prefs(
+        self: Self, data: Dict[str, Any], universe: Optional[pygame.Surface] = None
+    ) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it and writing to the universe instance for display
@@ -167,7 +174,7 @@ class BlobPlotter:
             self.add_z_axis(self.blobs[i])
             i += 1
 
-    def start_over(self, universe: pygame.Surface) -> None:
+    def start_over(self: Self, universe: pygame.Surface) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed = 0
@@ -175,7 +182,7 @@ class BlobPlotter:
         self.z_axis.clear()
         self.plot_blobs(universe)
 
-    def plot_blobs(self, universe: pygame.Surface) -> None:
+    def plot_blobs(self: Self, universe: pygame.Surface) -> None:
         """
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
         universe is the object reference needed to instantiate a MassiveBlob
@@ -186,14 +193,14 @@ class BlobPlotter:
         # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
             # Set up some random values for this blob
-            color = round(random.random() * (len(COLORS) - 1))
-            radius = 0
-            mass = 0
+            color: int = round(random.random() * (len(COLORS) - 1))
+            radius: int = 0
+            mass: float = 0.0
             # Divide mass and radius ranges in half, put smaller masses with
             # smaller radiuses, and vice versa. Randomize whether we're doing
             # a bigger or smaller blob.
-            max_radius_delta = MIN_RADIUS + ((MAX_RADIUS - MIN_RADIUS) / 2)
-            max_mass_delta = MIN_MASS + ((MAX_MASS - MIN_MASS) / 2)
+            max_radius_delta: float = MIN_RADIUS + ((MAX_RADIUS - MIN_RADIUS) / 2)
+            max_mass_delta: float = MIN_MASS + ((MAX_MASS - MIN_MASS) / 2)
 
             if round(random.randint(1, 10)) % 2:
                 radius = round(
@@ -226,7 +233,7 @@ class BlobPlotter:
         else:
             self.plot_circular_grid()
 
-    def draw_blobs(self) -> None:
+    def draw_blobs(self: Self) -> None:
         """
         Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
@@ -271,13 +278,13 @@ class BlobPlotter:
                         )
                     )
 
-    def update_blobs(self) -> None:
+    def update_blobs(self: Self) -> None:
         """
         Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
         """
-        checked = {}
+        checked: Dict[int, int] = {}
         self.z_axis.clear()
 
         def check_blobs(blob1: MassiveBlob, blobs: np.ndarray[MassiveBlob]) -> None:
@@ -291,7 +298,7 @@ class BlobPlotter:
 
         def check_grid(blob: MassiveBlob) -> None:
             pg = self.proximity_grid
-            gk = blob.grid_key()
+            gk: Tuple[int, int, int] = blob.grid_key()
 
             # Using the grid approach for optimization. Instead of every blob checking every blob,
             # every blob only checks the blobs in their own grid cell and the grid cells surrounding them.
@@ -324,7 +331,7 @@ class BlobPlotter:
 
             checked[id(self.blobs[i])] = 1
 
-    def plot_center_blob(self, universe: pygame.Surface) -> None:
+    def plot_center_blob(self: Self, universe: pygame.Surface) -> None:
         """Creates and places the center blob and adds it to self.blobs[0]"""
         scaled_half_universe_h = self.scaled_universe_height / 2
         scaled_half_universe_w = self.scaled_universe_width / 2
@@ -349,13 +356,14 @@ class BlobPlotter:
 
         self.add_z_axis(self.blobs[0])
 
-    def plot_square_grid(self) -> None:
+    def plot_square_grid(self: Self) -> None:
         """Iterates through blobs and plots them in a square grid configuration around the center blob"""
         x = self.blobs[0].x
         y = self.blobs[0].y
         z = self.blobs[0].z
         scaled_half_universe_w = self.blobs[0].x
         scaled_half_universe_h = self.blobs[0].y
+        blob_partition: float = 0.0
 
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 5:
@@ -399,7 +407,7 @@ class BlobPlotter:
 
             self.add_pos_vel(self.blobs[i], x, y, z)
 
-    def plot_circular_grid(self) -> None:
+    def plot_circular_grid(self: Self) -> None:
         """Iterates through blobs and plots them in a circular grid configuration around the center blob"""
 
         scaled_half_universe_w = self.blobs[0].x
@@ -462,16 +470,20 @@ class BlobPlotter:
 
             self.add_pos_vel(self.blobs[i], x, y, z)
 
-    def add_z_axis(self, blob: MassiveBlob) -> None:
+    def add_z_axis(self: Self, blob: MassiveBlob) -> None:
         """Adds the given blob to the z_axis dict according to it z position"""
         if self.z_axis.get(blob.z) is None:
             self.z_axis[blob.z] = np.array([blob], dtype=MassiveBlob)
         else:
-            self.z_axis[blob.z] = np.append(self.z_axis[blob.z], blob)
+            self.z_axis[blob.z] = np.append(
+                self.z_axis[blob.z], np.array([blob], dtype=MassiveBlob)
+            )
 
-    def add_pos_vel(self, blob: MassiveBlob, x: float, y: float, z: float) -> None:
+    def add_pos_vel(
+        self: Self, blob: MassiveBlob, x: float, y: float, z: float
+    ) -> None:
         """Adds z,y,z to given blob, and configures velocity for orbit around center blob"""
-        velocity = 0
+        velocity: float = 0.0
         # Figure out velocity for this blob
         dx = self.blobs[0].x - x
         dy = self.blobs[0].y - y

@@ -20,7 +20,7 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-def resource_path(relative_path: str) -> Path:
+def resource_path(relative_path: Path) -> Path:
     """Get absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
     mypath = Path()
 

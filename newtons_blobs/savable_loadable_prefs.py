@@ -6,7 +6,7 @@ A Protocol class used to define the interface for objects that BlobSaveLoad can,
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Dict, Protocol
+from typing import Any, Dict, Optional, Protocol, Self
 
 import pygame
 
@@ -39,11 +39,13 @@ class SavableLoadablePrefs(Protocol):
 
     """
 
-    def get_prefs(self, data: Dict[str, Any]) -> None:
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Sending a dict to this method will load the dict up with attributes that are desired to be saved."""
         pass
 
-    def set_prefs(self, data: Dict[str, Any], universe: pygame.Surface = None) -> None:
+    def set_prefs(
+        self: Self, data: Dict[str, Any], universe: Optional[pygame.Surface] = None
+    ) -> None:
         """
         Sending a dict and a pygame.Surface instances to this method, to it's implementer can load up values from it (that it saved when
         populating dict in get_prefs()). universe object represents the drawable surface that some objects may need to load themselves

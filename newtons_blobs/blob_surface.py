@@ -6,8 +6,9 @@ Class for building the blob objects for display
 by Jason Mott, copyright 2024
 """
 
-from typing import Tuple
+from typing import Tuple, Self
 import numpy as np
+import numpy.typing as npt
 import math, random
 import pygame
 
@@ -91,32 +92,34 @@ class BlobSurface:
     center_blob_z = UNIVERSE_SIZE_D / 2
     LIGHT_RADIUS_MULTI = 6
 
-    def __init__(self, radius: float, color: Tuple[int], universe: pygame.Surface):
+    def __init__(
+        self: Self, radius: float, color: Tuple[int, int, int], universe: pygame.Surface
+    ):
         self.universe: pygame.Surface = universe
         self.radius: float = radius
         # Double size of box, because radius can get twice the size
         self.width_center: float = radius + (radius)
         self.height_center: float = radius + (radius)
-        self.size: Tuple[float] = (self.width_center * 2, self.height_center * 2)
+        self.size: Tuple[float, float] = (self.width_center * 2, self.height_center * 2)
         self.blob_font: pygame.font.Font = pygame.font.Font(
             resource_path(DISPLAY_FONT), BLOB_FONT_SIZE
         )
-        self.position: Tuple[int] = (0, 0, 0)
+        self.position: Tuple[float, float, float] = (0, 0, 0)
         self.animation_scale_div: float = 0.15
         self.animation_cache_size: int = round(1 / self.animation_scale_div)
         self.animation_radius: float = self.radius * BlobSurface.LIGHT_RADIUS_MULTI
-        self.color: Tuple[int] = color
-        self.colorkey: Tuple[int] = (0, 0, 0)
+        self.color: Tuple[int, int, int] = color
+        self.colorkey: Tuple[int, int, int] = (0, 0, 0)
         self.light_radius: float = self.animation_radius
         self.light_flag: int = pygame.BLEND_RGB_ADD
-        self.light_color: Tuple[int] = (75, 75, 75)
-        self.light_cache: np.ndarray[pygame.Surface] = np.empty(
+        self.light_color: Tuple[int, int, int] = (75, 75, 75)
+        self.light_cache: npt.NDArray = np.empty(
             [self.animation_cache_size + 1], dtype=pygame.Surface
         )
         self.light_index: int = self.animation_cache_size
         self.shade_radius: float = self.animation_radius
-        self.shade_color: Tuple[int] = color
-        self.shade_cache: np.ndarray[pygame.Surface] = np.empty(
+        self.shade_color: Tuple[int, int, int] = color
+        self.shade_cache: npt.NDArray = np.empty(
             [self.animation_cache_size + 1], dtype=pygame.Surface
         )
         self.shade_index: int = self.animation_cache_size
@@ -125,24 +128,26 @@ class BlobSurface:
         self.draw_alpha_image()
         self.draw_mask()
 
-    def resize(self, radius: float) -> None:
+    def resize(self: Self, radius: float) -> None:
         """Update the radius"""
         self.radius = radius
 
-    def get_size(self) -> Tuple[float]:
+    def get_size(self: Self) -> Tuple[float, float]:
         """Returns the largest possible size for this instance (not affected by resize())"""
         return self.size
 
-    def update_center_blob(self, x: float, y: float, z: float) -> None:
+    def update_center_blob(self: Self, x: float, y: float, z: float) -> None:
         """Update the x,y,z of the center blob (the blob all other blobs get lighting from)"""
         BlobSurface.center_blob_x = x
         BlobSurface.center_blob_y = y
         BlobSurface.center_blob_z = z
 
-    def draw_alpha_image(self) -> None:
-        """Create/draw the prerequisite for the mask. Called from get_lighting_blob()
+    def draw_alpha_image(self: Self) -> None:
+        """
+        Create/draw the prerequisite for the mask. Called from get_lighting_blob()
         for each draw, but also in the constructor because it's needed to create the mask.
-        Created the first time it's called, just a fill and draw every time after."""
+        Created the first time it's called, just a fill and draw every time after.
+        """
 
         if self.alpha_image is None:
             self.alpha_image = pygame.Surface(self.get_size()).convert_alpha()
@@ -150,10 +155,12 @@ class BlobSurface:
 
         self.alpha_image.fill(self.color)
 
-    def draw_mask(self) -> None:
-        """Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
+    def draw_mask(self: Self) -> None:
+        """
+        Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
         of the main blob. This is called in the constructor and from get_lighting_blob().
-        Created the first time it's called, just a fill and draw every time after."""
+        Created the first time it's called, just a fill and draw every time after.
+        """
         if self.mask_image is None:
             self.mask_image = pygame.Surface(self.get_size(), pygame.SRCALPHA)
 
@@ -165,8 +172,9 @@ class BlobSurface:
             self.radius,
         )
 
-    def draw_light(self) -> None:
-        """Create/draw the overlay the will add shine to the blob in the direction of the center blob.
+    def draw_light(self: Self) -> None:
+        """
+        Create/draw the overlay the will add shine to the blob in the direction of the center blob.
         Called from check_animation_radius().
         This is an array of cached sizes, selected via the value of self.light_index.
         Each is created the first time it's called, and just a fill and draw every time after.
@@ -190,8 +198,9 @@ class BlobSurface:
 
         self.light_radius = self.light_cache[self.light_index].get_width() / 2
 
-    def draw_shade(self) -> None:
-        """Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
+    def draw_shade(self: Self) -> None:
+        """
+        Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
         direction of the center blob. Called from check_animation_radius().
         This is an array of cached sizes, selected via the value of self.light_index.
         Each is created the first time it's called, and just a fill and draw every time after.
@@ -215,10 +224,12 @@ class BlobSurface:
 
         self.shade_radius = self.shade_cache[self.shade_index].get_width() / 2
 
-    def get_lighting_blob(self) -> pygame.Surface:
-        """Create the final package for drawing. This puts all the pieces together. Everything
+    def get_lighting_blob(self: Self) -> pygame.Surface:
+        """
+        Create the final package for drawing. This puts all the pieces together. Everything
         is cached for every call, it just does a fill/draw on all the pieces. This is called
-        by the draw() method."""
+        by the draw() method.
+        """
 
         self.draw_alpha_image()
         self.draw_mask()
@@ -250,15 +261,17 @@ class BlobSurface:
 
         return self.alpha_image
 
-    def check_animation_radius(self, z: float) -> None:
-        """This points the lighted up side of the blob toward the center
+    def check_animation_radius(self: Self, z: float) -> None:
+        """
+        This points the lighted up side of the blob toward the center
         blob, the shade side opposite of the center blob, and ensures
-        radius is honoring z depth and realistic curvature."""
-        scale_zone_start = BlobSurface.center_blob_z * 0.95
-        scale_zone = scale_zone_start * 0.2
-        scale_zone_stop = scale_zone_start - scale_zone
+        radius is honoring z depth and realistic curvature.
+        """
+        scale_zone_start: float = BlobSurface.center_blob_z * 0.95
+        scale_zone: float = scale_zone_start * 0.2
+        scale_zone_stop: float = scale_zone_start - scale_zone
 
-        diff = 0
+        diff: float = 0.0
 
         if z > 0 and z < BlobSurface.center_blob_z * 2:
             diff = BlobSurface.center_blob_z - abs(BlobSurface.center_blob_z - z)
@@ -296,11 +309,13 @@ class BlobSurface:
         self.draw_light()
         self.draw_shade()
 
-    def get_lighting_direction(self) -> Tuple[float]:
-        """Get the x,y,z coordinates for the center of the overlay. This will point to the
+    def get_lighting_direction(self: Self) -> Tuple[float, float, float, float]:
+        """
+        Get the x,y,z coordinates for the center of the overlay. This will point to the
         center blob relative to offset of the main blob center in this instance (i.e., if a line were drawn between the center of
         the main blob and the center of the overlay, the offset would point to the center blob). This is called by the get_lighting_blob()
-        method."""
+        method.
+        """
         x1 = self.position[0]
         y1 = self.position[1]
         z1 = self.position[2]
@@ -324,7 +339,9 @@ class BlobSurface:
 
         return (lx, ly, sx, sy)
 
-    def draw(self, pos: Tuple[float] = None, lighting: bool = True) -> None:
+    def draw(
+        self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
+    ) -> None:
         """Draw the blob to the universe surface. Send pos,False to turn off lighting effects"""
         if pos is not None:
             self.position = pos
@@ -338,8 +355,11 @@ class BlobSurface:
                 ),
             )
         else:
+            self.alpha_image.blit(
+                self.mask_image, (0, 0), special_flags=pygame.BLEND_RGBA_MIN
+            )
             self.universe.blit(
-                self,
+                self.alpha_image,
                 (
                     self.position[0] - self.width_center,
                     self.position[1] - self.height_center,
@@ -363,10 +383,12 @@ class BlobSurface:
         # )
 
     def draw_as_center_blob(
-        self, pos: Tuple[float] = None, lighting: bool = True
+        self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
     ) -> None:
-        """Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
-        pos,False to turn off glowing effect"""
+        """
+        Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
+        pos,False to turn off glowing effect
+        """
         if pos is not None:
             self.position = pos
 

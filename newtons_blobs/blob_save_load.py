@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Self
 import pygame
 from .resources import home_path_plus
 from .globals import *
@@ -47,11 +47,11 @@ class BlobSaveLoad:
 
     """
 
-    def __init__(self, savable_loadables: List[SavableLoadablePrefs]):
+    def __init__(self: Self, savable_loadables: List[SavableLoadablePrefs]):
         self.savable_loadables: List[SavableLoadablePrefs] = savable_loadables
         self.json_data: Dict[str, Any] = {}
 
-    def save(self, get_prefs: bool = True) -> None:
+    def save(self: Self, get_prefs: bool = True) -> None:
         """Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval"""
         if get_prefs:
             for savable_loadable in self.savable_loadables:
@@ -60,7 +60,9 @@ class BlobSaveLoad:
         with open(home_path_plus((".newton",), "saved.json"), "w") as json_file:
             json.dump(self.json_data, json_file, indent=3)
 
-    def load(self, universe: pygame.Surface, set_prefs: bool = True) -> bool:
+    def load(
+        self: Self, universe: Optional[pygame.Surface] = None, set_prefs: bool = True
+    ) -> bool:
         """
         Loads the saved json file (if exists) and sends to the set_prefs() of the savable_loadables objects
         """
@@ -76,14 +78,14 @@ class BlobSaveLoad:
                 savable_loadable.set_prefs(self.json_data, universe)
         return True
 
-    def load_value(self, key: str) -> Any:
+    def load_value(self: Self, key: str) -> Any:
         """Returns the value of the single key in the json_data file, has no effect on blob_runner, blob_plotter"""
         if self.load(None, False):
             return self.json_data[key]
 
         return None
 
-    def save_value(self, key: str, value: Any) -> None:
+    def save_value(self: Self, key: str, value: Any) -> None:
         """Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter"""
         if self.load(None, False):
             self.json_data[key] = value
