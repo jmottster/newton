@@ -6,7 +6,7 @@ Class file for setting up initial positions and velocities of blobs and maintain
 by Jason Mott, copyright 2024
 """
 
-from typing import Dict
+from typing import Any, Dict
 import pygame
 import numpy as np
 import math, random
@@ -117,7 +117,7 @@ class BlobPlotter:
         self.square_grid: bool = SQUARE_BLOB_PLOTTER
         self.start_perfect_orbit: bool = START_PERFECT_ORBIT
 
-    def get_prefs(self, data: dict) -> None:
+    def get_prefs(self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["universe_size_w"] = self.universe_size_w
         data["universe_size_h"] = self.universe_size_h
@@ -134,7 +134,7 @@ class BlobPlotter:
             blob.get_prefs(blob_data)
             data["blobs"].append(blob_data)
 
-    def set_prefs(self, data: dict, universe: pygame.Surface) -> None:
+    def set_prefs(self, data: Dict[str, Any], universe: pygame.Surface) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it and writing to the universe instance for display

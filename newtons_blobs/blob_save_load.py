@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import json
-from typing import Any, List
+from typing import Any, Dict, List
 import pygame
 from .resources import home_path_plus
 from .globals import *
@@ -49,7 +49,7 @@ class BlobSaveLoad:
 
     def __init__(self, savable_loadables: List[SavableLoadablePrefs]):
         self.savable_loadables: List[SavableLoadablePrefs] = savable_loadables
-        self.json_data: dict = {}
+        self.json_data: Dict[str, Any] = {}
 
     def save(self, get_prefs: bool = True) -> None:
         """Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval"""

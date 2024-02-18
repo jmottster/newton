@@ -6,7 +6,7 @@ The class that runs the application
 by Jason Mott, copyright 2024
 """
 
-from typing import Callable, Dict
+from typing import Any, Callable, Dict
 import pygame
 
 from .blob_save_load import BlobSaveLoad
@@ -171,7 +171,7 @@ class BlobRunner:
         self.toggle_save_load_on: str = f"Toggled auto save/load to on"
         self.toggle_save_load_off: str = f"Toggled auto save/load to off"
 
-    def get_prefs(self, data: dict) -> None:
+    def get_prefs(self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["auto_save_load"] = self.auto_save_load
         data["running"] = self.running
@@ -182,7 +182,7 @@ class BlobRunner:
         data["fullscreen_save_w"] = self.fullscreen_save_w
         data["fullscreen_save_h"] = self.fullscreen_save_h
 
-    def set_prefs(self, data: dict, universe: pygame.Surface = None) -> None:
+    def set_prefs(self, data: Dict[str, Any], universe: pygame.Surface = None) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it. universe param is ignored, put there to conform with SavableLoadablePrefs protocol

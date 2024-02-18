@@ -6,7 +6,7 @@ Class file for the physics attributes of blobs that will interact with each othe
 by Jason Mott, copyright 2024
 """
 
-from typing import Tuple
+from typing import Any, Dict, Tuple
 from .globals import *
 from .blob_surface import BlobSurface
 
@@ -140,7 +140,7 @@ class MassiveBlob:
 
         self.fake_blob_z()
 
-    def get_prefs(self, data: dict) -> None:
+    def get_prefs(self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
         data["radius"] = self.orig_radius[2]
