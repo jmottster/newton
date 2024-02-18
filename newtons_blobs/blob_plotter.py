@@ -11,7 +11,9 @@ import pygame
 import numpy as np
 import math, random
 from .globals import *
-from .massive_blob import MassiveBlob, BlobSurface
+from .massive_blob import MassiveBlob
+from .blob_surface import BlobSurface
+from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -93,9 +95,11 @@ class BlobPlotter:
         self.scaled_universe_height: float = universe_h * SCALE_UP
         self.scaled_display_width: float = display_w * SCALE_UP
         self.scaled_display_height: float = display_h * SCALE_UP
+
         MassiveBlob.center_blob_x = universe_w / 2
         MassiveBlob.center_blob_y = universe_h / 2
         MassiveBlob.center_blob_z = universe_h / 2
+        bp.set_gravitational_range(self.scaled_universe_height)
 
         # Preferences/states
         self.blobs: np.ndarray[MassiveBlob] = np.empty([NUM_BLOBS], dtype=MassiveBlob)
@@ -281,9 +285,9 @@ class BlobPlotter:
                 return
             for blob2 in blobs:
                 if (id(blob2) != id(blob1)) and (checked.get(id(blob2)) is None):
-                    blob1.collision_detection(blob2)
+                    bp.collision_detection(blob1, blob2)
                     if blob1.name != CENTER_BLOB_NAME:
-                        blob1.gravitational_pull(blob2, G)
+                        bp.gravitational_pull(blob1, blob2)
 
         def check_grid(blob: MassiveBlob) -> None:
             pg = self.proximity_grid
@@ -304,7 +308,7 @@ class BlobPlotter:
                         )
 
         for i in range(1, len(self.blobs)):
-            self.blobs[0].gravitational_pull(self.blobs[i], G)
+            bp.gravitational_pull(self.blobs[0], self.blobs[i])
 
         # dirty hack to minimize bouncing off center blob (i.e., since this will run again in loop, that double
         #   check of collision with center blob makes getting sucked into center blob more likely)

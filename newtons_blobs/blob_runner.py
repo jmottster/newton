@@ -201,8 +201,10 @@ class BlobRunner:
             self.keyboard_events[pygame.K_f]()
 
     def load_keyboard_events(self) -> Dict[int, Callable[[None], None]]:
-        """Creates and populates a dict that holds function references for keyboard events (also creates the functions),
-        returns the dict"""
+        """
+        Creates and populates a dict that holds function references for keyboard events (also creates the functions),
+        returns the dict
+        """
         keyboard_events: Dict[int, Callable[[None], None]] = {}
 
         def quit_game() -> None:
