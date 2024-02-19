@@ -23,3 +23,5 @@ from .massive_blob import MassiveBlob
 from .blob_surface import BlobSurface
 from .blob_save_load import BlobSaveLoad
 from .blob_physics import BlobPhysics
+from .blob_universe import BlobUniverse
+from .blob_plugin_factory import BlobPluginFactory

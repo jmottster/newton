@@ -6,7 +6,7 @@ Class file for the physics attributes of blobs that will interact with each othe
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Dict, Tuple, Self
+from typing import Any, ClassVar, Dict, Tuple, Self
 from .globals import *
 from .blob_surface import BlobSurface
 
@@ -94,9 +94,9 @@ class MassiveBlob:
         "pause",
     )
 
-    center_blob_x: float = UNIVERSE_SIZE_W / 2
-    center_blob_y: float = UNIVERSE_SIZE_H / 2
-    center_blob_z: float = UNIVERSE_SIZE_D / 2
+    center_blob_x: ClassVar[float] = UNIVERSE_SIZE_W / 2
+    center_blob_y: ClassVar[float] = UNIVERSE_SIZE_H / 2
+    center_blob_z: ClassVar[float] = UNIVERSE_SIZE_D / 2
 
     def __init__(
         self: Self,
@@ -187,7 +187,7 @@ class MassiveBlob:
         z = self.z * SCALE_DOWN
 
         if self.name != CENTER_BLOB_NAME:
-            self.blob_surface.draw((x, y, z), LIGHTING)  # TODO fix
+            self.blob_surface.draw((x, y, z), LIGHTING)
         else:
             MassiveBlob.center_blob_x = x
             MassiveBlob.center_blob_y = y

@@ -7,13 +7,15 @@ by Jason Mott, copyright 2024
 """
 
 from typing import Any, Dict, Optional, Tuple, Self
-import pygame
 import numpy as np
 import numpy.typing as npt
 import math, random
+
+from .blob_plugin_factory import BlobPluginFactory
 from .globals import *
 from .massive_blob import MassiveBlob
 from .blob_surface import BlobSurface
+from .blob_universe import BlobUniverse
 from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
@@ -49,14 +51,14 @@ class BlobPlotter:
     get_prefs(data: dict) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
-    set_prefs(data, data: dict, universe: pygame.Surface) -> None
+    set_prefs(data, data: dict, universe: BlobUniverse) -> None
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it and writing to the universe instance for display
 
-    start_over(universe: pygame.Surface) -> None
+    start_over(universe: BlobUniverse) -> None
         Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)
 
-    plot_blobs(universe: pygame.Surface) -> None
+    plot_blobs(universe: BlobUniverse) -> None
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
         universe is the object reference needed to instantiate a MassiveBlob
 
@@ -69,7 +71,7 @@ class BlobPlotter:
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
         blobs within its proximity grid range
 
-    plot_center_blob(universe: pygame.Surface) -> None
+    plot_center_blob(universe: BlobUniverse) -> None
         Creates and places the center blob and adds it to self.blobs[0]
 
     plot_square_grid() -> None
@@ -92,6 +94,7 @@ class BlobPlotter:
         universe_h: float,
         display_w: float,
         display_h: float,
+        blob_factory: BlobPluginFactory,
     ):
 
         self.universe_size_w: float = universe_w
@@ -100,6 +103,7 @@ class BlobPlotter:
         self.scaled_universe_height: float = universe_h * SCALE_UP
         self.scaled_display_width: float = display_w * SCALE_UP
         self.scaled_display_height: float = display_h * SCALE_UP
+        self.blob_factory: BlobPluginFactory = blob_factory
 
         MassiveBlob.center_blob_x = universe_w / 2
         MassiveBlob.center_blob_y = universe_h / 2
@@ -110,7 +114,7 @@ class BlobPlotter:
         self.blobs: npt.NDArray = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed: int = 0
         self.blobs_escaped: int = 0
-        self.z_axis: Dict[float, np.ndarray[MassiveBlob]] = {}
+        self.z_axis: Dict[float, npt.NDArray] = {}
         self.proximity_grid: npt.NDArray = np.empty(
             [
                 int(GRID_KEY_UPPER_BOUND),
@@ -139,9 +143,7 @@ class BlobPlotter:
             blob.get_prefs(blob_data)
             data["blobs"].append(blob_data)
 
-    def set_prefs(
-        self: Self, data: Dict[str, Any], universe: Optional[pygame.Surface] = None
-    ) -> None:
+    def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it and writing to the universe instance for display
@@ -161,7 +163,9 @@ class BlobPlotter:
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
                 blob_pref["name"],
-                BlobSurface(blob_pref["radius"], blob_pref["color"], universe),
+                self.blob_factory.new_blob_surface(
+                    blob_pref["radius"], blob_pref["color"]
+                ),
                 blob_pref["mass"],
                 blob_pref["x"],
                 blob_pref["y"],
@@ -174,21 +178,21 @@ class BlobPlotter:
             self.add_z_axis(self.blobs[i])
             i += 1
 
-    def start_over(self: Self, universe: pygame.Surface) -> None:
+    def start_over(self: Self) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis.clear()
-        self.plot_blobs(universe)
+        self.plot_blobs()
 
-    def plot_blobs(self: Self, universe: pygame.Surface) -> None:
+    def plot_blobs(self: Self) -> None:
         """
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
         universe is the object reference needed to instantiate a MassiveBlob
         """
 
-        self.plot_center_blob(universe)
+        self.plot_center_blob()
 
         # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
@@ -218,7 +222,7 @@ class BlobPlotter:
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
                 str(i),
-                BlobSurface(radius, COLORS[color], universe),
+                self.blob_factory.new_blob_surface(radius, COLORS[color]),
                 mass,
                 0,
                 0,
@@ -287,7 +291,7 @@ class BlobPlotter:
         checked: Dict[int, int] = {}
         self.z_axis.clear()
 
-        def check_blobs(blob1: MassiveBlob, blobs: np.ndarray[MassiveBlob]) -> None:
+        def check_blobs(blob1: MassiveBlob, blobs: npt.NDArray) -> None:
             if blobs is None:
                 return
             for blob2 in blobs:
@@ -331,7 +335,7 @@ class BlobPlotter:
 
             checked[id(self.blobs[i])] = 1
 
-    def plot_center_blob(self: Self, universe: pygame.Surface) -> None:
+    def plot_center_blob(self: Self) -> None:
         """Creates and places the center blob and adds it to self.blobs[0]"""
         scaled_half_universe_h = self.scaled_universe_height / 2
         scaled_half_universe_w = self.scaled_universe_width / 2
@@ -344,7 +348,7 @@ class BlobPlotter:
         self.blobs[0] = MassiveBlob(
             self.universe_size_h,
             CENTER_BLOB_NAME,
-            BlobSurface(CENTER_BLOB_RADIUS, CENTER_BLOB_COLOR, universe),
+            self.blob_factory.new_blob_surface(CENTER_BLOB_RADIUS, CENTER_BLOB_COLOR),
             CENTER_BLOB_MASS,
             x,
             y,
@@ -512,11 +516,11 @@ class BlobPlotter:
         # Phew, let's instantiate this puppy . . .
         blob.update_pos_vel(
             x,
-            z,
             y,
+            z,
             velocityx,
-            velocityz,
             velocityy,
+            velocityz,
         )
 
         self.add_z_axis(blob)

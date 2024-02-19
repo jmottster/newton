@@ -27,7 +27,7 @@ AU = 149.6e6 * 1000  # 1 Astronomical Unit
 
 AUTO_SAVE_LOAD = True
 # Change to scale the size of universe (thus window)
-CLOCK_FPS = False
+CLOCK_FPS = True
 LIGHTING = True
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixels to equal 1 AU

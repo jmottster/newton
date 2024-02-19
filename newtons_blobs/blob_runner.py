@@ -6,13 +6,15 @@ The class that runs the application
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Callable, Dict, Optional, Self
-import pygame
+from typing import Any, Callable, Dict, Self, cast
 
-from .blob_save_load import BlobSaveLoad
 from .resources import resource_path
+from .blob_plugin_factory import BlobPluginFactory
+from .blob_save_load import BlobSaveLoad
 from .globals import *
 from .blob_plotter import BlobPlotter
+from .blob_universe import BlobUniverse
+from .blob_display import BlobDisplay
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -21,44 +23,6 @@ __version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
-
-
-class FPS:
-    """
-    An encapsulation of the fps clock, with display output functionality added
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-    render(display: pygame.Surface, x: float, y: float) -> None
-        Renders the fps to the display object at x,y coordinates
-
-
-    """
-
-    def __init__(self: Self):
-        self.clock: pygame.time.Clock = pygame.time.Clock()
-        self.font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
-        )
-        self.text: pygame.Surface = self.font.render(
-            f"FPS {round(self.clock.get_fps(), 2)}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-
-    def render(self: Self, display: pygame.Surface, x: float, y: float) -> None:
-        """Renders the fps to the display object at x,y coordinates"""
-        self.text = self.font.render(
-            f"FPS {round(self.clock.get_fps(), 2)}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        display.blit(self.text, (x, y))
 
 
 class BlobRunner:
@@ -115,23 +79,11 @@ class BlobRunner:
     DAYS = HOURS * 24
     YEARS = DAYS * 365.25
 
-    def __init__(self: Self):
+    def __init__(self: Self, blob_factory: BlobPluginFactory):
 
-        pygame.init()
-
-        # Set up the window, frame rate clock, and fonts
-        self.universe: pygame.Surface = pygame.Surface(
-            [UNIVERSE_SIZE_W, UNIVERSE_SIZE_H]
-        )
-        self.display: pygame.Surface = self.init_display()
-        self.img: pygame.Surface = pygame.image.load(resource_path(WINDOW_ICON))
-        self.fps: FPS = FPS()
-        self.stat_font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
-        )
-
-        pygame.display.set_caption(WINDOW_TITLE)
-        pygame.display.set_icon(self.img)
+        # Set up the rendering objects
+        self.universe: BlobUniverse = blob_factory.get_blob_universe()
+        self.display: BlobDisplay = blob_factory.get_blob_display()
 
         # Get all the blobs ready to roll
         self.blob_plotter: BlobPlotter = BlobPlotter(
@@ -139,6 +91,7 @@ class BlobRunner:
             self.universe.get_height(),
             self.display.get_width(),
             self.display.get_height(),
+            blob_factory,
         )
         self.blob_save_load: BlobSaveLoad = BlobSaveLoad([self, self.blob_plotter])
 
@@ -182,9 +135,7 @@ class BlobRunner:
         data["fullscreen_save_w"] = self.fullscreen_save_w
         data["fullscreen_save_h"] = self.fullscreen_save_h
 
-    def set_prefs(
-        self: Self, data: Dict[str, Any], universe: Optional[pygame.Surface] = None
-    ) -> None:
+    def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it. universe param is ignored, put there to conform with SavableLoadablePrefs protocol
@@ -200,7 +151,7 @@ class BlobRunner:
 
         if self.fullscreen:
             self.fullscreen = False
-            self.keyboard_events[pygame.K_f]()
+            self.keyboard_events[self.display.get_key_code("f")]()
 
     def load_keyboard_events(self: Self) -> Dict[int, Callable[[], None]]:
         """
@@ -224,7 +175,7 @@ class BlobRunner:
 
         def start_over() -> None:
             self.elapsed_time = 0
-            self.blob_plotter.start_over(self.universe)
+            self.blob_plotter.start_over()
 
         def toggle_square_grid() -> None:
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -246,15 +197,15 @@ class BlobRunner:
 
         def toggle_fullscreen() -> None:
             if self.fullscreen:
-                pygame.display.set_mode(
+                self.display.set_mode(
                     (self.fullscreen_save_w, self.fullscreen_save_h),
-                    pygame.RESIZABLE,
+                    BlobDisplay.RESIZABLE,
                 )
                 self.fullscreen = False
             else:
                 self.fullscreen_save_w = self.display.get_width()
                 self.fullscreen_save_h = self.display.get_height()
-                pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                self.display.set_mode((0, 0), BlobDisplay.FULLSCREEN)
                 self.fullscreen = True
 
         def toggle_auto_save_load() -> None:
@@ -266,29 +217,16 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
-        keyboard_events[pygame.K_e] = toggle_auto_save_load
-        keyboard_events[pygame.K_q] = quit_game
-        keyboard_events[pygame.K_SPACE] = pause_game
-        keyboard_events[pygame.K_d] = toggle_stats
-        keyboard_events[pygame.K_s] = start_over
-        keyboard_events[pygame.K_a] = toggle_square_grid
-        keyboard_events[pygame.K_w] = toggle_perfect_orbit
-        keyboard_events[pygame.K_f] = toggle_fullscreen
+        keyboard_events[self.display.get_key_code("e")] = toggle_auto_save_load
+        keyboard_events[self.display.get_key_code("q")] = quit_game
+        keyboard_events[self.display.get_key_code("space")] = pause_game
+        keyboard_events[self.display.get_key_code("d")] = toggle_stats
+        keyboard_events[self.display.get_key_code("s")] = start_over
+        keyboard_events[self.display.get_key_code("a")] = toggle_square_grid
+        keyboard_events[self.display.get_key_code("w")] = toggle_perfect_orbit
+        keyboard_events[self.display.get_key_code("f")] = toggle_fullscreen
 
         return keyboard_events
-
-    def init_display(self: Self) -> pygame.Surface:
-        """Initiates and returns a pygame display instance configured for the current monitor."""
-        current_height = pygame.display.get_desktop_sizes()[0][1]
-
-        if current_height < DISPLAY_SIZE_H:
-            return pygame.display.set_mode(
-                [current_height, current_height - 70], pygame.RESIZABLE
-            )
-
-        return pygame.display.set_mode(
-            [DISPLAY_SIZE_W, DISPLAY_SIZE_H], pygame.RESIZABLE
-        )
 
     def run(self: Self) -> None:
         """
@@ -299,43 +237,35 @@ class BlobRunner:
         self.auto_save_load = self.blob_save_load.load_value("auto_save_load")
 
         if self.auto_save_load:
-            if not self.blob_save_load.load(self.universe):
-                self.blob_plotter.plot_blobs(self.universe)
+            if not self.blob_save_load.load():
+                self.blob_plotter.plot_blobs()
         else:
-            self.blob_plotter.plot_blobs(self.universe)
+            self.blob_plotter.plot_blobs()
 
         while self.running:
-            # Check for events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                if event.type == pygame.KEYDOWN:
-                    if self.keyboard_events.get(event.key) is not None:
-                        self.keyboard_events[event.key]()
+            self.display.check_events(self.keyboard_events)
 
             self.render_frame()
 
-        # While loop broke! Time to quit.
         if self.auto_save_load:
             self.running = True
             self.blob_save_load.save()
         else:
             self.blob_save_load.save_value("auto_save_load", False)
-        pygame.quit()
+        self.display.quit()
 
     def render_frame(self: Self) -> None:
         """Calls all the draw methods to display a frame on the screen/monitor"""
 
-        # Fill the background, then draw stuff
         self.display.fill(BACKGROUND_COLOR)
         self.universe.fill(BACKGROUND_COLOR)
 
         self.blob_plotter.draw_blobs()
 
-        self.draw_universe()
+        self.display.draw_universe(self.universe)
 
         if self.show_stats:
-            self.draw_stats(self.stat_font, self.message)
+            self.draw_stats(self.message)
             if self.message_counter > 0:
                 self.message_counter -= 1
             else:
@@ -345,113 +275,72 @@ class BlobRunner:
             self.display_elapsed_time()
 
             if CLOCK_FPS:
-                self.fps.render(
-                    self.display,
-                    20,
-                    self.display.get_height() - (self.fps.text.get_height() * 2) - 20,
+                self.display.fps_render(
+                    (20, self.display.get_height() - 20),
                 )
 
-        # Flip the display
-        pygame.display.flip()
+        self.display.update()
 
         if not self.paused:
-            # Apply changes
             self.blob_plotter.update_blobs()
-
             self.elapsed_time += 1
 
-        # ensure frame rate
-        self.fps.clock.tick(FRAME_RATE)
+        self.display.fps_clock_tick(FRAME_RATE)
 
-    def draw_universe(self: Self) -> None:
-        """Draws the universe surface onto the display surface, for a frame of actual display to monitor."""
-        self.display.blit(
-            self.universe,
-            (
-                (self.display.get_width() - self.universe.get_width()) / 2,
-                (self.display.get_height() - self.universe.get_height()) / 2,
-            ),
-        )
-
-    def draw_stats(self: Self, stat_font: pygame.font.Font, message: str = "") -> None:
+    def draw_stats(self: Self, message: str = None) -> None:
         """
         Draws statistical information to the display instance, and if message is sent, will also draw that
         text in the middle of the display instance.
         """
         if message is not None:
             # Center, showing message, if any
-            message_center = stat_font.render(
+            self.display.blit_text(
                 message,
-                True,
-                (255, 255, 255),
-                BACKGROUND_COLOR,
-            )
-            self.display.blit(
-                message_center,
                 (
-                    (self.display.get_width() / 2) - (message_center.get_width() / 2),
-                    (self.display.get_height() / 2) - (message_center.get_height() / 2),
+                    (self.display.get_width() / 2),
+                    (self.display.get_height() / 2),
                 ),
+                (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_y),
             )
 
         # Top left, showing sun mass
-        stat_text_top_left = stat_font.render(
+        self.display.blit_text(
             f"Sun mass: {self.blob_plotter.blobs[0].mass}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_top_left,
             (
                 20,
                 20,
             ),
+            (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP),
         )
 
         # Top right, showing number of orbiting blobs
-        stat_text_top_right = stat_font.render(
+        self.display.blit_text(
             f"Orbiting blobs: {self.blob_plotter.blobs.size - 1}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_top_right,
             (
-                self.display.get_width() - stat_text_top_right.get_width() - 20,
+                self.display.get_width() - 20,
                 20,
             ),
+            (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_TOP),
         )
 
         # Bottom left, showing number of blobs swallowed by the sun
-        stat_text_bottom_left = stat_font.render(
+        self.display.blit_text(
             f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swallowed}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_bottom_left,
             (
                 20,
-                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
+                self.display.get_height() - 20,
             ),
+            (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM),
         )
 
         # Bottom right, showing number of blobs escaped the sun
-        stat_text_bottom_right = stat_font.render(
+        self.display.blit_text(
             f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
-        )
-        self.display.blit(
-            stat_text_bottom_right,
             (
-                self.display.get_width() - stat_text_bottom_right.get_width() - 20,
-                self.display.get_height() - stat_text_bottom_left.get_height() - 20,
+                self.display.get_width() - 20,
+                self.display.get_height() - 20,
             ),
+            (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
         )
 
     def get_elapsed_time_in(self: Self, divisor: float) -> float:
@@ -464,11 +353,8 @@ class BlobRunner:
 
     def display_elapsed_time(self: Self) -> None:
         """Draws the elapsed time to the display instance"""
-
-        self.time_text = self.stat_font.render(
+        self.display.blit_text(
             f"Years elapsed: {self.get_elapsed_time_in(self.YEARS)}",
-            True,
-            (255, 255, 255),
-            BACKGROUND_COLOR,
+            (20, 20),
+            (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP_PLUS),
         )
-        self.display.blit(self.time_text, (20, self.time_text.get_height() + 20))
