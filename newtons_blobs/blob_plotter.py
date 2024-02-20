@@ -44,23 +44,23 @@ class BlobPlotter:
 
     display_h : float
         The height of the drawing surface that will represent the display screen
-
+    blob_factory: BlobPluginFactory
+        An instance of BlobFactory loaded up with the required drawing libraries
 
     Methods
     -------
     get_prefs(data: dict) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
-    set_prefs(data, data: dict, universe: BlobUniverse) -> None
-        Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
-        saved in it and writing to the universe instance for display
+    set_prefs(data, data: dict) -> None
+        Sets this instance's variables according to the key/value pairs in the provided dict, restoring the state
+        saved in it
 
-    start_over(universe: BlobUniverse) -> None
-        Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)
+    start_over() -> None
+        Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()
 
-    plot_blobs(universe: BlobUniverse) -> None
-        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
-        universe is the object reference needed to instantiate a MassiveBlob
+    plot_blobs() -> None
+        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences
 
     draw_blobs() -> None
         Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
@@ -146,7 +146,7 @@ class BlobPlotter:
     def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
-        saved in it and writing to the universe instance for display
+        saved in it
         """
         self.universe_size_w = data["universe_size_w"]
         self.universe_size_h = data["universe_size_h"]
@@ -179,7 +179,7 @@ class BlobPlotter:
             i += 1
 
     def start_over(self: Self) -> None:
-        """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs(universe)"""
+        """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
@@ -188,8 +188,7 @@ class BlobPlotter:
 
     def plot_blobs(self: Self) -> None:
         """
-        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences.
-        universe is the object reference needed to instantiate a MassiveBlob
+        Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences
         """
 
         self.plot_center_blob()

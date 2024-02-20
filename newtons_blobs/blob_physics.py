@@ -34,11 +34,11 @@ class BlobPhysics:
         or it wraps to other end of screen if wrap==True (wrap currently not working)
 
     collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None
-        Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
+        Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
 
     gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob) -> None
-        Changes velocity of self and provided blob in relation to gravitational pull with each other
+        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
     """
 
     g: float = G
@@ -115,7 +115,7 @@ class BlobPhysics:
     @staticmethod
     def collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None:
         """
-        Checks to see if this blob is colliding with provided blob, and adjusts velocity of each
+        Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
         """
         dd = blob1.orig_radius[0] + blob2.orig_radius[0]
@@ -186,7 +186,7 @@ class BlobPhysics:
     @staticmethod
     def gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob) -> None:
         """
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other.
+        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         """
 
         dx = blob2.x - blob1.x

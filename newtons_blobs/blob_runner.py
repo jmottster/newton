@@ -32,6 +32,8 @@ class BlobRunner:
 
     Attributes
     ----------
+    blob_factory: BlobPluginFactory
+        An instance of BlobFactory loaded up with the required drawing libraries
 
     Methods
     -------
@@ -46,18 +48,12 @@ class BlobRunner:
         Creates and populates a dict that holds function references for keyboard events (also creates the functions),
         returns the dict
 
-    init_display() -> pygame.Surface
-        Initiates and returns a pygame display instance configured for the current monitor.
-
     run() -> None
         Starts the application and maintains the while loop. This is the only method that ever gets called
         from an external source.
 
     render_frame() -> None
         Calls all the draw methods to display a frame on the screen/monitor
-
-    draw_universe() -> None
-        Draws the universe surface onto the display surface, for a frame of actual display to monitor.
 
     draw_stats(stat_font: pygame.font.Font, message: str =None) -> None
         Draws statistical information to the display instance, and if message is sent, will also draw that

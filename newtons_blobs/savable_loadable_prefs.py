@@ -29,20 +29,20 @@ class SavableLoadablePrefs(Protocol):
     Methods
     -------
     get_prefs(data: dict) -> None
-        Sending a dict to this method will load the dict up with attributes that are desired to be saved.
+        Sending a dict to this method will load the dict up with attributes that are desired to be saved
 
     set_prefs(data: dict) -> None
-        Sending a dict and a pygame.Surface instances to this method, to it's implementer can load up values from it (that it saved when
-        populating dict in get_prefs()).
+        Send a dict instances to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs())
     """
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
-        """Sending a dict to this method will load the dict up with attributes that are desired to be saved."""
+        """Sending a dict to this method will load the dict up with attributes that are desired to be saved"""
         pass
 
     def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
-        Sending a dict and a pygame.Surface instances to this method, to it's implementer can load up values from it (that it saved when
-        populating dict in get_prefs()).
+        Send a dict instances to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs())
         """
         pass

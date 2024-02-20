@@ -1,7 +1,8 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-
+An implementation class of the interface for a plugin object for providing
+a graphics/drawing library to this simulator, based on Pygame
 
 by Jason Mott, copyright 2024
 """
@@ -27,6 +28,26 @@ __status__ = "In Progress"
 
 
 class BlobPygameFactory:
+    """
+    An implementation class of the interface for a plugin object for providing
+    a graphics/drawing library to this simulator, based on Pygame
+
+    Attributes
+    ----------
+
+    Methods
+    -------
+    new_blob_surface(self: Self, radius: float, color: Tuple[int, int, int]) -> BlobSurface
+        Factory method for instantiating instances of an implementor of the BlobSurface interface
+
+    get_blob_universe(self: Self) -> BlobUniverse
+        Returns a the single instance of a Universe object, intended to be the area that is drawn on.
+        Can be larger than the display area, which represents the area shown on one's monitor
+
+    get_blob_display(self: Self) -> BlobDisplay
+        Returns the single instance of a Display object, intended to be the area of the Universe object
+        that is shown on one's monitor
+    """
 
     def __init__(self: Self):
         self.py_universe: BlobUniversePygame = BlobUniversePygame(
@@ -39,13 +60,22 @@ class BlobPygameFactory:
     def new_blob_surface(
         self: Self, radius: float, color: Tuple[int, int, int]
     ) -> BlobSurface:
-        """Factory method for instantiating instances, as implementation is not known at runtime"""
+        """Factory method for instantiating instances of an implementor of the BlobSurface interface"""
         return cast(
             BlobSurface, BlobSurfacePygame(radius, color, self.get_blob_universe())
         )
 
     def get_blob_universe(self: Self) -> BlobUniverse:
+        """
+        Returns a the single instance of a Universe object, intended to be the area that is drawn on.
+        Can be larger than the display area, which represents the area shown on one's monitor
+
+        """
         return cast(BlobUniverse, self.py_universe)
 
     def get_blob_display(self: Self) -> BlobDisplay:
+        """
+        Returns the single instance of a Display object, intended to be the area of the Universe object
+        that is shown on one's monitor
+        """
         return cast(BlobDisplay, self.py_display)

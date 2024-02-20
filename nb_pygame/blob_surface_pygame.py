@@ -35,9 +35,8 @@ class BlobSurfacePygame:
         the size of the blob, by radius value
     color : tuple
         a three value tuple for RGB color value of blob
-    universe : A pygame.Surface object representing the universe space to draw blobs onto
-
-
+    universe : BlobUniverse
+        object representing the universe space to draw blobs onto
 
     Methods
     -------
@@ -52,6 +51,44 @@ class BlobSurfacePygame:
 
     update_center_blob(x: float, y: float, z: float) -> None
         Update the x,y,z of the center blob (the blob all other blobs get lighting from)
+
+    draw_alpha_image(self: Self) -> None
+        Create/draw the prerequisite for the mask. Called from get_lighting_blob()
+        for each draw, but also in the constructor because it's needed to create the mask.
+        Created the first time it's called, just a fill and draw every time after
+
+    draw_mask(self: Self) -> None
+        Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
+        of the main blob. This is called in the constructor and from get_lighting_blob().
+        Created the first time it's called, just a fill and draw every time after
+
+    draw_light(self: Self) -> None
+        Create/draw the overlay the will add shine to the blob in the direction of the center blob.
+        Called from check_animation_radius().
+        This is an array of cached sizes, selected via the value of self.light_index.
+        Each is created the first time it's called, and just a fill and draw every time after
+
+    draw_shade(self: Self) -> None
+        Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
+        direction of the center blob. Called from check_animation_radius().
+        This is an array of cached sizes, selected via the value of self.light_index.
+        Each is created the first time it's called, and just a fill and draw every time after
+
+    get_lighting_blob(self: Self) -> pygame.Surface
+        Create the final package for drawing. This puts all the pieces together. Everything
+        is cached for every call, it just does a fill/draw on all the pieces. This is called
+        by the draw() method
+
+    check_animation_radius(self: Self, z: float) -> None
+        This points the lighted up side of the blob toward the center
+        blob, the shade side opposite of the center blob, and ensures
+        radius is honoring z depth and realistic curvature
+
+    get_lighting_direction(self: Self) -> Tuple[float, float, float, float]
+        Get the x,y,z coordinates for the center of the overlay. This will point to the
+        center blob relative to offset of the main blob center in this instance (i.e., if a line were drawn between the center of
+        the main blob and the center of the overlay, the offset would point to the center blob). This is called by the get_lighting_blob()
+        method
 
     draw(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draws this blob to the universe surface, with the given position (or uses position already set),
@@ -134,7 +171,7 @@ class BlobSurfacePygame:
         self.draw_mask()
 
     def resize(self: Self, radius: float) -> None:
-        """Update the radius"""
+        """Sets a new radius for this blob"""
         self.radius = radius
 
     def get_size(self: Self) -> Tuple[float, float]:
@@ -151,7 +188,7 @@ class BlobSurfacePygame:
         """
         Create/draw the prerequisite for the mask. Called from get_lighting_blob()
         for each draw, but also in the constructor because it's needed to create the mask.
-        Created the first time it's called, just a fill and draw every time after.
+        Created the first time it's called, just a fill and draw every time after
         """
 
         if self.alpha_image is None:
@@ -164,7 +201,7 @@ class BlobSurfacePygame:
         """
         Create/draw the mask, which will hide the parts of the overlay that go beyond the boundary
         of the main blob. This is called in the constructor and from get_lighting_blob().
-        Created the first time it's called, just a fill and draw every time after.
+        Created the first time it's called, just a fill and draw every time after
         """
         if self.mask_image is None:
             self.mask_image = pygame.Surface(self.get_size(), pygame.SRCALPHA)
@@ -182,7 +219,7 @@ class BlobSurfacePygame:
         Create/draw the overlay the will add shine to the blob in the direction of the center blob.
         Called from check_animation_radius().
         This is an array of cached sizes, selected via the value of self.light_index.
-        Each is created the first time it's called, and just a fill and draw every time after.
+        Each is created the first time it's called, and just a fill and draw every time after
         """
         if self.light_cache[self.light_index] is None:
             width = self.light_radius * 2
@@ -208,7 +245,7 @@ class BlobSurfacePygame:
         Create/draw the overlay the will add shade (true color of blob) to the blob in the opposite
         direction of the center blob. Called from check_animation_radius().
         This is an array of cached sizes, selected via the value of self.light_index.
-        Each is created the first time it's called, and just a fill and draw every time after.
+        Each is created the first time it's called, and just a fill and draw every time after
         """
         if self.shade_cache[self.shade_index] is None:
             width = self.shade_radius * 2
@@ -233,7 +270,7 @@ class BlobSurfacePygame:
         """
         Create the final package for drawing. This puts all the pieces together. Everything
         is cached for every call, it just does a fill/draw on all the pieces. This is called
-        by the draw() method.
+        by the draw() method
         """
 
         self.draw_alpha_image()
@@ -270,7 +307,7 @@ class BlobSurfacePygame:
         """
         This points the lighted up side of the blob toward the center
         blob, the shade side opposite of the center blob, and ensures
-        radius is honoring z depth and realistic curvature.
+        radius is honoring z depth and realistic curvature
         """
         scale_zone_start: float = BlobSurfacePygame.center_blob_z * 0.95
         scale_zone: float = scale_zone_start * 0.2
@@ -321,7 +358,7 @@ class BlobSurfacePygame:
         Get the x,y,z coordinates for the center of the overlay. This will point to the
         center blob relative to offset of the main blob center in this instance (i.e., if a line were drawn between the center of
         the main blob and the center of the overlay, the offset would point to the center blob). This is called by the get_lighting_blob()
-        method.
+        method
         """
         x1 = self.position[0]
         y1 = self.position[1]
@@ -349,7 +386,10 @@ class BlobSurfacePygame:
     def draw(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
     ) -> None:
-        """Draw the blob to the universe surface. Send pos,False to turn off lighting effects"""
+        """
+        Draws this blob to the universe surface, with the given position (or uses position already set),
+        send (pos,False) to turn off lighting effects
+        """
         if pos is not None:
             self.position = pos
 
@@ -394,7 +434,7 @@ class BlobSurfacePygame:
     ) -> None:
         """
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
-        pos,False to turn off glowing effect
+        send (pos,False) to turn off glowing effect
         """
         if pos is not None:
             self.position = pos

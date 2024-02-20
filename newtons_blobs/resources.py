@@ -36,6 +36,7 @@ def resource_path(relative_path: Path) -> Path:
 def home_path_plus(
     path_tuple: Tuple[str], file: str, create_if_not_exists: bool = True
 ) -> Path:
+    """Get or create a file in the user home directory (no need to send home dir, it'll be the base no matter what)"""
     mypath = Path()
     full_path = mypath.home()
     for item in path_tuple:

@@ -28,7 +28,8 @@ class BlobSaveLoad:
 
     Attributes
     ----------
-    savable_loadables: List[SavableLoadablePrefs] a list of objects that implement SavableLoadablePrefs
+    savable_loadables: List[SavableLoadablePrefs]
+        a list of objects that implement SavableLoadablePrefs
 
     Methods
     -------
@@ -39,10 +40,10 @@ class BlobSaveLoad:
         Loads the saved json file (if exists) and sends to the set_prefs() of the savable_loadables objects
 
     load_value(key: str) -> Any
-        Returns the value of the single key in the json_data file, has no effect on blob_runner, blob_plotter
+        Returns the value of the single key in the json_data file, has no effect on any savable_loadables objects
 
     save_value(key: str, value: Any) -> None
-        Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter
+        Saves the key/value pair in the stored json_data file, has no effect on any savable_loadables objects
 
     """
 
@@ -51,7 +52,9 @@ class BlobSaveLoad:
         self.json_data: Dict[str, Any] = {}
 
     def save(self: Self, get_prefs: bool = True) -> None:
-        """Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval"""
+        """
+        Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval
+        """
         if get_prefs:
             for savable_loadable in self.savable_loadables:
                 savable_loadable.get_prefs(self.json_data)
@@ -61,7 +64,7 @@ class BlobSaveLoad:
 
     def load(self: Self, set_prefs: bool = True) -> bool:
         """
-        Loads the saved json file (if exists) and sends to the set_prefs() of the savable_loadables objects
+        Returns the value of the single key in the json_data file, has no effect on any savable_loadables objects
         """
         try:
             with open(home_path_plus((".newton",), "saved.json"), "r") as json_file:
@@ -76,14 +79,18 @@ class BlobSaveLoad:
         return True
 
     def load_value(self: Self, key: str) -> Any:
-        """Returns the value of the single key in the json_data file, has no effect on blob_runner, blob_plotter"""
+        """
+        Returns the value of the single key in the json_data file, has no effect on any savable_loadables objects
+        """
         if self.load(False):
             return self.json_data[key]
 
         return None
 
     def save_value(self: Self, key: str, value: Any) -> None:
-        """Saves the key/value pair in the stored json_data file, has no effect on blob_runner, blob_plotter"""
+        """
+        Saves the key/value pair in the stored json_data file, has no effect on any savable_loadables objects
+        """
         if self.load(False):
             self.json_data[key] = value
             self.save(False)

@@ -1,7 +1,12 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-The class that runs the application
+A class that holds and controls a drawing area intended for screen display
+implements newtons_blobs.BlobDisplay
+
+As well as an encapsulation class of the fps clock, 
+with display output functionality added
+
 
 by Jason Mott, copyright 2024
 """
@@ -35,8 +40,6 @@ class FPS:
     -------
     render(display: pygame.Surface, x: float, y: float) -> None
         Renders the fps to the display object at x,y coordinates
-
-
     """
 
     def __init__(self: Self):
@@ -63,6 +66,67 @@ class FPS:
 
 
 class BlobDisplayPygame:
+    """
+    A class that holds and controls a drawing area intended for screen display
+    implements newtons_blobs.BlobDisplay
+
+    Attributes
+    ----------
+    size_w: float
+        The desired width of the display in pixels
+    size_h: float
+        The desired height of the display in pixels
+
+    Methods
+    -------
+    init_display() -> pygame.Surface
+        Initiates and returns a pygame display instance configured for the current monitor.
+
+    set_mode(self: Self, size: Tuple[float, float], mode: int) -> None
+        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
+
+    get_framework(self: Self) -> Any
+        Returns the underlying framework implementation of the drawing area for display, mostly for use
+        in an implementation of BlobSurface within the same framework for direct access
+
+    get_width(self: Self) -> float
+        Returns the current width of the display object
+
+    get_height(self: Self) -> float
+        Returns the current height of the display object
+
+    get_key_code(self: Self, key: str) -> int
+        Returns the key code of the provided character (keyboard character). For use in creating a dict that
+        holds function references in a dict
+
+    check_events(self: Self, keyboard_events: Dict[int, Callable[[], None]]) -> None
+        Send a dict that has codes from get_key_codes (i.e. keyboard key codes) as the keys (i.e. dict keys),
+        and something to do upon that key being pressed.
+        This is presumed to be used for each iteration of a frame before drawing.
+
+    fps_clock_tick(self: Self, fps: int) -> None
+        Control the FPS rate by sending the desired rate here every frame of while loop
+
+    fps_render(self: Self, pos: Tuple[float, float]) -> None
+        Will print the current achieved rate on the screen
+
+    fill(self: Self, color: Tuple[int, int, int]) -> None
+        Fill the entire area wit a particular color to prepare for drawing another screen
+
+    blit_text(self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
+        Print the proved text to the screen a the provided coordinates. orientation helps to give hints
+        on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
+        class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
+
+    draw_universe(self: Self, universe: BlobUniverse) -> None
+        Draw the universe area inside the display area (note that universe may be larger than display)
+
+    update(self: Self) -> None
+        Draw the prepared frame to the screen/window
+
+    quit(self: Self) -> None
+        Exit the application
+    """
 
     def __init__(self: Self, size_w: float, size_h: float):
 
@@ -97,23 +161,39 @@ class BlobDisplayPygame:
         return pygame.display.set_mode([self.width, self.height], pygame.RESIZABLE)
 
     def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
+        """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
         pygame.display.set_mode(size, self.modes[mode])
 
     def get_framework(self: Self) -> Any:
+        """
+        Returns the pygame.Surface instance that represents the display area. Must cast it since the interface requires
+        a return type of Any
+        """
         return self.display
 
     def get_width(self: Self) -> float:
+        """Returns the current width of the display object"""
         return self.display.get_width()
 
     def get_height(self: Self) -> float:
+        """Returns the current height of the display object"""
         return self.display.get_height()
 
     def get_key_code(self: Self, key: str) -> int:
+        """
+        Returns the key code of the provided character (keyboard character). For use in creating a dict that
+        holds function references in a dict
+        """
         return pygame.key.key_code(key)
 
     def check_events(
         self: Self, keyboard_events: Dict[int, Callable[[], None]]
     ) -> None:
+        """
+        Send a dict that has codes from get_key_codes (i.e. keyboard key codes) as the keys (i.e. dict keys),
+        and something to do upon that key being pressed.
+        This is presumed to be used for each iteration of a frame before drawing.
+        """
         # Check for events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -123,17 +203,25 @@ class BlobDisplayPygame:
                     keyboard_events[event.key]()
 
     def fps_clock_tick(self: Self, fps: int) -> None:
+        """Control the FPS rate by sending the desired rate here every frame of while loop"""
         self.fps.clock.tick(fps)
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
+        """Will print the current achieved rate on the screen"""
         self.fps.render(self.display, pos[0], pos[1] - (self.fps.text.get_height() * 2))
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
+        """Fill the entire area wit a particular color to prepare for drawing another screen"""
         self.display.fill(color)
 
     def blit_text(
         self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]
     ) -> None:
+        """
+        Print the proved text to the screen a the provided coordinates. orientation helps to give hints
+        on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
+        class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
+        """
         text_surface = self.stat_font.render(
             text,
             True,
@@ -165,7 +253,10 @@ class BlobDisplayPygame:
         )
 
     def draw_universe(self: Self, universe: BlobUniverse) -> None:
-        """Draws the universe surface onto the display surface, for a frame of actual display to monitor."""
+        """
+        Draw the universe area inside the display area (note that universe may be larger than display),
+        for a frame of actual display to monitor.
+        """
         self.display.blit(
             cast(pygame.Surface, universe.get_framework()),
             (
@@ -175,7 +266,9 @@ class BlobDisplayPygame:
         )
 
     def update(self: Self) -> None:
+        """Draw the prepared frame to the screen/window"""
         pygame.display.flip()
 
     def quit(self: Self) -> None:
+        """Exit the application"""
         pygame.quit()
