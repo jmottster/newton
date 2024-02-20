@@ -6,9 +6,8 @@ The class that runs the application
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Callable, Dict, Self, cast
+from typing import Any, Callable, Dict, Self
 
-from .resources import resource_path
 from .blob_plugin_factory import BlobPluginFactory
 from .blob_save_load import BlobSaveLoad
 from .globals import *

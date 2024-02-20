@@ -6,7 +6,7 @@ Class file for setting up initial positions and velocities of blobs and maintain
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Dict, Optional, Tuple, Self
+from typing import Any, Dict, Tuple, Self
 import numpy as np
 import numpy.typing as npt
 import math, random
@@ -14,8 +14,6 @@ import math, random
 from .blob_plugin_factory import BlobPluginFactory
 from .globals import *
 from .massive_blob import MassiveBlob
-from .blob_surface import BlobSurface
-from .blob_universe import BlobUniverse
 from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
