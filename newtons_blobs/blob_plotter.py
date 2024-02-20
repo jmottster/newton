@@ -289,6 +289,7 @@ class BlobPlotter:
         """
         checked: Dict[int, int] = {}
         self.z_axis.clear()
+        pg = self.proximity_grid
 
         def check_blobs(blob1: MassiveBlob, blobs: npt.NDArray) -> None:
             if blobs is None:
@@ -300,7 +301,7 @@ class BlobPlotter:
                         bp.gravitational_pull(blob1, blob2)
 
         def check_grid(blob: MassiveBlob) -> None:
-            pg = self.proximity_grid
+
             gk: Tuple[int, int, int] = blob.grid_key()
 
             # Using the grid approach for optimization. Instead of every blob checking every blob,
@@ -317,12 +318,12 @@ class BlobPlotter:
                             pg[gk[0] + x_offset][gk[1] + y_offset][gk[2] + z_offset],
                         )
 
-        for i in range(1, len(self.blobs)):
-            bp.gravitational_pull(self.blobs[0], self.blobs[i])
-
         # dirty hack to minimize bouncing off center blob (i.e., since this will run again in loop, that double
         #   check of collision with center blob makes getting sucked into center blob more likely)
         check_grid(self.blobs[0])
+
+        for i in range(1, len(self.blobs)):
+            bp.gravitational_pull(self.blobs[0], self.blobs[i])
 
         for i in range(0, len(self.blobs)):
 

@@ -270,10 +270,10 @@ class BlobRunner:
 
             self.display_elapsed_time()
 
-            if CLOCK_FPS:
-                self.display.fps_render(
-                    (20, self.display.get_height() - 20),
-                )
+        if CLOCK_FPS:
+            self.display.fps_render(
+                (20, self.display.get_height() - 20),
+            )
 
         self.display.update()
 

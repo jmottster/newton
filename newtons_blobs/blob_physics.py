@@ -192,10 +192,10 @@ class BlobPhysics:
         dx = blob2.x - blob1.x
         dy = blob2.y - blob1.y
         dz = blob2.z - blob1.z
-        dd = (blob1.orig_radius[0] * 0.90) + blob2.orig_radius[0]
+        # dd = (blob1.orig_radius[0] * 0.90) + blob2.orig_radius[0]
         d = math.sqrt((dx**2) + (dy**2) + (dz**2))
 
-        if d < BlobPhysics.GRAVITATIONAL_RANGE and d > 0:
+        if d < BlobPhysics.GRAVITATIONAL_RANGE:
             F = BlobPhysics.g * blob1.mass * blob2.mass / d**2
 
             theta = math.acos(dz / d)
@@ -213,7 +213,7 @@ class BlobPhysics:
             blob2.vy -= fdy / blob2.mass * TIMESCALE
             blob2.vz -= fdz / blob2.mass * TIMESCALE
 
-        elif d > BlobPhysics.GRAVITATIONAL_RANGE and blob1.name == CENTER_BLOB_NAME:
+        elif blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it
             blob2.dead = True
             blob2.escaped = True
