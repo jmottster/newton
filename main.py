@@ -7,6 +7,8 @@ by Jason Mott, copyright 2024
 """
 
 import newtons_blobs as nb
+from nb_pygame import BlobPygameFactory
+
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -18,5 +20,5 @@ __status__ = "In Progress"
 
 
 if __name__ == "__main__":
-    blober = nb.BlobRunner()
+    blober: nb.BlobRunner = nb.BlobRunner(BlobPygameFactory())
     blober.run()

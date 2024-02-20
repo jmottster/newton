@@ -6,12 +6,12 @@ Global constants
 by Jason Mott, copyright 2024
 """
 
-from os import path
+from pathlib import Path
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.2"
+__version__ = "0.0.4"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -109,8 +109,9 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # night black (19, 21, 21)
 # jet grey (43, 44, 40)
 # rich black (0, 21, 36)
-DISPLAY_FONT = path.join(".", "newtons_blobs", "font", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = path.join(".", "newtons_blobs", "img", "newton_icon.gif")
+DISPLAY_FONT = Path().joinpath(".", "newtons_blobs", "font", "Rushfordclean-rgz89.otf")
+WINDOW_ICON = Path().joinpath(".", "newtons_blobs", "img", "newton_icon.gif")
+WINDOW_TITLE = "Newton's Blobs"
 STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
 BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)
 

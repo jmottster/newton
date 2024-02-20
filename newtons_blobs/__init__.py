@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.2"
+__version__ = "0.0.4"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -22,3 +22,6 @@ from .blob_plotter import BlobPlotter
 from .massive_blob import MassiveBlob
 from .blob_surface import BlobSurface
 from .blob_save_load import BlobSaveLoad
+from .blob_physics import BlobPhysics
+from .blob_universe import BlobUniverse
+from .blob_plugin_factory import BlobPluginFactory
