@@ -1,12 +1,12 @@
 # Newton's Blobs
 
-### Version 0.0.3 Alpha Prototype 3D
+### Version 0.0.4 Alpha Prototype 3D
 
 *A simulator of Newton's laws of physics, using space scale objects*
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.3! This is the prototype 3d version with auto save and load! In this version the feature of auto save and load is added, on top of the many improvements from 0.0.2: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
+Alpha release 0.0.4! In this release, there is nothing different in terms of user experience, this was a major code refactoring in preparation for replacing pygame as the graphics engine. In the last version the feature of auto save and load was added, on top of the many improvements from 0.0.2: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
 
 To toggle auto save and load, just press the E key.
 
