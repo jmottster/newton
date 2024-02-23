@@ -36,10 +36,10 @@ class BlobRunner:
 
     Methods
     -------
-    get_prefs(data: dict) -> None
+    get_prefs(data: Dict[str, Any]) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
-    set_prefs(data: dict, universe: pygame.Surface = None) -> None
+    set_prefs(data: Dict[str, Any]) -> None
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it. universe param is ignored, put there to conform with SavableLoadablePrefs protocol
 
@@ -54,7 +54,7 @@ class BlobRunner:
     render_frame() -> None
         Calls all the draw methods to display a frame on the screen/monitor
 
-    draw_stats(stat_font: pygame.font.Font, message: str =None) -> None
+    draw_stats(message: str =None) -> None
         Draws statistical information to the display instance, and if message is sent, will also draw that
         text in the middle of the display instance.
 

@@ -6,10 +6,10 @@ A Protocol class used to represent an object that draws a blob, with a distincti
 by Jason Mott, copyright 2024
 """
 
-from typing import Tuple, Self, Protocol
+from typing import Tuple, Self
 
-from .blob_universe import BlobUniverse
-from .globals import *
+from newtons_blobs.blob_universe import BlobUniverse
+from newtons_blobs.globals import *
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -20,7 +20,7 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-class BlobSurface(Protocol):
+class BlobSurfaceUrsina:
     """
     A Protocol class used to represent an object that draws a blob, with a distinction of the center blob
 
