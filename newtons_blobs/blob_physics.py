@@ -46,7 +46,7 @@ class BlobPhysics:
 
     @classmethod
     def set_gravitational_range(cls, scaled_universe_height: float) -> None:
-        cls.GRAVITATIONAL_RANGE = (scaled_universe_height / 8) * 6
+        cls.GRAVITATIONAL_RANGE = scaled_universe_height
 
     @staticmethod
     def edge_detection(blob: MassiveBlob, wrap: bool) -> None:
@@ -178,7 +178,7 @@ class BlobPhysics:
                 if blob1.name == CENTER_BLOB_NAME:
                     smaller_blob = blob2
                     larger_blob = blob1
-                if abs(dd - d) >= (smaller_blob.orig_radius[0] * 0.6):
+                if d <= dd:
                     larger_blob.mass += smaller_blob.mass
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True

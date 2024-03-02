@@ -47,6 +47,9 @@ class BlobUniversePygame:
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
+    clear() -> None
+        Used to delete and properly clean up blobs (for a start over, for example)
+
     """
 
     def __init__(self: Self, size_w: float, size_h: float):
@@ -70,3 +73,7 @@ class BlobUniversePygame:
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
         self.universe.fill(color)
+
+    def clear(self: Self) -> None:
+        """Used to delete and properly clean up blobs (for a start over, for example)"""
+        pass

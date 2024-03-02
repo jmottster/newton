@@ -20,6 +20,19 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
+def relative_resource_path_str(relative_path: str, leading_char: str = ".") -> str:
+    """Get string version of absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
+    my_str = str(resource_path(Path(relative_path))).replace(
+        str(Path().absolute()), leading_char
+    )
+    return my_str
+
+
+def resource_path_str(relative_path: str) -> str:
+    """Get string version of absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
+    return str(resource_path(Path(relative_path)))
+
+
 def resource_path(relative_path: Path) -> Path:
     """Get absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
     mypath = Path()

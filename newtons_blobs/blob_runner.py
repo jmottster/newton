@@ -69,11 +69,6 @@ class BlobRunner:
 
     """
 
-    MINUTES = 60
-    HOURS = MINUTES * 60
-    DAYS = HOURS * 24
-    YEARS = DAYS * 365.25
-
     def __init__(self: Self, blob_factory: BlobPluginFactory):
 
         # Set up the rendering objects
@@ -103,9 +98,9 @@ class BlobRunner:
         self.show_stats: bool = True
         self.message: str = None
         self.message_counter: int = 0
-        self.fullscreen: bool = False
-        self.fullscreen_save_w: float = self.display.get_width()
-        self.fullscreen_save_h: float = self.display.get_height()
+        self.fullscreen: bool = True
+        self.fullscreen_save_w: float = self.display.get_windowed_width()
+        self.fullscreen_save_h: float = self.display.get_windowed_height()
 
         # Display text for option changes
         self.toggle_start_square_t: str = f"Toggled starting formation to square"
@@ -144,9 +139,8 @@ class BlobRunner:
         self.fullscreen_save_w = data["fullscreen_save_w"]
         self.fullscreen_save_h = data["fullscreen_save_h"]
 
-        if self.fullscreen:
-            self.fullscreen = False
-            self.keyboard_events[self.display.get_key_code("f")]()
+        self.fullscreen = not self.fullscreen
+        self.keyboard_events[self.display.get_key_code("f")]()
 
     def load_keyboard_events(self: Self) -> Dict[int, Callable[[], None]]:
         """
@@ -167,9 +161,14 @@ class BlobRunner:
 
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats
+            if not self.show_stats:
+                self.message = None
+                self.message_counter = 0
 
         def start_over() -> None:
             self.elapsed_time = 0
+            self.message = None
+            self.message_counter = 0
             self.blob_plotter.start_over()
 
         def toggle_square_grid() -> None:
@@ -212,14 +211,14 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
-        keyboard_events[self.display.get_key_code("e")] = toggle_auto_save_load
-        keyboard_events[self.display.get_key_code("q")] = quit_game
+        keyboard_events[self.display.get_key_code("escape")] = quit_game
         keyboard_events[self.display.get_key_code("space")] = pause_game
-        keyboard_events[self.display.get_key_code("d")] = toggle_stats
-        keyboard_events[self.display.get_key_code("s")] = start_over
-        keyboard_events[self.display.get_key_code("a")] = toggle_square_grid
-        keyboard_events[self.display.get_key_code("w")] = toggle_perfect_orbit
         keyboard_events[self.display.get_key_code("f")] = toggle_fullscreen
+        keyboard_events[self.display.get_key_code("1")] = start_over
+        keyboard_events[self.display.get_key_code("2")] = toggle_square_grid
+        keyboard_events[self.display.get_key_code("3")] = toggle_perfect_orbit
+        keyboard_events[self.display.get_key_code("4")] = toggle_stats
+        keyboard_events[self.display.get_key_code("5")] = toggle_auto_save_load
 
         return keyboard_events
 
@@ -349,7 +348,7 @@ class BlobRunner:
     def display_elapsed_time(self: Self) -> None:
         """Draws the elapsed time to the display instance"""
         self.display.blit_text(
-            f"Years elapsed: {self.get_elapsed_time_in(self.YEARS)}",
+            f"Years elapsed: {self.get_elapsed_time_in(YEARS)}",
             (20, 20),
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP_PLUS),
         )

@@ -7,6 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 from pathlib import Path
+import math
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -23,52 +24,68 @@ VERSION = __version__
 
 # No need to ever change these
 G = 6.67428e-11  # Gravitational constant
-AU = 149.6e6 * 1000  # 1 Astronomical Unit
+AU = 1.495978707 * 10**11  # 149.6e6 * 1000   1 Astronomical Unit
+S = 6.96 * 10**8
+J = 7.1492 * 10**7
+E = 6.3781 * 10**6
 
-AUTO_SAVE_LOAD = True
-# Change to scale the size of universe (thus window)
-CLOCK_FPS = False
-LIGHTING = True
 SCALE_PERCENT = 1
 AU_SCALE_FACTOR = 500 * SCALE_PERCENT  # Number of pixels to equal 1 AU
-TIMESCALE = 3600 * 10 * SCALE_PERCENT  # elapsed time per frame, in seconds
+SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
+SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
+
+FRAME_RATE = 60  # there are FRAME_RATE frames per second
+CLOCK_FPS = True
+
+SECONDS = 1
+MINUTES = SECONDS * 60
+HOURS = MINUTES * 60
+DAYS = HOURS * 24
+YEARS = DAYS * 365.25
+
+TIMESCALE = HOURS * 20 * SCALE_PERCENT  # elapsed time per frame, in seconds
+
+AUTO_SAVE_LOAD = True
+LIGHTING = True
+TRUE_3D = True
+
+# Constants for creating blobs somewhat randomly
+NUM_BLOBS = 100
+
+# If true all blobs will start
+# with a perfect orbital velocity
+START_PERFECT_ORBIT = False
+# Plot blobs in a square grid to start
+# (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
+SQUARE_BLOB_PLOTTER = False
+
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000
 # Cube size of Universe in pixels
-UNIVERSE_SIZE = 2000 * SCALE_PERCENT
+UNIVERSE_SIZE = 3500 * SCALE_PERCENT
 UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
 UNIVERSE_SIZE_D = UNIVERSE_SIZE
-MIN_RADIUS = 5 * SCALE_PERCENT
-MAX_RADIUS = 25 * SCALE_PERCENT
+SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
+
+MIN_RADIUS = (500 * E / S) * SCALE_PERCENT
+MAX_RADIUS = (500 * J / S) * SCALE_PERCENT
 GRID_CELL_SIZE = MAX_RADIUS * 3
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
-SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
-SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 # Cube size of the universe in real life scale
-SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
-FRAME_RATE = 60  # there are FRAME_RATE frames per second
 
-# Constants for creating blobs somewhat randomly
-NUM_BLOBS = 150
-# If true all blobs will start
-# with a perfect orbital velocity
-START_PERFECT_ORBIT = True
-# Plot blobs in a square grid to start
-# (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
-SQUARE_BLOB_PLOTTER = False
-MIN_VELOCITY = 31.4 * 1000  # Only if START_PERFECT_ORBIT is False
-MAX_VELOCITY = 35.783 * 1000  # Only if START_PERFECT_ORBIT is False
+
 MIN_MASS = 7.34767309 * 10**22  # Mass of Moon
 # 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 6.9742 * 10**24  # currently set slightly larger than mass of Earth
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
 # 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
-CENTER_BLOB_RADIUS = 30 * SCALE_PERCENT
+CENTER_BLOB_RADIUS = 500 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
+CENTER_BLOB_START_POS = (0, 0, 0)
 COLORS = [
     (221, 110, 66),  # rgb(221, 110, 66)
     (33, 118, 174),  # rgb(33, 118, 174)
@@ -109,8 +126,8 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # night black (19, 21, 21)
 # jet grey (43, 44, 40)
 # rich black (0, 21, 36)
-DISPLAY_FONT = Path().joinpath(".", "newtons_blobs", "font", "Rushfordclean-rgz89.otf")
-WINDOW_ICON = Path().joinpath(".", "newtons_blobs", "img", "newton_icon.gif")
+DISPLAY_FONT = Path("newtons_blobs/font/Rushfordclean-rgz89.otf")
+WINDOW_ICON = Path("newtons_blobs/img/newton_icon.ico")
 WINDOW_TITLE = "Newton's Blobs"
 STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
 BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)

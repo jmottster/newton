@@ -156,13 +156,17 @@ class BlobPlotter:
         self.start_perfect_orbit = data["start_perfect_orbit"]
         self.blobs = np.empty([len(data["blobs"])], dtype=MassiveBlob)
         self.z_axis.clear()
+
         i = 0
         for blob_pref in data["blobs"]:
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
                 blob_pref["name"],
                 self.blob_factory.new_blob_surface(
-                    blob_pref["radius"], blob_pref["color"]
+                    blob_pref["radius"],
+                    tuple(blob_pref["color"]),  # type: ignore
+                    blob_pref.get("texture"),  # Might not exist
+                    blob_pref.get("rotation_speed"),  # Might not exist
                 ),
                 blob_pref["mass"],
                 blob_pref["x"],
@@ -178,7 +182,14 @@ class BlobPlotter:
 
     def start_over(self: Self) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
+
+        display = self.blob_factory.get_blob_display()
+        for blob in self.blobs:
+            blob.destroy()
+            display.update()
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
+        self.blob_factory.get_blob_universe().clear()
+        display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis.clear()
@@ -188,7 +199,6 @@ class BlobPlotter:
         """
         Creates MassiveBlob instances and plots their initial x,y,z coordinates, all according to global constant preferences
         """
-
         self.plot_center_blob()
 
         # Create orbiting blobs without position or velocity
@@ -262,6 +272,7 @@ class BlobPlotter:
                     elif blob.escaped:
                         self.blobs_escaped += 1
                     self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
+                    blob.destroy()
                     continue
                 blob.draw()
 
@@ -335,13 +346,13 @@ class BlobPlotter:
 
     def plot_center_blob(self: Self) -> None:
         """Creates and places the center blob and adds it to self.blobs[0]"""
-        scaled_half_universe_h = self.scaled_universe_height / 2
-        scaled_half_universe_w = self.scaled_universe_width / 2
+        # scaled_half_universe_h = self.scaled_universe_height / 2
+        # scaled_half_universe_w = self.scaled_universe_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = scaled_half_universe_w
-        y = scaled_half_universe_h
-        z = scaled_half_universe_h
+        x = CENTER_BLOB_START_POS[0]
+        y = CENTER_BLOB_START_POS[1]
+        z = CENTER_BLOB_START_POS[2]
 
         self.blobs[0] = MassiveBlob(
             self.universe_size_h,
@@ -375,17 +386,32 @@ class BlobPlotter:
         else:
             blob_partition = self.scaled_display_height / 4
 
+        if blob_partition < ((MAX_RADIUS * SCALE_UP) * 4):
+            blob_partition = round((MAX_RADIUS * SCALE_UP) * 4)
+
+        clearance = float(
+            round(
+                ((MAX_RADIUS * 3) + (CENTER_BLOB_RADIUS * 3))
+                * SCALE_UP
+                / blob_partition
+            )
+        )
+
+        if clearance % 2:
+            clearance += 1
+
         # Iterators grid placement
-        y_count = 2
+        y_count = int(clearance)
         y_turns = 0
         x_turns = 1
-        x += blob_partition
-        y -= blob_partition
+        x += (clearance / 2) * blob_partition
+        y -= (clearance / 2) * blob_partition
 
         for i in range(1, NUM_BLOBS):
             # Get x and y coordinates for this blob
             # x and y take turns moving, each turn gives the other one more turn than
             # last time, which we need to do to spiral around in a square grid
+
             if y_turns == 0:
                 x_turns -= 1
                 if x_turns == 0:
@@ -427,7 +453,7 @@ class BlobPlotter:
         # How far apart each blob will be on each circumference
         chord_scaled = (MAX_RADIUS * 3) * SCALE_UP
         # The start radius (smallest circle around center blob)
-        plot_radius = ((MAX_RADIUS * 3) + (CENTER_BLOB_RADIUS * 2)) * SCALE_UP
+        plot_radius = ((CENTER_BLOB_RADIUS * 3)) * SCALE_UP
         # How many radians to increase for each blob around the circumference (such that
         # we get chord_scaled length between each blob center)
         pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
@@ -435,7 +461,7 @@ class BlobPlotter:
         pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
-            plot_radius = self.scaled_display_height / 4
+            # plot_radius = self.scaled_display_height / 4
 
             pi_inc = (math.pi * 2) / (orbiting_blobs)
 
@@ -492,18 +518,19 @@ class BlobPlotter:
         dz = self.blobs[0].z - z
         d = math.sqrt(dx**2 + dy**2 + dz**2)
 
-        if self.start_perfect_orbit:
-            # get velocity for a perfect orbit around center blob
-            velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
-        else:
-            # Generate a random velocity within provided boundaries
-            velocity = (random.random() * (MAX_VELOCITY - MIN_VELOCITY)) + MIN_VELOCITY
+        # get velocity for a perfect orbit around center blob
+        velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
+
+        if not self.start_perfect_orbit:
+            for _ in range(1, random.randint(1, 2)):
+                velocity *= random.randint(0, 1) + (random.random())
 
         theta = math.acos(dz / d)
         phi = math.atan2(dy, dx)
 
-        # Add some chaos to starting trajectory
-        theta = theta - (math.pi * 0.15)
+        if not self.start_perfect_orbit:
+            # Add some chaos to starting trajectory
+            theta = theta - (math.pi * 0.15)
         # turn 90 degrees from pointing center for beginning velocity (orbit)
         phi = phi - (math.pi * 0.5)
 

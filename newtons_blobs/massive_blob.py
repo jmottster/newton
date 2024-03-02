@@ -66,6 +66,9 @@ class MassiveBlob:
     advance() -> None
         Applies velocity to blob, changing its x,y coordinates for next frame draw
 
+    destroy() -> None
+        Call when no longer needed, so it can clean up and disappear
+
     update_pos_vel(x: float, y: float, z: float, vx: float, vy: float, vz: float) -> None
         direct way to update position and velocity values
     """
@@ -120,6 +123,8 @@ class MassiveBlob:
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
+        if TRUE_3D and self.radius > MAX_RADIUS:
+            self.radius = self.radius * 0.75
         self.scaled_radius: float = self.radius * SCALE_UP
         self.mass: float = mass
         self.x: float = x
@@ -138,13 +143,18 @@ class MassiveBlob:
         self.escaped: bool = False
         self.pause: bool = False
 
-        self.fake_blob_z()
+        if not TRUE_3D:
+            self.fake_blob_z()
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
         data["radius"] = self.orig_radius[2]
         data["color"] = self.blob_surface.color
+        if getattr(self.blob_surface, "texture"):
+            data["texture"] = self.blob_surface.texture
+        if getattr(self.blob_surface, "rotation_speed"):
+            data["rotation_speed"] = self.blob_surface.rotation_speed
         data["mass"] = self.mass
         data["x"] = self.x
         data["y"] = self.y
@@ -222,7 +232,13 @@ class MassiveBlob:
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
         self.z += self.vz * TIMESCALE
 
-        self.fake_blob_z()
+        if not TRUE_3D:
+            self.fake_blob_z()
+
+    def destroy(self: Self) -> None:
+        """Call when no longer needed, so it can clean up and disappear"""
+        self.blob_surface.destroy()
+        # self.blob_surface = None
 
     def update_pos_vel(
         self: Self, x: float, y: float, z: float, vx: float, vy: float, vz: float
@@ -235,4 +251,5 @@ class MassiveBlob:
         self.vy = vy
         self.vz = vz
 
-        self.fake_blob_z()
+        if not TRUE_3D:
+            self.fake_blob_z()

@@ -45,6 +45,9 @@ class BlobUniverse(Protocol):
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
+    clear() -> None
+        Used to delete and properly clean up blobs (for a start over, for example)
+
     """
 
     size_w: float
@@ -71,4 +74,8 @@ class BlobUniverse(Protocol):
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
+        pass
+
+    def clear(self: Self) -> None:
+        """Used to delete and properly clean up blobs (for a start over, for example)"""
         pass

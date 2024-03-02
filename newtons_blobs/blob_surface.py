@@ -28,10 +28,14 @@ class BlobSurface(Protocol):
     ----------
     radius : float
         the size of the blob, by radius value
-    color : tuple
+    color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe: BlobUniverse
         The universe instance the blobs will be drawn on
+    texture : str = None
+        For 3d rendering, this is optional (implement as texture = None in __init__)
+    rotation_speed : float = None
+        For 3d rendering, the speed (degrees per frame) at which the blob will spin
 
     Methods
     -------
@@ -50,11 +54,16 @@ class BlobSurface(Protocol):
     draw_as_center_blob(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
+
+    destroy() -> None
+        Call to get rid of this instance, so it can clean up
     """
 
     radius: float
-    color: tuple
+    color: Tuple[int, int, int]
     universe: BlobUniverse
+    texture: str = None
+    rotation_speed: float = None
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""
@@ -83,4 +92,8 @@ class BlobSurface(Protocol):
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
         """
+        pass
+
+    def destroy(self: Self) -> None:
+        """Call to get rid of this instance, so it can clean up"""
         pass

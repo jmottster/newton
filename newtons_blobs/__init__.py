@@ -16,7 +16,12 @@ __status__ = "In Progress"
 
 
 from .globals import *
-from .resources import resource_path, home_path_plus
+from .resources import (
+    resource_path,
+    home_path_plus,
+    resource_path_str,
+    relative_resource_path_str,
+)
 from .blob_runner import BlobRunner
 from .blob_plotter import BlobPlotter
 from .massive_blob import MassiveBlob

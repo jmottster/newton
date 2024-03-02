@@ -33,10 +33,14 @@ class BlobSurfacePygame:
     ----------
     radius : float
         the size of the blob, by radius value
-    color : tuple
+    color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe : BlobUniverse
         object representing the universe space to draw blobs onto
+    texture : str = None
+        Not used, this is a 2d implementation
+    rotation_speed : float = None
+        Not used, this is a 2d implementation
 
     Methods
     -------
@@ -97,6 +101,9 @@ class BlobSurfacePygame:
     draw_as_center_blob(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
+
+    destroy() -> None
+        Call to get rid of this instance, so it can clean up
     """
 
     __slots__ = (
@@ -131,7 +138,12 @@ class BlobSurfacePygame:
     LIGHT_RADIUS_MULTI: ClassVar[float] = 6
 
     def __init__(
-        self: Self, radius: float, color: Tuple[int, int, int], universe: BlobUniverse
+        self: Self,
+        radius: float,
+        color: Tuple[int, int, int],
+        universe: BlobUniverse,
+        texture: str = None,
+        rotation_speed: float = None,
     ):
         self.py_universe: pygame.Surface = cast(
             pygame.Surface, universe.get_framework()
@@ -463,3 +475,7 @@ class BlobSurfacePygame:
             ),
             special_flags=pygame.BLEND_RGB_ADD,
         )
+
+    def destroy(self: Self) -> None:
+        """Call to get rid of this instance, so it can clean up"""
+        pass

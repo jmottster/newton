@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import newtons_blobs as nb
-from nb_pygame import BlobPygameFactory
+from nb_ursina import BlobUrsinaFactory
 
 
 __author__ = "Jason Mott"
@@ -20,5 +20,5 @@ __status__ = "In Progress"
 
 
 if __name__ == "__main__":
-    blober: nb.BlobRunner = nb.BlobRunner(BlobPygameFactory())
+    blober: nb.BlobRunner = nb.BlobRunner(BlobUrsinaFactory())
     blober.run()
