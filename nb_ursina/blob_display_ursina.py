@@ -116,13 +116,6 @@ class BlobDisplayUrsina:
 
     FULLSCREEN: ClassVar[int] = 1
     RESIZABLE: ClassVar[int] = 2
-    TEXT_LEFT: ClassVar[int] = 1
-    TEXT_RIGHT: ClassVar[int] = 2
-    TEXT_TOP: ClassVar[int] = 3
-    TEXT_TOP_PLUS: ClassVar[int] = 4
-    TEXT_BOTTOM: ClassVar[int] = 5
-    TEXT_CENTER_x: ClassVar[int] = 6
-    TEXT_CENTER_y: ClassVar[int] = 7
 
     size_w: float
     size_h: float
@@ -164,7 +157,7 @@ class BlobDisplayUrsina:
             BlobDisplay.RESIZABLE: False,
         }
 
-        self.text_cache: Dict[str, urs.Text] = {}
+        self.text_entity_cache: Dict[str, urs.Text] = {}
         self.h = WindowHandler(urs.window.size, self)
 
         mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
@@ -221,14 +214,14 @@ class BlobDisplayUrsina:
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats
 
-            for _, item in self.text_cache.items():
+            for _, item in self.text_entity_cache.items():
                 item.enabled = self.show_stats
                 if not self.show_stats:
                     item.enabled = False
                     urs.destroy(item)
 
             if not self.show_stats:
-                self.text_cache.clear()
+                self.text_entity_cache.clear()
 
         keyboard_events[self.get_key_code("space")] = pause_game
         keyboard_events[self.get_key_code("4")] = toggle_stats
@@ -327,14 +320,15 @@ class BlobDisplayUrsina:
         self: Self, text: str, pos: Tuple[float, float], msg_key: str
     ) -> None:
 
-        text_entity = self.text_cache.get(msg_key)
+        text_entity = self.text_entity_cache.get(msg_key)
         if text_entity is None:
-            self.text_cache[msg_key] = TempMessage()
-            text_entity = self.text_cache.get(msg_key)
+            self.text_entity_cache[msg_key] = TempMessage(text=text, pos=pos)
+            text_entity = self.text_entity_cache.get(msg_key)
+            text_entity.set_text(text, pos)
 
-        FontUtils.position_text(pos[0], pos[1], text_entity)
-        text_entity.update_text_pos()
-        text_entity.set_text(text)
+        if text_entity.get_text() != text:
+            text_entity.set_text(text, pos)
+
         text_entity.reset_counter()
 
     def blit_text(
@@ -354,44 +348,17 @@ class BlobDisplayUrsina:
 
         key = f"{orientation[0]}{orientation[1]}"
 
-        text_entity = self.text_cache.get(key)
-        if text_entity is None:
-            self.text_cache[key] = urs.Text(
-                font=relative_resource_path_str(str(DISPLAY_FONT), ""),
-                size=(STAT_FONT_SIZE / 100),
-                resolution=100 * (STAT_FONT_SIZE / 100),
-                parent=FontUtils.get_text_parent(),
-                scale=0.1,
-                color=urs.color.rgb(255, 255, 255),
-                enabled=True,
-                origin=(-0.5, -0.5),
-                eternal=True,
+        text_entity_entity = self.text_entity_cache.get(key)
+        if text_entity_entity is None:
+            self.text_entity_cache[key] = StatText(
+                text=text, pos=pos, orientation=orientation
             )
-            text_entity = self.text_cache.get(key)
 
-        text_entity.text = text
-        text_entity.create_background(
-            text_entity.size * 0.3,
-            text_entity.size * 0.5,
-            urs.color.rgb(
-                BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
-            ),
-        )
+            text_entity_entity = self.text_entity_cache.get(key)
+            text_entity_entity.set_text(text, pos, orientation)
 
-        if orientation[0] == BlobDisplay.TEXT_RIGHT:
-            text_entity.origin = (0.5, text_entity.origin[1])
-        elif orientation[0] == BlobDisplay.TEXT_CENTER_x:
-            text_entity.origin = (0, text_entity.origin[1])
-
-        if orientation[1] == BlobDisplay.TEXT_TOP:
-            text_entity.origin = (text_entity.origin[0], 0.5)
-        elif orientation[1] == BlobDisplay.TEXT_CENTER_y:
-            text_entity.origin = (text_entity.origin[0], 0)
-        elif orientation[1] == BlobDisplay.TEXT_TOP_PLUS:
-            text_entity.origin = (text_entity.origin[0], 0.5)
-            pos = (pos[0], pos[1] + (text_entity.height * 100))
-
-        FontUtils.position_text(pos[0], pos[1], text_entity)
+        if text_entity_entity.get_text() != text:
+            text_entity_entity.set_text(text, pos, orientation)
 
     def draw_universe(self: Self, universe: BlobUniverse) -> None:
         """Draw the universe area inside the display area (note that universe may be larger than display)"""

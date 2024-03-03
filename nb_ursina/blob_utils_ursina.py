@@ -1,4 +1,4 @@
-from typing import Tuple, Self, cast
+from typing import ClassVar, Tuple, Self, cast
 from collections import deque
 
 from panda3d.core import ClockObject  # type: ignore
@@ -79,7 +79,11 @@ class FPS:
 
     def render(self: Self, x: float, y: float) -> None:
         """Renders the fps to the display object at x,y coordinates"""
+
         self.text.text = f"FPS {round(self.clock.getAverageFrameRate(),2)}"
+
+        FontUtils.position_text(x, y, self.text)
+
         self.text.create_background(
             self.text.size * 0.3,
             self.text.size * 0.5,
@@ -88,8 +92,6 @@ class FPS:
             ),
         )
 
-        FontUtils.position_text(x, y, self.text)
-
         if not self.text.enabled:
             self.text.enabled = True
 
@@ -97,6 +99,10 @@ class FPS:
 class TempMessage(urs.Entity):
     def __init__(self: Self, **kwargs):
         kwargs["eternal"] = True
+
+        self.text = kwargs["text"]
+        self.pos = kwargs["pos"]
+
         super().__init__()
         for key in (
             "model",
@@ -130,10 +136,13 @@ class TempMessage(urs.Entity):
 
         self.position = (0, 0)
 
+        self.set_text(self.text, self.pos)
+
         self.counter = 30
 
-    def set_text(self, text):
+    def set_text(self, text, pos):
         self.temp_text.text = text
+        self.update_text_pos(pos)
         self.temp_text.create_background(
             self.temp_text.size * 1.5,
             self.temp_text.size,
@@ -142,8 +151,13 @@ class TempMessage(urs.Entity):
             ),
         )
 
-    def update_text_pos(self):
-        self.temp_text.position = self.position
+    def get_text(self):
+        return self.temp_text.text
+
+    def update_text_pos(self, pos):
+        self.pos = pos
+
+        FontUtils.position_text(self.pos[0], self.pos[1], self.temp_text)
 
     def reset_counter(self):
         self.counter = 30
@@ -166,6 +180,100 @@ class TempMessage(urs.Entity):
         # urs.destroy(self.temp_text)
         self.enabled = False
         self.temp_text = None
+
+
+class StatText(urs.Entity):
+
+    TEXT_LEFT: ClassVar[int] = 1
+    TEXT_RIGHT: ClassVar[int] = 2
+    TEXT_TOP: ClassVar[int] = 3
+    TEXT_TOP_PLUS: ClassVar[int] = 4
+    TEXT_BOTTOM: ClassVar[int] = 5
+    TEXT_CENTER_x: ClassVar[int] = 6
+    TEXT_CENTER_y: ClassVar[int] = 7
+
+    def __init__(self: Self, **kwargs):
+        kwargs["eternal"] = True
+
+        self.text = kwargs["text"]
+        self.pos = kwargs["pos"]
+        self.orientation = kwargs["orientation"]
+
+        super().__init__()
+        for key in (
+            "model",
+            "origin",
+            "origin_x",
+            "origin_y",
+            "origin_z",
+            "collider",
+            "shader",
+            "texture",
+            "texture_scale",
+            "texture_offset",
+        ):
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.stat_text = urs.Text(
+            font=relative_resource_path_str(str(DISPLAY_FONT), ""),
+            size=(STAT_FONT_SIZE / 100),
+            resolution=100 * (STAT_FONT_SIZE / 100),
+            parent=FontUtils.get_text_parent(),
+            scale=0.1,
+            color=urs.color.rgb(255, 255, 255),
+            enabled=True,
+            origin=(-0.5, -0.5),
+            eternal=True,
+        )
+
+        self.set_text(self.text, self.pos, self.orientation)
+
+    def set_text(self, text, pos, orientation):
+        self.stat_text.text = text
+        self.update_text_pos(pos, orientation)
+        self.stat_text.create_background(
+            self.stat_text.size * 0.5,
+            self.stat_text.size * 0.75,
+            urs.color.rgb(
+                BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
+            ),
+        )
+
+    def get_text(self):
+        return self.stat_text.text
+
+    def update_text_pos(self, pos, orientation):
+
+        self.pos = pos
+        self.orientation = orientation
+
+        if self.orientation[0] == StatText.TEXT_RIGHT:
+            self.stat_text.origin = (0.5, self.stat_text.origin[1])
+        elif self.orientation[0] == StatText.TEXT_CENTER_x:
+            self.stat_text.origin = (0, self.stat_text.origin[1])
+
+        if self.orientation[1] == StatText.TEXT_TOP:
+            self.stat_text.origin = (self.stat_text.origin[0], 0.5)
+        elif self.orientation[1] == StatText.TEXT_CENTER_y:
+            self.stat_text.origin = (self.stat_text.origin[0], 0)
+        elif self.orientation[1] == StatText.TEXT_TOP_PLUS:
+            self.stat_text.origin = (self.stat_text.origin[0], 0.5)
+            self.pos = (self.pos[0], self.pos[1] + (self.stat_text.height * 100))
+
+        FontUtils.position_text(self.pos[0], self.pos[1], self.stat_text)
+
+    def on_disable(self: Self):
+        self.stat_text.enabled = False
+
+    def on_destroy(self: Self):
+        self.stat_text.enabled = False
+        # urs.destroy(self.temp_text)
+        self.enabled = False
+        self.stat_text = None
 
 
 class EventQueue(urs.Entity):
@@ -205,6 +313,7 @@ class FirstPersonSurface:
         universe: BlobUniverse,
         texture: str = None,
         rotation_speed: float = None,
+        rotation_pos: Tuple[int, int, int] = None,
     ):
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
