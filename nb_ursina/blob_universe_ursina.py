@@ -46,6 +46,9 @@ class BlobUniverseUrsina:
     get_height(self: Self) -> float
         Returns the current height of the universe object
 
+    get_center_blob_start_pos() -> Tuple[float,float,float]
+        Returns a tuple of the center point x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
@@ -68,7 +71,7 @@ class BlobUniverseUrsina:
             model="sky_dome",
             scale=CENTER_BLOB_RADIUS * (size_h * 0.5),
             texture=relative_resource_path_str(
-                "nb_ursina/textures/space/solar_system_scope/8k_stars.jpg", ""
+                "nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg", ""
             ),
             texture_scale=(1, 1),
             rotation_x=90,
@@ -95,6 +98,10 @@ class BlobUniverseUrsina:
         Returns the current height of the universe object
         """
         return self.height
+
+    def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
+        """Returns a tuple of the center point x,y,z"""
+        return (0, 0, 0)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""

@@ -67,25 +67,28 @@ UNIVERSE_SIZE = 3500 * SCALE_PERCENT
 UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
 UNIVERSE_SIZE_D = UNIVERSE_SIZE
+# Cube size of the universe in real life scale
 SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
 
-MIN_RADIUS = (500 * E / S) * SCALE_PERCENT
-MAX_RADIUS = (500 * J / S) * SCALE_PERCENT
+CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
+# 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
+CENTER_BLOB_RADIUS = 100 * SCALE_PERCENT
+if TRUE_3D:
+    CENTER_BLOB_RADIUS = 250 * SCALE_PERCENT
+CENTER_BLOB_COLOR = (255, 210, 63)
+CENTER_BLOB_NAME = "sun"
+
+MIN_RADIUS = (CENTER_BLOB_RADIUS * E / S) * SCALE_PERCENT
+MAX_RADIUS = (CENTER_BLOB_RADIUS * J / S) * SCALE_PERCENT
 GRID_CELL_SIZE = MAX_RADIUS * 3
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
-# Cube size of the universe in real life scale
 
 
 MIN_MASS = 7.34767309 * 10**22  # Mass of Moon
 # 3.30 * 10**23 * 0.75  # currently set with 75% of mass of Mercury
 MAX_MASS = 6.9742 * 10**24  # currently set slightly larger than mass of Earth
-CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
-# 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
-CENTER_BLOB_RADIUS = 500 * SCALE_PERCENT
-CENTER_BLOB_COLOR = (255, 210, 63)
-CENTER_BLOB_NAME = "sun"
-CENTER_BLOB_START_POS = (0, 0, 0)
+
 COLORS = [
     (221, 110, 66),  # rgb(221, 110, 66)
     (33, 118, 174),  # rgb(33, 118, 174)

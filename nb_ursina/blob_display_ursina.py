@@ -58,9 +58,6 @@ class BlobDisplayUrsina:
 
     Methods
     -------
-    set_mode(self: Self, size: Tuple[float, float], mode: int) -> None
-        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
-
     get_framework(self: Self) -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
@@ -91,6 +88,12 @@ class BlobDisplayUrsina:
 
     fps_render(self: Self, pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
+
+    set_mode(size: Tuple[float, float], mode: int) -> None
+        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
+
+    is_fullscreen() -> bool:
+        Whether of not the display is in fullscreen mode (False if in windowed mode)
 
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
@@ -311,16 +314,10 @@ class BlobDisplayUrsina:
                 ((urs.window.main_monitor.width - size[0]) / 2),
                 ((urs.window.main_monitor.height - size[1]) / 2),
             )
-            # urs.camera.fov = 50
-        # else:
-        # urs.camera.fov = 100
 
-        # urs.camera.fov = urs.window.size[0] * fov_ratio
-
-        # width = urs.window.size[0]
-        # height = urs.window.size[1]
-        # urs.camera.ui_lens.setFilmSize(width, height)
-        # urs.camera.ui_lens.setFocalLength(500)
+    def is_fullscreen(self: Self) -> bool:
+        """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
+        return urs.window.fullscreen
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""

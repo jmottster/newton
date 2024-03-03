@@ -98,7 +98,7 @@ class BlobRunner:
         self.show_stats: bool = True
         self.message: str = None
         self.message_counter: int = 0
-        self.fullscreen: bool = True
+        self.fullscreen: bool = self.display.is_fullscreen()
         self.fullscreen_save_w: float = self.display.get_windowed_width()
         self.fullscreen_save_h: float = self.display.get_windowed_height()
 

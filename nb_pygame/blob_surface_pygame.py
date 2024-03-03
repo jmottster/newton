@@ -41,6 +41,8 @@ class BlobSurfacePygame:
         Not used, this is a 2d implementation
     rotation_speed : float = None
         Not used, this is a 2d implementation
+    rotation_pos : Tuple[int, int, int] = None
+        Not used, this is a 2d implementation
 
     Methods
     -------
@@ -107,6 +109,9 @@ class BlobSurfacePygame:
     """
 
     __slots__ = (
+        "texture",
+        "rotation_speed",
+        "rotation_pos",
         "py_universe",
         "radius",
         "width_center",
@@ -144,7 +149,13 @@ class BlobSurfacePygame:
         universe: BlobUniverse,
         texture: str = None,
         rotation_speed: float = None,
+        rotation_pos: Tuple[int, int, int] = None,
     ):
+
+        self.texture = texture
+        self.rotation_speed = rotation_speed
+        self.rotation_pos = rotation_pos
+
         self.py_universe: pygame.Surface = cast(
             pygame.Surface, universe.get_framework()
         )

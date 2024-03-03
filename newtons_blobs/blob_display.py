@@ -35,9 +35,6 @@ class BlobDisplay(Protocol):
 
     Methods
     -------
-    set_mode(size: Tuple[float, float], mode: int) -> None
-        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
-
     get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
@@ -68,6 +65,12 @@ class BlobDisplay(Protocol):
 
     fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
+
+    set_mode(size: Tuple[float, float], mode: int) -> None
+        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
+
+    is_fullscreen() -> bool:
+        Whether of not the display is in fullscreen mode (False if in windowed mode)
 
     fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
@@ -159,6 +162,10 @@ class BlobDisplay(Protocol):
 
     def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
         """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
+        pass
+
+    def is_fullscreen(self: Self) -> bool:
+        """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
         pass
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:

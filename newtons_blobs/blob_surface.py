@@ -36,6 +36,8 @@ class BlobSurface(Protocol):
         For 3d rendering, this is optional (implement as texture = None in __init__)
     rotation_speed : float = None
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
+    rotation_pos : Tuple[int, int, int] = None
+        For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
 
     Methods
     -------
@@ -64,6 +66,7 @@ class BlobSurface(Protocol):
     universe: BlobUniverse
     texture: str = None
     rotation_speed: float = None
+    rotation_pos: Tuple[int, int, int] = None
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""

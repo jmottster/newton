@@ -20,6 +20,8 @@ from newtons_blobs.globals import *
 from newtons_blobs.blob_universe import BlobUniverse
 from newtons_blobs.blob_display import BlobDisplay
 
+from .blob_surface_pygame import BlobSurfacePygame
+
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
@@ -82,12 +84,15 @@ class BlobDisplayPygame:
     init_display() -> pygame.Surface
         Initiates and returns a pygame display instance configured for the current monitor.
 
-    set_mode(self: Self, size: Tuple[float, float], mode: int) -> None
-        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
-
     get_framework(self: Self) -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
+
+    get_windowed_width() -> float
+        Returns the default width of the non-fullscreen display object
+
+    get_windowed_height() -> float
+        Returns the default height of the non-fullscreen display object
 
     get_width(self: Self) -> float
         Returns the current width of the display object
@@ -109,6 +114,12 @@ class BlobDisplayPygame:
 
     fps_render(self: Self, pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
+
+    set_mode(size: Tuple[float, float], mode: int) -> None
+        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
+
+    is_fullscreen() -> bool:
+        Whether of not the display is in fullscreen mode (False if in windowed mode)
 
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
@@ -134,6 +145,8 @@ class BlobDisplayPygame:
 
         self.width: float = size_w
         self.height: float = size_h
+        self.windowed_width = size_w
+        self.windowed_height = size_h
         self.display: pygame.Surface = self.init_display()
         self.img: pygame.Surface = pygame.image.load(resource_path(WINDOW_ICON))
         self.fps: FPS = FPS()
@@ -160,16 +173,24 @@ class BlobDisplayPygame:
 
         return pygame.display.set_mode([self.width, self.height], pygame.RESIZABLE)
 
-    def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
-        """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
-        pygame.display.set_mode(size, self.modes[mode])
-
     def get_framework(self: Self) -> Any:
         """
         Returns the pygame.Surface instance that represents the display area. Must cast it since the interface requires
         a return type of Any
         """
         return self.display
+
+    def get_windowed_width(self: Self) -> float:
+        """
+        Returns the default width of the non-fullscreen display object
+        """
+        return self.windowed_width
+
+    def get_windowed_height(self: Self) -> float:
+        """
+        Returns the default height of the non-fullscreen display object
+        """
+        return self.windowed_height
 
     def get_width(self: Self) -> float:
         """Returns the current width of the display object"""
@@ -197,7 +218,7 @@ class BlobDisplayPygame:
         # Check for events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                keyboard_events[pygame.K_q]()
+                keyboard_events[pygame.K_ESCAPE]()
             if event.type == pygame.KEYDOWN:
                 if keyboard_events.get(event.key) is not None:
                     keyboard_events[event.key]()
@@ -209,6 +230,14 @@ class BlobDisplayPygame:
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
         self.fps.render(self.display, pos[0], pos[1] - (self.fps.text.get_height() * 2))
+
+    def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
+        """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
+        pygame.display.set_mode(size, self.modes[mode])
+
+    def is_fullscreen(self: Self) -> bool:
+        """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
+        return pygame.display.is_fullscreen()
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""

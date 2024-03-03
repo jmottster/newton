@@ -39,7 +39,7 @@ class BlobPygameFactory:
 
     Methods
     -------
-    new_blob_surface(radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None) -> BlobSurface
+    new_blob_surface(radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface
 
     get_blob_universe() -> BlobUniverse
@@ -68,10 +68,19 @@ class BlobPygameFactory:
         color: Tuple[int, int, int],
         texture: str = None,
         rotation_speed: float = None,
+        rotation_pos: Tuple[int, int, int] = None,
     ) -> BlobSurface:
         """Factory method for instantiating instances of an implementor of the BlobSurface interface"""
         return cast(
-            BlobSurface, BlobSurfacePygame(radius, color, self.get_blob_universe())
+            BlobSurface,
+            BlobSurfacePygame(
+                radius,
+                color,
+                self.get_blob_universe(),
+                texture,
+                rotation_speed,
+                rotation_pos,
+            ),
         )
 
     def get_blob_universe(self: Self) -> BlobUniverse:

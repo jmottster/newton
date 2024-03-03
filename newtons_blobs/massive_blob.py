@@ -155,6 +155,8 @@ class MassiveBlob:
             data["texture"] = self.blob_surface.texture
         if getattr(self.blob_surface, "rotation_speed"):
             data["rotation_speed"] = self.blob_surface.rotation_speed
+        if getattr(self.blob_surface, "rotation_pos"):
+            data["rotation_pos"] = self.blob_surface.rotation_pos
         data["mass"] = self.mass
         data["x"] = self.x
         data["y"] = self.y

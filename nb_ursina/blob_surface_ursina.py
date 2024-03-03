@@ -33,6 +33,7 @@ class Rotator(urs.Entity):
         super().__init__()
 
         self.rotation_speed = kwargs.get("rotation_speed")
+        self.rotation_pos = kwargs.get("rotation_pos")
 
         for key in (
             "model",
@@ -56,6 +57,17 @@ class Rotator(urs.Entity):
         self.world_rotation_x = random.random() * 360
         self.world_rotation_y = random.random() * 360
         self.world_rotation_z = random.random() * 360
+
+        if self.rotation_pos is not None:
+            self.world_rotation_x, self.world_rotation_y, self.world_rotation_z = (
+                self.rotation_pos
+            )
+
+        self.rotation_pos = (
+            self.world_rotation_x,
+            self.world_rotation_y,
+            self.world_rotation_z,
+        )
 
         if self.rotation_speed is None:
             self.rotation_speed = (random.random() * 5.00) + 1
@@ -81,7 +93,10 @@ class BlobSurfaceUrsina:
         The universe instance the blobs will be drawn on
     texture : str
         For 3d rendering, this is optional (implement as texture = None in __init__)
-
+    rotation_speed : float = None
+        For 3d rendering, the speed (degrees per frame) at which the blob will spin
+    rotation_pos : Tuple[int, int, int] = None
+        For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
 
     Methods
     -------
@@ -105,6 +120,17 @@ class BlobSurfaceUrsina:
         Call to get rid of this instance, so it can clean up
     """
 
+    __slots__ = (
+        "radius",
+        "color",
+        "universe",
+        "texture",
+        "rotation_speed",
+        "rotation_pos",
+        "ursina_center_blob",
+        "ursina_blob",
+    )
+
     center_blob_x: ClassVar[float] = 0
     center_blob_y: ClassVar[float] = 0
     center_blob_z: ClassVar[float] = 0
@@ -116,6 +142,7 @@ class BlobSurfaceUrsina:
         universe: BlobUniverse,
         texture: str = None,
         rotation_speed: float = None,
+        rotation_pos: Tuple[int, int, int] = None,
     ):
 
         self.radius: float = radius
@@ -133,8 +160,11 @@ class BlobSurfaceUrsina:
                     random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
                 ]
         self.rotation_speed = None
+        self.rotation_pos = None
         if rotation_speed is not None:
             self.rotation_speed = rotation_speed
+        if rotation_pos is not None:
+            self.rotation_pos = rotation_pos
 
         self.ursina_center_blob: urs.PointLight = None
         self.ursina_blob: Rotator = None
@@ -142,10 +172,11 @@ class BlobSurfaceUrsina:
         if color == CENTER_BLOB_COLOR:
             self.ursina_blob = Rotator(
                 position=(0, 0, 0),
-                model=relative_resource_path_str("nb_ursina/models/local_uvsphere", ""),
+                model="local_uvsphere.bam",
                 scale=radius,
                 texture=relative_resource_path_str("nb_ursina/textures/sun03.png", ""),
                 rotation_speed=self.rotation_speed,
+                rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
                 collider="mesh",
                 color=urs.color.rgb(100, 100, 100, 255),
@@ -163,10 +194,11 @@ class BlobSurfaceUrsina:
         else:
             self.ursina_blob = Rotator(
                 position=(0, 0, 0),
-                model=relative_resource_path_str("nb_ursina/models/local_uvsphere", ""),
+                model="local_uvsphere.bam",
                 scale=radius,
                 texture=relative_resource_path_str(self.texture, ""),
                 rotation_speed=self.rotation_speed,
+                rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
                 collider="mesh",
                 shader=shd.lit_with_shadows_shader,
@@ -174,6 +206,7 @@ class BlobSurfaceUrsina:
             self.ursina_blob.setShaderAuto()
 
         self.rotation_speed = self.ursina_blob.rotation_speed
+        self.rotation_pos = self.ursina_blob.rotation_pos
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""

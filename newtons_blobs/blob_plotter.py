@@ -167,6 +167,7 @@ class BlobPlotter:
                     tuple(blob_pref["color"]),  # type: ignore
                     blob_pref.get("texture"),  # Might not exist
                     blob_pref.get("rotation_speed"),  # Might not exist
+                    blob_pref.get("rotation_pos"),  # Might not exist
                 ),
                 blob_pref["mass"],
                 blob_pref["x"],
@@ -350,9 +351,7 @@ class BlobPlotter:
         # scaled_half_universe_w = self.scaled_universe_width / 2
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x = CENTER_BLOB_START_POS[0]
-        y = CENTER_BLOB_START_POS[1]
-        z = CENTER_BLOB_START_POS[2]
+        x, y, z = self.blob_factory.get_blob_universe().get_center_blob_start_pos()
 
         self.blobs[0] = MassiveBlob(
             self.universe_size_h,

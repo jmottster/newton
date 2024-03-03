@@ -44,6 +44,9 @@ class BlobUniversePygame:
     get_height(self: Self) -> float
         Returns the current height of the universe object
 
+    get_center_blob_start_pos() -> Tuple[float,float,float]
+        Returns a tuple of the center point x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
@@ -69,6 +72,13 @@ class BlobUniversePygame:
     def get_height(self: Self) -> float:
         """Returns the current height of the universe object"""
         return self.universe.get_height()
+
+    def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
+        """Returns a tuple of the center point x,y,z"""
+        x = self.get_width() * SCALE_UP
+        y = self.get_height() * SCALE_UP
+        z = self.get_height() * SCALE_UP
+        return (x / 2, y / 2, z / 2)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
