@@ -197,9 +197,10 @@ class BlobRunner:
                 )
                 self.fullscreen = False
             else:
-                self.fullscreen_save_w = self.display.get_width()
-                self.fullscreen_save_h = self.display.get_height()
-                self.display.set_mode((0, 0), BlobDisplay.FULLSCREEN)
+                if not self.display.is_fullscreen():
+                    self.fullscreen_save_w = self.display.get_width()
+                    self.fullscreen_save_h = self.display.get_height()
+                    self.display.set_mode((0, 0), BlobDisplay.FULLSCREEN)
                 self.fullscreen = True
 
         def toggle_auto_save_load() -> None:

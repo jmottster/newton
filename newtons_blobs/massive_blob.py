@@ -123,8 +123,6 @@ class MassiveBlob:
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
-        if TRUE_3D and self.radius > MAX_RADIUS:
-            self.radius = self.radius * 0.75
         self.scaled_radius: float = self.radius * SCALE_UP
         self.mass: float = mass
         self.x: float = x

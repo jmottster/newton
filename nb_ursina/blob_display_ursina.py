@@ -40,8 +40,14 @@ class WindowHandler(DirectObject.DirectObject):
 
         if urs.window.size[0] != self.last_size[0]:
             urs.camera.fov = urs.camera.fov * (urs.window.size[0] / self.last_size[0])
-            self.display.width = urs.window.size[0]
-            self.display.height = urs.window.size[1]
+
+            if urs.window.fullscreen:
+                self.display.width = urs.window.main_monitor.width
+                self.display.height = urs.window.main_monitor.height
+            else:
+                self.display.width = urs.window.size[0]
+                self.display.height = urs.window.size[1]
+
             self.last_size = urs.window.size
             for _, item in self.display.text_entity_cache.items():
                 item.enabled = False
@@ -99,7 +105,7 @@ class BlobDisplayUrsina:
         Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
 
     is_fullscreen() -> bool:
-        Whether of not the display is in fullscreen mode (False if in windowed mode)
+        Whether or not the display is in fullscreen mode (False if in windowed mode)
 
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
@@ -181,8 +187,12 @@ class BlobDisplayUrsina:
             self.key_ints[key] = i
             i += 1
 
-        self.width = urs.window.size[0]
-        self.height = urs.window.size[1]
+        if urs.window.fullscreen:
+            self.width = urs.window.main_monitor.width
+            self.height = urs.window.main_monitor.height
+        else:
+            self.width = urs.window.size[0]
+            self.height = urs.window.size[1]
 
         self.urs_keyboard_events: Dict[int, Callable[[], None]] = (
             self.load_keyboard_events()
@@ -316,9 +326,11 @@ class BlobDisplayUrsina:
                 ((urs.window.main_monitor.width - size[0]) / 2),
                 ((urs.window.main_monitor.height - size[1]) / 2),
             )
+            self.windowed_width = size[0]
+            self.windowed_height = size[1]
 
     def is_fullscreen(self: Self) -> bool:
-        """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
+        """Whether or not the display is in fullscreen mode (False if in windowed mode)"""
         return urs.window.fullscreen
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
