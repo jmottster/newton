@@ -145,10 +145,6 @@ class BlobDisplayUrsina:
             cog_menu=False,
         )
 
-        # urs.forced_aspect_ratio = (
-        #     urs.window.main_monitor.width / urs.window.main_monitor.height
-        # )
-
         urs.window.color = urs.color.rgb(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
