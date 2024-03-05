@@ -253,8 +253,9 @@ class BlobSurfaceUrsina:
 
     def destroy(self: Self) -> None:
         if self.ursina_center_blob is not None:
-            self.ursina_center_blob.enabled = False
-            # self.ursina_center_blob = None
+            self.ursina_center_blob.color = (0, 0, 0, 0)
+            urs.destroy(self.ursina_center_blob)
+            self.ursina_center_blob = None
 
         self.ursina_blob.enabled = False
         # self.ursina_blob = None
