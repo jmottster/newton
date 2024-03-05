@@ -12,7 +12,8 @@ from typing import Tuple, Self, cast
 import numpy.typing as npt
 
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_display_ursina import BlobDisplayUrsina, FirstPersonSurface
+from .blob_display_ursina import BlobDisplayUrsina
+from .blob_first_person_surface import FirstPersonSurface
 from .blob_surface_ursina import BlobSurfaceUrsina
 from newtons_blobs import MassiveBlob
 from newtons_blobs.blob_surface import BlobSurface
@@ -66,6 +67,13 @@ class BlobUrsinaFactory:
             (0, 0, 0),
             self.urs_universe,
         )
+        start_pos = self.urs_universe.get_center_blob_start_pos()
+        start_pos = (
+            start_pos[0] * SCALE_DOWN,
+            start_pos[1] * SCALE_DOWN,
+            (start_pos[2] * SCALE_DOWN) - (DISPLAY_SIZE_H),
+        )
+        self.urs_display.first_person_surface.draw(start_pos)
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
             UNIVERSE_SIZE_H,

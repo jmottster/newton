@@ -47,7 +47,7 @@ class FPS:
     def __init__(self: Self):
         self.clock: pygame.time.Clock = pygame.time.Clock()
         self.font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), STAT_FONT_SIZE
         )
         self.text: pygame.Surface = self.font.render(
             f"FPS {round(self.clock.get_fps(), 2)}",
@@ -148,10 +148,10 @@ class BlobDisplayPygame:
         self.windowed_width = size_w
         self.windowed_height = size_h
         self.display: pygame.Surface = self.init_display()
-        self.img: pygame.Surface = pygame.image.load(resource_path(WINDOW_ICON))
+        self.img: pygame.Surface = pygame.image.load(resource_path(Path(WINDOW_ICON)))
         self.fps: FPS = FPS()
         self.stat_font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), STAT_FONT_SIZE
         )
 
         pygame.display.set_caption(WINDOW_TITLE)

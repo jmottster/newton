@@ -165,7 +165,7 @@ class BlobSurfacePygame:
         self.height_center: float = radius + (radius)
         self.size: Tuple[float, float] = (self.width_center * 2, self.height_center * 2)
         self.blob_font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), BLOB_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), BLOB_FONT_SIZE
         )
         self.position: Tuple[float, float, float] = (0, 0, 0)
         self.animation_scale_div: float = 0.15

@@ -43,7 +43,7 @@ HOURS = MINUTES * 60
 DAYS = HOURS * 24
 YEARS = DAYS * 365.25
 
-TIMESCALE = HOURS * 20 * SCALE_PERCENT  # elapsed time per frame, in seconds
+TIMESCALE = HOURS * 10 * SCALE_PERCENT  # elapsed time per frame, in seconds
 
 AUTO_SAVE_LOAD = True
 LIGHTING = True
@@ -74,7 +74,7 @@ CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
 # 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
 CENTER_BLOB_RADIUS = 100 * SCALE_PERCENT
 if TRUE_3D:
-    CENTER_BLOB_RADIUS = 250 * SCALE_PERCENT
+    CENTER_BLOB_RADIUS = 100 * SCALE_PERCENT
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
 
@@ -129,8 +129,8 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 # night black (19, 21, 21)
 # jet grey (43, 44, 40)
 # rich black (0, 21, 36)
-DISPLAY_FONT = Path("newtons_blobs/font/Rushfordclean-rgz89.otf")
-WINDOW_ICON = Path("newtons_blobs/img/newton_icon.ico")
+DISPLAY_FONT = "newtons_blobs/font/Rushfordclean-rgz89.otf"
+WINDOW_ICON = "newtons_blobs/img/newton_icon.ico"
 WINDOW_TITLE = "Newton's Blobs"
 STAT_FONT_SIZE = round(24 * SCALE_PERCENT)
 BLOB_FONT_SIZE = round(16 * SCALE_PERCENT)

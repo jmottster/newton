@@ -5,9 +5,10 @@ import ursina.shaders as shd  # type: ignore
 
 from .blob_surface_ursina import BlobSurfaceUrsina
 from newtons_blobs.globals import *
-from newtons_blobs import relative_resource_path_str
+from newtons_blobs import resource_path
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL
+from .blob_utils_ursina import TempMessage
 
 
 class BlobFirstPersonUrsina(urs.Entity):
@@ -39,7 +40,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.temp_scale * 0.025,
                 self.temp_scale * 0.025,
             ),
-            texture=relative_resource_path_str("nb_ursina/textures/sun03.png", ""),
+            texture="nb_ursina/textures/sun03.png",
             texture_scale=(1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
@@ -86,11 +87,14 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.speed = 5
         self.roll_speed = 1.5
+        self.orig_speed = 5
+        self.orig_roll_speed = 1.5
         self.position = urs.Vec3(0, 0, self.start_z)
         self.velocity = urs.Vec3(0, 0, 0)
         self.world_position = urs.Vec3(0, 0, self.start_z)
         self.local_disabled = False
         self.flashlight_on = True
+        self.temp_message: TempMessage = None
 
         urs.mouse.traverse_target = None
         urs.mouse.locked = True
@@ -122,6 +126,8 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.speed *= self.temp_scale * 3
         self.roll_speed *= self.temp_scale * 3
+        self.orig_speed *= self.temp_scale * 3
+        self.orig_roll_speed *= self.temp_scale * 3
         self.scroll_smoothness *= self.temp_scale * 3
 
         # self.cam_pos = urs.Text(
@@ -147,32 +153,51 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             thrust = self.mouse_scroll_up - self.mouse_scroll_down
 
-            self.scroll_speed += thrust * self.scroll_smoothness
+            if thrust != 0:
 
-            self.m_direction = urs.Vec3(self.up * self.scroll_speed).normalized()
+                self.speed += self.scale[0] * thrust
+                self.roll_speed += self.scale[0] * thrust
 
-            if self.scroll_speed > -(
-                self.scroll_smoothness / 4
-            ) and self.scroll_speed < (self.scroll_smoothness / 4):
-                self.scroll_speed = 0
-
-            elif self.scroll_speed < 0:
-                self.scroll_speed = urs.clamp(
-                    self.scroll_speed,
-                    -(self.scroll_smoothness),
-                    -(self.scroll_smoothness / 4),
+                self.speed = urs.clamp(
+                    self.speed,
+                    self.orig_speed * 0.05,
+                    self.orig_speed * 2.5,
                 )
 
-            elif self.scroll_speed > 0:
-                self.scroll_speed = urs.clamp(
-                    self.scroll_speed,
-                    self.scroll_smoothness / 4,
-                    self.scroll_smoothness,
+                self.roll_speed = urs.clamp(
+                    self.roll_speed,
+                    self.orig_roll_speed * 0.25,
+                    self.orig_roll_speed * 2,
                 )
 
-            self.velocity = self.m_direction * urs.time.dt * abs(self.scroll_speed)
+                self.report_throttle_speed()
 
-            self.scroll_speed *= 0.95
+            # self.scroll_speed += thrust * self.scroll_smoothness
+
+            # self.m_direction = urs.Vec3(self.up * self.scroll_speed).normalized()
+
+            # if self.scroll_speed > -(
+            #     self.scroll_smoothness / 4
+            # ) and self.scroll_speed < (self.scroll_smoothness / 4):
+            #     self.scroll_speed = 0
+
+            # elif self.scroll_speed < 0:
+            #     self.scroll_speed = urs.clamp(
+            #         self.scroll_speed,
+            #         -(self.scroll_smoothness),
+            #         -(self.scroll_smoothness / 4),
+            #     )
+
+            # elif self.scroll_speed > 0:
+            #     self.scroll_speed = urs.clamp(
+            #         self.scroll_speed,
+            #         self.scroll_smoothness / 4,
+            #         self.scroll_smoothness,
+            #     )
+
+            # self.velocity = self.m_direction * urs.time.dt * abs(self.scroll_speed)
+
+            # self.scroll_speed *= 0.95
 
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
@@ -183,7 +208,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 + self.up * (urs.held_keys["e"] - urs.held_keys["x"])
             ).normalized()
 
-            self.velocity += self.direction * urs.time.dt * self.speed
+            self.velocity = self.direction * urs.time.dt * self.speed
 
             self.position += self.velocity
 
@@ -221,11 +246,36 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.flashlight.color = self.flashlight_color
                 self.flashlight_on = True
 
+        if key == "r":
+            self.speed = self.orig_speed
+            self.roll_speed = self.orig_roll_speed
+            self.report_throttle_speed()
+
         # print(key)
         if key == "scroll up":
             self.mouse_scroll_up = 1
         if key == "scroll down":
             self.mouse_scroll_down = 1
+
+    def report_throttle_speed(self: Self):
+        if self.temp_message is None:
+
+            self.temp_message = TempMessage(
+                text=f"Throttle speed: {self.speed}",
+                pos=(
+                    (urs.window.size[0] / 2),
+                    (urs.window.size[1] * 0.75),
+                ),
+            )
+        else:
+            self.temp_message.set_text(
+                f"Throttle speed: {self.speed}",
+                (
+                    (urs.window.size[0] / 2),
+                    (urs.window.size[1] * 0.75),
+                ),
+            )
+            self.temp_message.reset_counter()
 
     def on_mouse1_click(self):
         print(f"click")

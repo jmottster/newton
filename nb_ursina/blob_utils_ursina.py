@@ -5,10 +5,9 @@ from panda3d.core import ClockObject  # type: ignore
 import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs.resources import relative_resource_path_str
+from newtons_blobs.resources import resource_path
 from newtons_blobs.blob_universe import BlobUniverse
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_first_person_ursina import BlobFirstPersonUrsina
 
 
 class FontUtils:
@@ -25,7 +24,12 @@ class FontUtils:
 
     @staticmethod
     def position_text(x: float, y: float, text_entity: urs.Text) -> None:
-        x = (x * urs.window.aspect_ratio) / urs.window.size[0]
+        aspect_ratio = urs.window.aspect_ratio
+        if urs.window.fullscreen:
+            aspect_ratio = (
+                urs.window.main_monitor.width / urs.window.main_monitor.height
+            )
+        x = (x * aspect_ratio) / urs.window.size[0]
         y = 1 - (y / urs.window.size[1])
 
         text_entity.position = (x, y)
@@ -62,7 +66,7 @@ class FPS:
                 return self.globalClock.getAverageFrameRate()
 
         self.clock: Clock = Clock()
-        self.font = relative_resource_path_str(str(DISPLAY_FONT), "")
+        self.font = DISPLAY_FONT
         self.font_size = STAT_FONT_SIZE / 100
 
         self.text = urs.Text(
@@ -82,7 +86,7 @@ class FPS:
 
         self.text.text = f"FPS {round(self.clock.getAverageFrameRate(),2)}"
 
-        FontUtils.position_text(x, y, self.text)
+        FontUtils.position_text(x, y - (self.text.height * 100), self.text)
 
         self.text.create_background(
             self.text.size * 0.3,
@@ -102,6 +106,10 @@ class TempMessage(urs.Entity):
 
         self.text = kwargs["text"]
         self.pos = kwargs["pos"]
+        if kwargs.get("counter") is not None:
+            self.counter = kwargs["counter"]
+        else:
+            self.counter = 30
 
         super().__init__()
         for key in (
@@ -123,7 +131,7 @@ class TempMessage(urs.Entity):
             setattr(self, key, value)
 
         self.temp_text = urs.Text(
-            font=relative_resource_path_str(str(DISPLAY_FONT), ""),
+            font=DISPLAY_FONT,
             size=(STAT_FONT_SIZE / 100),
             resolution=100 * (STAT_FONT_SIZE / 100),
             parent=FontUtils.get_text_parent(),
@@ -137,8 +145,6 @@ class TempMessage(urs.Entity):
         self.position = (0, 0)
 
         self.set_text(self.text, self.pos)
-
-        self.counter = 30
 
     def set_text(self, text, pos):
         self.temp_text.text = text
@@ -219,7 +225,7 @@ class StatText(urs.Entity):
             setattr(self, key, value)
 
         self.stat_text = urs.Text(
-            font=relative_resource_path_str(str(DISPLAY_FONT), ""),
+            font=DISPLAY_FONT,
             size=(STAT_FONT_SIZE / 100),
             resolution=100 * (STAT_FONT_SIZE / 100),
             parent=FontUtils.get_text_parent(),
@@ -302,49 +308,3 @@ class EventQueue(urs.Entity):
 
     def input(self: Self, key: str):
         self.input_queue.append(key)
-
-
-class FirstPersonSurface:
-
-    def __init__(
-        self: Self,
-        radius: float,
-        color: Tuple[int, int, int],
-        universe: BlobUniverse,
-        texture: str = None,
-        rotation_speed: float = None,
-        rotation_pos: Tuple[int, int, int] = None,
-    ):
-        self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
-        self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
-            scale=CENTER_BLOB_RADIUS / 5,
-            universe=self.universe,
-            start_z=radius,
-            eternal=True,
-            mass=MIN_MASS,
-        )
-        self.radius = radius
-        self.color = color
-
-    def get_position(self: Self) -> urs.Vec3:
-        return self.first_person_viewer.position
-
-    def resize(self: Self, radius: float) -> None:
-        pass
-
-    def update_center_blob(self: Self, x: float, y: float, z: float) -> None:
-        pass
-
-    def draw(
-        self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
-    ) -> None:
-        self.first_person_viewer.position = urs.Vec3(pos)
-
-    def draw_as_center_blob(
-        self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
-    ) -> None:
-        pass
-
-    def destroy(self: Self) -> None:
-        if self.first_person_viewer is not None:
-            self.first_person_viewer.enabled = False

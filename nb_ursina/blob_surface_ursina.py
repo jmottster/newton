@@ -14,7 +14,7 @@ import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.blob_universe import BlobUniverse
 from newtons_blobs.globals import *
-from newtons_blobs import relative_resource_path_str
+from newtons_blobs import resource_path
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL, BLOB_TEXTURES_LARGE
 
@@ -170,11 +170,12 @@ class BlobSurfaceUrsina:
         self.ursina_blob: Rotator = None
 
         if color == CENTER_BLOB_COLOR:
+            self.texture = "nb_ursina/textures/sun03.png"
             self.ursina_blob = Rotator(
                 position=(0, 0, 0),
                 model="local_uvsphere.bam",
                 scale=radius,
-                texture=relative_resource_path_str("nb_ursina/textures/sun03.png", ""),
+                texture=self.texture,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
@@ -196,7 +197,7 @@ class BlobSurfaceUrsina:
                 position=(0, 0, 0),
                 model="local_uvsphere.bam",
                 scale=radius,
-                texture=relative_resource_path_str(self.texture, ""),
+                texture=self.texture,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),

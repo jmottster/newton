@@ -11,11 +11,12 @@ from typing import Any, Callable, ClassVar, Dict, Tuple, Self, cast
 from direct.showbase import DirectObject  # type: ignore
 import ursina as urs  # type: ignore
 
-from newtons_blobs.resources import resource_path, relative_resource_path_str
+from newtons_blobs.resources import resource_path
 from newtons_blobs.globals import *
 from newtons_blobs.blob_universe import BlobUniverse
 from newtons_blobs.blob_display import BlobDisplay
 from .blob_utils_ursina import *
+from .blob_first_person_surface import FirstPersonSurface
 
 
 __author__ = "Jason Mott"
@@ -42,6 +43,11 @@ class WindowHandler(DirectObject.DirectObject):
             self.display.width = urs.window.size[0]
             self.display.height = urs.window.size[1]
             self.last_size = urs.window.size
+            for _, item in self.display.text_entity_cache.items():
+                item.enabled = False
+                urs.destroy(item)
+
+            self.display.text_entity_cache.clear()
 
 
 class BlobDisplayUrsina:
@@ -129,21 +135,28 @@ class BlobDisplayUrsina:
         self.windowed_height = size_h
 
         self.app: urs.Ursina = urs.Ursina(
+            title=WINDOW_TITLE,
+            icon=WINDOW_ICON,
             borderless=False,
+            fullscreen=True,
             editor_ui_enabled=False,
             development_mode=False,
             exit_button=False,
             cog_menu=False,
-            title=WINDOW_TITLE,
-            icon=resource_path(WINDOW_ICON),
         )
+
+        # urs.forced_aspect_ratio = (
+        #     urs.window.main_monitor.width / urs.window.main_monitor.height
+        # )
 
         urs.window.color = urs.color.rgb(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
-        urs.window.fullscreen = True
+        # urs.window.fullscreen = True
         # urs.window.position = urs.Vec2(50, 70)
-        # urs.window.size = urs.Vec2(self.width, self.height)
+        # urs.window.size = urs.Vec2(
+        #     urs.window.main_monitor.width, urs.window.main_monitor.height
+        # )
 
         self.event_queue: EventQueue = EventQueue(eternal=True)
 
@@ -290,7 +303,7 @@ class BlobDisplayUrsina:
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
-        self.fps.render(pos[0], pos[1] - (self.fps.text.height * 100))
+        self.fps.render(pos[0], pos[1])
 
     def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
         """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
