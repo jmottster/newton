@@ -1,14 +1,16 @@
 # Compilation mode, standalone everywhere, except on macOS there app bundle
 # nuitka-project-if: {OS} in ("Windows", "Linux", "FreeBSD", "Darwin"):
 #    nuitka-project: --onefile
-#    nuitka-project: --output-filename=newton3D.exe
 # nuitka-project-if: {OS} in ("Windows"):
+#    nuitka-project: --output-filename=newton3D.exe
 #    nuitka-project: --windows-icon-from-ico=newtons_blobs/img/newton_icon.ico
 # nuitka-project-if: {OS} in ("Linux"):
+#    nuitka-project: --output-filename=newton3D
 #    nuitka-project: --linux-icon=newtons_blobs/img/newton_icon.ico
 # nuitka-project-if: {OS} == "Darwin":
 #    nuitka-project: --standalone
 #    nuitka-project: --macos-create-app-bundle
+#    nuitka-project: --output-filename=newton3D
 #    nuitka-project: --macos-app-icon=newtons_blobs/img/newton_icon.ico
 #
 # Debugging options, controlled via environment variable at compile time.
