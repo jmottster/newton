@@ -140,6 +140,8 @@ class BlobDisplayUrsina:
         self.windowed_width = size_w
         self.windowed_height = size_h
 
+        urs.application.asset_folder = Path(__file__).parent.parent
+
         self.app: urs.Ursina = urs.Ursina(
             title=WINDOW_TITLE,
             icon=WINDOW_ICON,

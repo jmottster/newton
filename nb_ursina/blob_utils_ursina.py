@@ -1,4 +1,4 @@
-from typing import ClassVar, Tuple, Self, cast
+from typing import ClassVar, Self
 from collections import deque
 
 from panda3d.core import ClockObject  # type: ignore
@@ -25,12 +25,14 @@ class FontUtils:
     @staticmethod
     def position_text(x: float, y: float, text_entity: urs.Text) -> None:
         aspect_ratio = urs.window.aspect_ratio
+        height = urs.window.size[1]
         if urs.window.fullscreen:
             aspect_ratio = (
                 urs.window.main_monitor.width / urs.window.main_monitor.height
             )
+            height = urs.window.main_monitor.height
         x = (x * aspect_ratio) / urs.window.size[0]
-        y = 1 - (y / urs.window.size[1])
+        y = 1 - (y / height)
 
         text_entity.position = (x, y)
 
