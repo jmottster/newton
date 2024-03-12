@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-A Protocol class that defines an interface for a plugin object for providing
+A class that implements an interface for a plugin object for providing
 a graphics/drawing library to this simulator
 
 by Jason Mott, copyright 2024
@@ -32,7 +32,7 @@ __status__ = "In Progress"
 
 class BlobUrsinaFactory:
     """
-    A Protocol class that defines an interface for a plugin object for providing
+    A class that implements an interface for a plugin object for providing
     a graphics/drawing library to this simulator
 
     Methods
@@ -42,7 +42,7 @@ class BlobUrsinaFactory:
         as implementation is not known at runtime
 
     get_blob_universe() -> BlobUniverse
-        Returns a the single instance of a Universe object, intended to be the area that is drawn on.
+        Returns a single instance of a Universe object, intended to be the area that is drawn on.
         Can be larger than the display area, which represents the area shown on one's monitor
 
     get_blob_display() -> BlobDisplay
@@ -114,7 +114,7 @@ class BlobUrsinaFactory:
 
     def get_blob_universe(self: Self) -> BlobUniverse:
         """
-        Returns a the single instance of a Universe object, intended to be the area that is drawn on.
+        Returns a single instance of a Universe object, intended to be the area that is drawn on.
         Can be larger than the display area, which represents the area shown on one's monitor
         """
         return cast(BlobUniverse, self.urs_universe)

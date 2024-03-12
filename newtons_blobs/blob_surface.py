@@ -66,7 +66,7 @@ class BlobSurface(Protocol):
     universe: BlobUniverse
     texture: str = None
     rotation_speed: float = None
-    rotation_pos: Tuple[int, int, int] = None
+    rotation_pos: Tuple[float, float, float] = None
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""

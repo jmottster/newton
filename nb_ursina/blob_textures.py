@@ -1,3 +1,22 @@
+"""
+Newton's Laws, a simulator of physics at the scale of space
+
+Lists of textures for blobs, large and small
+
+by Jason Mott, copyright 2024
+"""
+
+from newtons_blobs.globals import *
+
+__author__ = "Jason Mott"
+__copyright__ = "Copyright 2024"
+__license__ = "GPL 3.0"
+__version__ = VERSION
+__maintainer__ = "Jason Mott"
+__email__ = "github@jasonmott.com"
+__status__ = "In Progress"
+
+
 BLOB_TEXTURES_LARGE = [
     # "nb_ursina/textures/jupiter.jpg",
     # "nb_ursina/textures/saturn.jpg",

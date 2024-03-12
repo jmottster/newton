@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Protocol class to represent an object that holds and controls a drawing area intended for screen display
+Class to represent an object that holds and controls a drawing area intended for screen display
 
 by Jason Mott, copyright 2024
 """
@@ -29,6 +29,19 @@ __status__ = "In Progress"
 
 
 class WindowHandler(DirectObject.DirectObject):
+    """
+    A class to catch window events from the Panda3D event handler. This is to maintain
+    a consistent view by adjusting FOV according to the window width. (So the image
+    doesn't scale with window size)
+
+    Methods
+    -------
+    possible_resize(self: Self, arg: str) -> None
+        Implementation of event call back (set up in __init__ via self.accept("window-event", self.possible_resize)
+        See  direct.showbase.DirectObject from Panda3D API). This will adjust FOV if the window has changed size.
+
+    """
+
     def __init__(self: Self, last_size: urs.Vec2, display: "BlobDisplayUrsina"):
         self.last_size: urs.Vec2 = last_size
         self.accept("window-event", self.possible_resize)
@@ -36,7 +49,11 @@ class WindowHandler(DirectObject.DirectObject):
         self.orig_fov: float = 90.0
         urs.camera.fov = self.orig_fov
 
-    def possible_resize(self, arg):
+    def possible_resize(self: Self, arg: str) -> None:
+        """
+        Implementation of event call back (set up in __init__ via self.accept("window-event", self.possible_resize)
+        See  direct.showbase.DirectObject from Panda3D API). This will adjust FOV if the window has changed size.
+        """
 
         if urs.window.size[0] != self.last_size[0]:
             urs.camera.fov = urs.camera.fov * (urs.window.size[0] / self.last_size[0])
@@ -58,7 +75,7 @@ class WindowHandler(DirectObject.DirectObject):
 
 class BlobDisplayUrsina:
     """
-    Protocol class to represent an object that holds and controls a drawing
+    Class to represent an object that holds and controls a drawing
     area intended for screen display (the viewable area of the Universe object)
 
     Attributes
@@ -70,7 +87,15 @@ class BlobDisplayUrsina:
 
     Methods
     -------
-    get_framework(self: Self) -> Any
+
+    load_key_ints() -> Dict[str, int]
+        Loads up the Dict that holds integers that represent keys. (see get_key_code)
+
+    load_keyboard_events() -> Dict[int, Callable[[], None]]
+        Creates and populates a dict that holds function references for keyboard events (also creates the functions),
+        returns the dict
+
+    get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
 
@@ -80,25 +105,25 @@ class BlobDisplayUrsina:
     get_windowed_height() -> float
         Returns the default height of the non-fullscreen display object
 
-    get_width(self: Self) -> float
+    get_width() -> float
         Returns the current width of the display object
 
-    get_height(self: Self) -> float
+    get_height() -> float
         Returns the current height of the display object
 
-    get_key_code(self: Self, key: str) -> int
+    get_key_code(key: str) -> int
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
 
-    check_events(self: Self, keyboard_events: Dict[int, Callable[[], None]]) -> None
+    check_events(keyboard_events: Dict[int, Callable[[], None]]) -> None
         Send a dict that has codes from get_key_codes (i.e. keyboard key codes) as the keys (i.e. dict keys),
         and something to do upon that key being pressed.
         This is presumed to be used for each iteration of a frame before drawing.
 
-    fps_clock_tick(self: Self, fps: int) -> None
+    fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
 
-    fps_render(self: Self, pos: Tuple[float, float]) -> None
+    fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
 
     set_mode(size: Tuple[float, float], mode: int) -> None
@@ -107,21 +132,24 @@ class BlobDisplayUrsina:
     is_fullscreen() -> bool:
         Whether or not the display is in fullscreen mode (False if in windowed mode)
 
-    fill(self: Self, color: Tuple[int, int, int]) -> None
+    fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
-    blit_text(self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
+    temp_message(text: str, pos: Tuple[float, float], msg_key: str) -> None
+        Sends the given message to the center of the screen for 30 seconds
+
+    blit_text(text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
         Print the proved text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
 
-    draw_universe(self: Self, universe: BlobUniverse) -> None
+    draw_universe(universe: BlobUniverse) -> None
         Draw the universe area inside the display area (note that universe may be larger than display)
 
-    update(self: Self) -> None
+    update() -> None
         Draw the prepared frame to the screen/window
 
-    quit(self: Self) -> None
+    quit() -> None
         Exit the application
 
     """
@@ -129,16 +157,7 @@ class BlobDisplayUrsina:
     FULLSCREEN: ClassVar[int] = 1
     RESIZABLE: ClassVar[int] = 2
 
-    size_w: float
-    size_h: float
-
     def __init__(self: Self, size_w: float, size_h: float):
-
-        self.paused = False
-        self.show_stats = True
-
-        self.windowed_width = size_w
-        self.windowed_height = size_h
 
         urs.application.asset_folder = Path(__file__).parent.parent
 
@@ -156,67 +175,56 @@ class BlobDisplayUrsina:
         urs.window.color = urs.color.rgb(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
-        # urs.window.fullscreen = True
-        # urs.window.position = urs.Vec2(50, 70)
-        # urs.window.size = urs.Vec2(
-        #     urs.window.main_monitor.width, urs.window.main_monitor.height
-        # )
-
-        self.event_queue: EventQueue = EventQueue(eternal=True)
 
         self.first_person_surface: FirstPersonSurface = None  # set by BlobUrsinaFactory
 
-        self.fps: FPS = FPS()
+        self.windowed_width: float = size_w
+        self.windowed_height: float = size_h
 
-        # self.font_overlay = urs.Entity(parent=urs.camera.ui, scale=1, x=-1, y=1)
+        self.width: float = urs.window.main_monitor.width
+        self.height: float = urs.window.main_monitor.height
+
+        if not urs.window.fullscreen:
+            self.width = urs.window.size[0]
+            self.height = urs.window.size[1]
+
         self.modes: Dict[int, int] = {
             BlobDisplay.FULLSCREEN: True,
             BlobDisplay.RESIZABLE: False,
         }
 
+        self.h: WindowHandler = WindowHandler(urs.window.size, self)
+
+        self.paused: bool = False
+        self.show_stats: bool = True
+
+        self.event_queue: EventQueue = EventQueue(eternal=True)
+
+        self.fps: FPS = FPS()
+
         self.text_entity_cache: Dict[str, urs.Text] = {}
-        self.h = WindowHandler(urs.window.size, self)
 
-        mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
-        morekeys = ("escape", "space")
-
-        self.key_ints: Dict[str, int] = {}
-        i = 0
-        for key in mykeys:
-            self.key_ints[key] = i
-            i += 1
-        for key in morekeys:
-            self.key_ints[key] = i
-            i += 1
-
-        if urs.window.fullscreen:
-            self.width = urs.window.main_monitor.width
-            self.height = urs.window.main_monitor.height
-        else:
-            self.width = urs.window.size[0]
-            self.height = urs.window.size[1]
+        self.key_ints: Dict[str, int] = self.load_key_ints()
 
         self.urs_keyboard_events: Dict[int, Callable[[], None]] = (
             self.load_keyboard_events()
         )
 
-        # self.cam_pos = urs.Text(
-        #     f"({self.x},{self.y},{self.z})",
-        #     position=(0, 0.03, 0),
-        #     parent=urs.camera.ui,
-        #     origin=(0, 0),
-        #     scale=0.75,
-        # )
-        # self.cam_pos_rot = urs.Text(
-        #     f"({self.rotation_x},{self.rotation_y},{self.rotation_z})",
-        #     position=(0, 0.06, 0),
-        #     parent=urs.camera.ui,
-        #     origin=(0, 0),
-        #     scale=0.75,
-        # )
+    def load_key_ints(self: Self) -> Dict[str, int]:
+        """Loads up the Dict that holds integers that represent keys. (see get_key_code)"""
+        mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
+        morekeys = ("escape", "space")
 
-        # self.cam_pos_rot.text = f"({round(self.rotation_x,2)},{round(self.rotation_y,2)},{round(self.rotation_z,2)})"
-        # self.cam_pos.text = f"({round(self.position[0],2)},{round(self.position[1],2)},{round(self.position[2],2)})"
+        key_ints: Dict[str, int] = {}
+        i = 0
+        for key in mykeys:
+            key_ints[key] = i
+            i += 1
+        for key in morekeys:
+            key_ints[key] = i
+            i += 1
+
+        return key_ints
 
     def load_keyboard_events(self: Self) -> Dict[int, Callable[[], None]]:
         """
@@ -342,6 +350,7 @@ class BlobDisplayUrsina:
     def temp_message(
         self: Self, text: str, pos: Tuple[float, float], msg_key: str
     ) -> None:
+        """Sends the given message to the center of the screen for 30 seconds"""
 
         text_entity = self.text_entity_cache.get(msg_key)
         if text_entity is None:
@@ -357,11 +366,11 @@ class BlobDisplayUrsina:
     def blit_text(
         self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]
     ) -> None:
-        # """
-        # Print the proved text to the screen a the provided coordinates. orientation helps to give hints
-        # on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
-        # class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
-        # """
+        """
+        Print the proved text to the screen a the provided coordinates. orientation helps to give hints
+        on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
+        class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
+        """
 
         if orientation == (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_y):
             self.temp_message(

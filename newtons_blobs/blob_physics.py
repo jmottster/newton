@@ -29,6 +29,9 @@ class BlobPhysics:
 
     Methods
     -------
+    set_gravitational_range(scaled_universe_height: float) -> None
+        Sets the gravitational range of the center blob. Blobs that go beyond this limit
+        are flagged as "escaped" and are deleted
     edge_detection(blob: MassiveBlob, wrap: bool) -> None
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
@@ -46,6 +49,10 @@ class BlobPhysics:
 
     @classmethod
     def set_gravitational_range(cls, scaled_universe_height: float) -> None:
+        """
+        Sets the gravitational range of the center blob. Blobs that go beyond this limit
+        are flagged as "escaped" and are deleted
+        """
         cls.GRAVITATIONAL_RANGE = scaled_universe_height
 
     @staticmethod

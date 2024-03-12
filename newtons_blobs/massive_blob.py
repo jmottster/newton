@@ -80,20 +80,20 @@ class MassiveBlob:
         "scaled_universe_height",
         "scaled_universe_size_half_z",
         "name",
+        "blob_surface",
         "radius",
         "scaled_radius",
+        "orig_radius",
         "mass",
         "x",
         "y",
         "z",
-        "orig_radius",
         "vx",
         "vy",
         "vz",
         "dead",
         "swallowed",
         "escaped",
-        "blob_surface",
         "pause",
     )
 
@@ -124,15 +124,16 @@ class MassiveBlob:
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
         self.scaled_radius: float = self.radius * SCALE_UP
-        self.mass: float = mass
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
         self.orig_radius: Tuple[float, float, float] = (
             self.scaled_radius,
             self.scaled_radius / 2,
             self.radius,
         )
+        self.mass: float = mass
+        self.x: float = x
+        self.y: float = y
+        self.z: float = z
+
         self.vx: float = vx  # x velocity per frame
         self.vy: float = vy  # y velocity per frame
         self.vz: float = vz  # z velocity per frame

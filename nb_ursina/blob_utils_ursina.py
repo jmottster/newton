@@ -1,4 +1,12 @@
-from typing import ClassVar, Self
+"""
+Newton's Laws, a simulator of physics at the scale of space
+
+A collection of utility classes
+
+by Jason Mott, copyright 2024
+"""
+
+from typing import ClassVar, Self, Tuple
 from collections import deque
 
 from panda3d.core import ClockObject  # type: ignore
@@ -6,16 +14,27 @@ import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
 from newtons_blobs.resources import resource_path
-from newtons_blobs.blob_universe import BlobUniverse
-from .blob_universe_ursina import BlobUniverseUrsina
 
 
 class FontUtils:
+    """
+    Static class for repetitive tasks related to setting up text for display
+
+    Methods
+    -------
+    get_text_parent() -> urs.Entity
+        Get the shared parent Entity which is the display field
+
+    position_text(x: float, y: float, text_entity: urs.Text) -> None
+        Apply standard fixes to x/y positioning for text
+
+    """
 
     font_overlay: urs.Entity = None
 
     @staticmethod
     def get_text_parent() -> urs.Entity:
+        """Get the shared parent Entity which is the display field"""
         if FontUtils.font_overlay is None:
             FontUtils.font_overlay = urs.Entity(
                 parent=urs.camera.ui, x=-0.9, y=-0.5, scale=1, eternal=True
@@ -24,6 +43,7 @@ class FontUtils:
 
     @staticmethod
     def position_text(x: float, y: float, text_entity: urs.Text) -> None:
+        """Apply standard fixes to x/y positioning for text"""
         aspect_ratio = urs.window.aspect_ratio
         height = urs.window.size[1]
         if urs.window.fullscreen:
@@ -40,9 +60,6 @@ class FontUtils:
 class FPS:
     """
     An encapsulation of the fps clock, with display output functionality added
-
-    Attributes
-    ----------
 
     Methods
     -------
@@ -103,15 +120,50 @@ class FPS:
 
 
 class TempMessage(urs.Entity):
+    """
+    An Entity class for controlling temporary text. It expires in "counter" seconds, or 30
+    seconds by default
+
+
+    Attributes
+    ----------
+    **kwargs
+        Specific to this class: text (the text to be displayed),
+        pos (the x/y position, in Vec2 format), counter (number of seconds to expire)
+
+    Methods
+    -------
+    set_text(text: str, pos: urs.Vec3) -> None
+        Set the text to be displayed, and its position
+
+    get_text() -> str
+        Returns the text set as the display text
+
+    update_text_pos(pos: urs.Vec3) -> None
+        Updates the position the text will be displayed at
+
+    reset_counter() -> None
+        Reset the counter back to its starting point
+
+    update() -> None
+        Called by Ursina, once per frame
+
+    on_disable() -> None
+        Called when enabled is set to False
+
+    on_destroy() -> None
+        Called when this Entity is destroyed
+
+    """
+
     def __init__(self: Self, **kwargs):
         kwargs["eternal"] = True
 
-        self.text = kwargs["text"]
-        self.pos = kwargs["pos"]
+        self.text: str = kwargs["text"]
+        self.pos: urs.Vec2 = kwargs["pos"]
+        self.counter: int = 30
         if kwargs.get("counter") is not None:
             self.counter = kwargs["counter"]
-        else:
-            self.counter = 30
 
         super().__init__()
         for key in (
@@ -132,7 +184,7 @@ class TempMessage(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.temp_text = urs.Text(
+        self.temp_text: urs.Text = urs.Text(
             font=DISPLAY_FONT,
             size=(STAT_FONT_SIZE / 100),
             resolution=100 * (STAT_FONT_SIZE / 100),
@@ -144,11 +196,12 @@ class TempMessage(urs.Entity):
             eternal=True,
         )
 
-        self.position = (0, 0)
+        self.position = urs.Vec2(0, 0)
 
         self.set_text(self.text, self.pos)
 
-    def set_text(self, text, pos):
+    def set_text(self: Self, text: str, pos: urs.Vec2) -> None:
+        """Set the text to be displayed, and its position"""
         self.temp_text.text = text
         self.update_text_pos(pos)
         self.temp_text.create_background(
@@ -159,30 +212,36 @@ class TempMessage(urs.Entity):
             ),
         )
 
-    def get_text(self):
+    def get_text(self: Self) -> str:
+        """Returns the text set as the display text"""
         return self.temp_text.text
 
-    def update_text_pos(self, pos):
+    def update_text_pos(self: Self, pos: urs.Vec2) -> None:
+        """Updates the position the text will be displayed at"""
         self.pos = pos
 
         FontUtils.position_text(self.pos[0], self.pos[1], self.temp_text)
 
-    def reset_counter(self):
+    def reset_counter(self: Self) -> None:
+        """Reset the counter back to its starting point"""
         self.counter = 30
         self.temp_text.enabled = True
         self.enabled = True
 
-    def update(self: Self):
+    def update(self: Self) -> None:
+        """Called by Ursina, once per frame"""
         self.counter -= 1
         if self.counter <= 0:
             self.temp_text.enabled = False
             self.enabled = False
 
-    def on_disable(self: Self):
+    def on_disable(self: Self) -> None:
+        """Called when enabled is set to False"""
         self.counter = 0
         self.temp_text.enabled = False
 
-    def on_destroy(self: Self):
+    def on_destroy(self: Self) -> None:
+        """Called when this Entity is destroyed"""
         self.counter = 0
         self.temp_text.enabled = False
         # urs.destroy(self.temp_text)
@@ -191,6 +250,35 @@ class TempMessage(urs.Entity):
 
 
 class StatText(urs.Entity):
+    """
+    A class for displaying information on the four corners of the screen
+
+
+    Attributes
+    ----------
+    **kwargs
+        Specifics of this class: text (the text to be displayed), pos (the x/z position of
+        the text in urs.Vec2 format), orientation (two of the TEXT_* class vars of
+        this class, in tuple format)
+
+    Methods
+    -------
+    set_text(text: str, pos: urs.Vec2, orientation: Tuple[int, int]) -> None
+        Sets the text, position, and orientation to be displayed
+
+    get_text() -> str
+        Returns the text to be displayed
+
+    update_text_pos(pos: urs.Vec2, orientation: Tuple[int, int]) -> None
+        Updates the position and orientation of the displayed text
+
+    on_disable() -> None
+        Called when enabled is set to False
+
+    on_destroy() -> None
+        Called when destroyed
+
+    """
 
     TEXT_LEFT: ClassVar[int] = 1
     TEXT_RIGHT: ClassVar[int] = 2
@@ -203,9 +291,9 @@ class StatText(urs.Entity):
     def __init__(self: Self, **kwargs):
         kwargs["eternal"] = True
 
-        self.text = kwargs["text"]
-        self.pos = kwargs["pos"]
-        self.orientation = kwargs["orientation"]
+        self.text: str = kwargs["text"]
+        self.pos: urs.Vec2 = kwargs["pos"]
+        self.orientation: Tuple[int, int] = kwargs["orientation"]
 
         super().__init__()
         for key in (
@@ -240,7 +328,10 @@ class StatText(urs.Entity):
 
         self.set_text(self.text, self.pos, self.orientation)
 
-    def set_text(self, text, pos, orientation):
+    def set_text(
+        self: Self, text: str, pos: urs.Vec2, orientation: Tuple[int, int]
+    ) -> None:
+        """Sets the text, position, and orientation to be displayed"""
         self.stat_text.text = text
         self.update_text_pos(pos, orientation)
         self.stat_text.create_background(
@@ -251,10 +342,14 @@ class StatText(urs.Entity):
             ),
         )
 
-    def get_text(self):
+    def get_text(self: Self) -> str:
+        """Returns the text to be displayed"""
         return self.stat_text.text
 
-    def update_text_pos(self, pos, orientation):
+    def update_text_pos(
+        self: Self, pos: urs.Vec2, orientation: Tuple[int, int]
+    ) -> None:
+        """Updates the position and orientation of the displayed text"""
 
         self.pos = pos
         self.orientation = orientation
@@ -274,10 +369,12 @@ class StatText(urs.Entity):
 
         FontUtils.position_text(self.pos[0], self.pos[1], self.stat_text)
 
-    def on_disable(self: Self):
+    def on_disable(self: Self) -> None:
+        """Called when enabled is set to False"""
         self.stat_text.enabled = False
 
-    def on_destroy(self: Self):
+    def on_destroy(self: Self) -> None:
+        """Called when destroyed"""
         self.stat_text.enabled = False
         # urs.destroy(self.temp_text)
         self.enabled = False
@@ -285,6 +382,21 @@ class StatText(urs.Entity):
 
 
 class EventQueue(urs.Entity):
+    """
+    A class the captures and stores  (in a queue) keyboard
+    events triggered through Ursina
+
+
+    Attributes
+    ----------
+    **kwargs standard urs.Entity args
+
+    Methods
+    -------
+    input(key: str) -> None
+        Method that capture the events (called by Ursina)
+
+    """
 
     def __init__(self: Self, **kwargs):
         super().__init__()
@@ -308,5 +420,6 @@ class EventQueue(urs.Entity):
 
         self.input_queue: deque[str] = deque([])
 
-    def input(self: Self, key: str):
+    def input(self: Self, key: str) -> None:
+        """Method that capture the events (called by Ursina)"""
         self.input_queue.append(key)

@@ -42,6 +42,7 @@ class BlobPlotter:
 
     display_h : float
         The height of the drawing surface that will represent the display screen
+
     blob_factory: BlobPluginFactory
         An instance of BlobFactory loaded up with the required drawing libraries
 

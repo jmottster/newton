@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-Protocol class to represent an object that holds and controls a drawing area for the universe of blobs
+Class to represent an object that holds and controls a drawing area for the universe of blobs
 
 by Jason Mott, copyright 2024
 """
@@ -36,20 +36,20 @@ class BlobUniverseUrsina:
 
     Methods
     -------
-    get_framework(self: Self) -> Any
+    get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for the universe, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
 
-    get_width(self: Self) -> float
+    get_width() -> float
         Returns the current width of the universe object
 
-    get_height(self: Self) -> float
+    get_height() -> float
         Returns the current height of the universe object
 
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the center point x,y,z
 
-    fill(self: Self, color: Tuple[int, int, int]) -> None
+    fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
     clear() -> None
@@ -111,16 +111,3 @@ class BlobUniverseUrsina:
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
         urs.scene.clear()
-
-    def center_blob_light_on(self: Self, parent: urs.Entity) -> None:
-        # if self.ursina_center_blob.parent != parent:
-        #     self.ursina_center_blob.parent = parent
-
-        # if not self.ursina_center_blob.enabled:
-        #     self.ursina_center_blob.enable()
-        pass
-
-    def center_blob_light_off(self) -> None:
-        # if self.ursina_center_blob is not None:
-        #     self.ursina_center_blob.disable()
-        pass

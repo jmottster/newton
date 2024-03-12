@@ -94,25 +94,25 @@ class BlobDisplayPygame:
     get_windowed_height() -> float
         Returns the default height of the non-fullscreen display object
 
-    get_width(self: Self) -> float
+    get_width() -> float
         Returns the current width of the display object
 
-    get_height(self: Self) -> float
+    get_height() -> float
         Returns the current height of the display object
 
-    get_key_code(self: Self, key: str) -> int
+    get_key_code(key: str) -> int
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
 
-    check_events(self: Self, keyboard_events: Dict[int, Callable[[], None]]) -> None
+    check_events(keyboard_events: Dict[int, Callable[[], None]]) -> None
         Send a dict that has codes from get_key_codes (i.e. keyboard key codes) as the keys (i.e. dict keys),
         and something to do upon that key being pressed.
         This is presumed to be used for each iteration of a frame before drawing.
 
-    fps_clock_tick(self: Self, fps: int) -> None
+    fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
 
-    fps_render(self: Self, pos: Tuple[float, float]) -> None
+    fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
 
     set_mode(size: Tuple[float, float], mode: int) -> None
@@ -121,21 +121,21 @@ class BlobDisplayPygame:
     is_fullscreen() -> bool:
         Whether of not the display is in fullscreen mode (False if in windowed mode)
 
-    fill(self: Self, color: Tuple[int, int, int]) -> None
+    fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
-    blit_text(self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
+    blit_text(text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
         Print the proved text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
 
-    draw_universe(self: Self, universe: BlobUniverse) -> None
+    draw_universe(universe: BlobUniverse) -> None
         Draw the universe area inside the display area (note that universe may be larger than display)
 
-    update(self: Self) -> None
+    update() -> None
         Draw the prepared frame to the screen/window
 
-    quit(self: Self) -> None
+    quit() -> None
         Exit the application
     """
 

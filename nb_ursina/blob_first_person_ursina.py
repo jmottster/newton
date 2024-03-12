@@ -1,4 +1,13 @@
-from typing import Self
+"""
+Newton's Laws, a simulator of physics at the scale of space
+
+An Entity (Ursina) class that holds the first person view, 
+position and rotation control via keyboard and mouse
+
+by Jason Mott, copyright 2024
+"""
+
+from typing import Callable, Self
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -10,18 +19,57 @@ from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL
 from .blob_utils_ursina import TempMessage
 
+__author__ = "Jason Mott"
+__copyright__ = "Copyright 2024"
+__license__ = "GPL 3.0"
+__version__ = VERSION
+__maintainer__ = "Jason Mott"
+__email__ = "github@jasonmott.com"
+__status__ = "In Progress"
+
 
 class BlobFirstPersonUrsina(urs.Entity):
+    """
+    An Entity (Ursina) class that holds the first person view,
+    position and rotation control via keyboard and mouse
+
+    Attributes
+    ----------
+    **kwargs
+        Recommended for this class scale and eternal, Specific to this class: start_z and universe
+
+    Methods
+    -------
+    update() -> None
+        Called by Ursina engine once per frame
+
+    input(key: str) -> None
+        Called by Ursina when a keyboard event happens
+
+    report_throttle_speed() -> None
+        Called from update when throttle speed changes, will print a temporary message
+        on screen reporting the current throttle speed
+
+    on_mouse1_click() -> None
+        Called when the mouse1 button is clicked
+
+    on_enable() -> None
+        Called by Ursina when this Entity is enabled
+
+    on_disable() -> None
+        Called by Ursina when this Entity is disabled
+
+    """
 
     def __init__(self: Self, **kwargs):
 
-        self.temp_scale = kwargs["scale"]
-        self.start_z = kwargs["start_z"]
-        self.flashlight_color = urs.color.rgb(0.175, 0.175, 0.175, 0.3)
-        self.mass = None
+        self.temp_scale: float = kwargs["scale"]
+        self.start_z: float = kwargs["start_z"]
+        self.flashlight_color: urs.Vec3 = urs.color.rgb(0.175, 0.175, 0.175, 0.3)
+        self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
 
-        self.center_cursor = urs.Entity(
+        self.center_cursor: urs.Entity = urs.Entity(
             parent=urs.camera.ui,
             model="quad",
             color=urs.color.rgb(179, 0, 27),
@@ -31,7 +79,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
-        self.gimbal = urs.Entity(
+        self.gimbal: urs.Entity = urs.Entity(
             model="sphere",
             color=urs.color.rgb(200, 200, 200, 150),
             position=(0, 0, self.start_z),
@@ -46,7 +94,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
-        self.gimbal_arrow = urs.Entity(
+        self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
             model="arrow",
             color=urs.rgb(179, 0, 27),
@@ -59,7 +107,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
-        self.flashlight = urs.AmbientLight(
+        self.flashlight: urs.AmbientLight = urs.AmbientLight(
             parent=self.gimbal,
             position=(0, 0, 0),
             shadows=False,
@@ -72,7 +120,7 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         super().__init__()
 
-        self.center_blob = urs.Vec3(
+        self.center_blob: urs.Vec3 = urs.Vec3(
             BlobSurfaceUrsina.center_blob_x,
             BlobSurfaceUrsina.center_blob_y,
             BlobSurfaceUrsina.center_blob_z,
@@ -85,26 +133,27 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.ui.collider = "sphere"
         urs.camera.ui.on_click = self.on_mouse1_click
 
-        self.speed = 5
-        self.roll_speed = 1.5
-        self.orig_speed = 5
-        self.orig_roll_speed = 1.5
-        self.position = urs.Vec3(0, 0, self.start_z)
-        self.velocity = urs.Vec3(0, 0, 0)
-        self.world_position = urs.Vec3(0, 0, self.start_z)
-        self.local_disabled = False
-        self.flashlight_on = True
+        self.speed: float = 5
+        self.roll_speed: float = 1.5
+        self.orig_speed: float = 5
+        self.orig_roll_speed: float = 1.5
+        self.direction: urs.Vec3 = None
+        # self.m_direction: urs.Vec3 = None
+        self.position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
+        self.velocity: urs.Vec3 = urs.Vec3(0, 0, 0)
+        self.world_position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
+        self.local_disabled: bool = False
+        self.flashlight_on: bool = True
         self.temp_message: TempMessage = None
 
-        urs.mouse.traverse_target = None
         urs.mouse.locked = True
-        self.mouse_sensitivity = urs.Vec2(35, 35)
-        self.scroll_smoothness = 6
-        self.scroll_speed = 0
-        self.mouse_scroll_up = 0
-        self.mouse_scroll_down = 0
+        self.mouse_sensitivity: urs.Vec3 = urs.Vec2(35, 35)
+        self.scroll_smoothness: float = 6
+        self.scroll_speed: float = 0
+        self.mouse_scroll_up: int = 0
+        self.mouse_scroll_down: int = 0
 
-        self.on_destroy = self.on_disable
+        self.on_destroy: Callable[[], None] = self.on_disable
 
         for key in (
             "model",
@@ -138,7 +187,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         #     scale=0.75,
         # )
 
-    def update(self):
+    def update(self: Self) -> None:
+        """Called by Ursina engine once per frame"""
 
         if urs.mouse.locked:
             self.rotate((0, urs.mouse.velocity[0] * self.mouse_sensitivity[1], 0))
@@ -151,7 +201,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 * self.roll_speed
             )
 
-            thrust = self.mouse_scroll_up - self.mouse_scroll_down
+            thrust: int = self.mouse_scroll_up - self.mouse_scroll_down
 
             if thrust != 0:
 
@@ -227,7 +277,8 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             # self.cam_pos.text = f"({round(self.world_position[0],2)}, {round(self.world_position[1],2)}, {round(self.world_position[2],2)})"
 
-    def input(self, key):
+    def input(self: Self, key: str) -> None:
+        """Called by Ursina when a keyboard event happens"""
 
         if key == "q":
             if self.local_disabled:
@@ -257,7 +308,11 @@ class BlobFirstPersonUrsina(urs.Entity):
         if key == "scroll down":
             self.mouse_scroll_down = 1
 
-    def report_throttle_speed(self: Self):
+    def report_throttle_speed(self: Self) -> None:
+        """
+        Called from update when throttle speed changes, will print a temporary message
+        on screen reporting the current throttle speed
+        """
         if self.temp_message is None:
 
             self.temp_message = TempMessage(
@@ -277,10 +332,12 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
             self.temp_message.reset_counter()
 
-    def on_mouse1_click(self):
+    def on_mouse1_click(self: Self) -> None:
+        """on_mouse1_click(self: Self) -> None"""
         print(f"click")
 
-    def on_enable(self):
+    def on_enable(self: Self) -> None:
+        """Called by Ursina when this Entity is enabled"""
         urs.mouse.locked = True
         self.gimbal_arrow.enabled = True
         self.gimbal.enabled = True
@@ -293,7 +350,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             urs.camera.parent = self
             urs.camera.transform = self._original_camera_transform
 
-    def on_disable(self):
+    def on_disable(self: Self) -> None:
+        """Called by Ursina when this Entity is disabled"""
+
         urs.mouse.locked = False
         self.gimbal_arrow.enabled = False
         self.gimbal.enabled = False

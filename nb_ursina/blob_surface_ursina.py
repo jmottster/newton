@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-A Protocol class used to represent an object that draws a blob, with a distinction of the center blob
+A class used to represent an object that draws a blob, with a distinction of the center blob
 
 by Jason Mott, copyright 2024
 """
@@ -28,12 +28,39 @@ __status__ = "In Progress"
 
 
 class Rotator(urs.Entity):
+    """
+    A class to create a blob Entity that rotates
 
-    def __init__(self, **kwargs):
-        super().__init__()
+    Attributes
+    ----------
+    **kwargs
+        Specific to this class:
+        rotation_speed: float, rotation_pos: Tuple[float, float, float]
+
+    Methods
+    -------
+    update() -> None
+        Called by Ursina engine once per frame
+
+     on_destroy() -> None
+        Called when this Entity is destroyed
+
+    """
+
+    __slots__ = (
+        "rotation_speed",
+        "rotation_pos",
+    )
+
+    def __init__(self: Self, **kwargs):
+
+        self.rotation_speed: float = None
+        self.rotation_pos: Tuple[float, float, float] = None
 
         self.rotation_speed = kwargs.get("rotation_speed")
         self.rotation_pos = kwargs.get("rotation_pos")
+
+        super().__init__()
 
         for key in (
             "model",
@@ -54,9 +81,9 @@ class Rotator(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.world_rotation_x = random.random() * 360
-        self.world_rotation_y = random.random() * 360
-        self.world_rotation_z = random.random() * 360
+        self.world_rotation_x: float = random.random() * 360
+        self.world_rotation_y: float = random.random() * 360
+        self.world_rotation_z: float = random.random() * 360
 
         if self.rotation_pos is not None:
             self.world_rotation_x, self.world_rotation_y, self.world_rotation_z = (
@@ -72,16 +99,18 @@ class Rotator(urs.Entity):
         if self.rotation_speed is None:
             self.rotation_speed = (random.random() * 5.00) + 1
 
-    def update(self):
+    def update(self: Self) -> None:
+        """Called by Ursina engine once per frame"""
         self.rotate((0, self.rotation_speed, 0))
 
-    def on_destroy(self: Self):
+    def on_destroy(self: Self) -> None:
+        """Called when this Entity is destroyed"""
         self.hide()
 
 
 class BlobSurfaceUrsina:
     """
-    A Protocol class used to represent an object that draws a blob, with a distinction of the center blob
+    A class used to represent an object that draws a blob, with a distinction of the center blob
 
     Attributes
     ----------
@@ -95,7 +124,7 @@ class BlobSurfaceUrsina:
         For 3d rendering, this is optional (implement as texture = None in __init__)
     rotation_speed : float = None
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
-    rotation_pos : Tuple[int, int, int] = None
+    rotation_pos : Tuple[float, float, float] = None
         For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
 
     Methods
@@ -117,7 +146,7 @@ class BlobSurfaceUrsina:
         send (pos,False) to turn off glowing effect
 
     destroy() -> None
-        Call to get rid of this instance, so it can clean up
+        Call when getting rid of this instance, so it can clean up
     """
 
     __slots__ = (
@@ -142,12 +171,14 @@ class BlobSurfaceUrsina:
         universe: BlobUniverse,
         texture: str = None,
         rotation_speed: float = None,
-        rotation_pos: Tuple[int, int, int] = None,
+        rotation_pos: Tuple[float, float, float] = None,
     ):
 
         self.radius: float = radius
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
+        self.texture: str = None
+
         if texture is not None:
             self.texture = texture
         else:
@@ -159,8 +190,9 @@ class BlobSurfaceUrsina:
                 self.texture = BLOB_TEXTURES_SMALL[
                     random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
                 ]
-        self.rotation_speed = None
-        self.rotation_pos = None
+        self.rotation_speed: float = None
+        self.rotation_pos: Tuple[float, float, float] = None
+
         if rotation_speed is not None:
             self.rotation_speed = rotation_speed
         if rotation_pos is not None:
@@ -252,6 +284,7 @@ class BlobSurfaceUrsina:
         self.ursina_blob.position = urs.Vec3(pos)
 
     def destroy(self: Self) -> None:
+        """Call when getting rid of this instance, so it can clean up"""
         if self.ursina_center_blob is not None:
             self.ursina_center_blob.color = (0, 0, 0, 0)
             urs.destroy(self.ursina_center_blob)
