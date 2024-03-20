@@ -11,10 +11,12 @@ from typing import Tuple, Self, cast
 
 import numpy.typing as npt
 
+
 from newtons_blobs.globals import *
-from newtons_blobs.blob_surface import BlobSurface
-from newtons_blobs.blob_display import BlobDisplay
-from newtons_blobs.blob_universe import BlobUniverse
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobSurface
+from newtons_blobs import BlobDisplay
+from newtons_blobs import BlobUniverse
 from .blob_universe_pygame import BlobUniversePygame
 from .blob_display_pygame import BlobDisplayPygame
 from .blob_surface_pygame import BlobSurfacePygame
@@ -39,7 +41,7 @@ class BlobPygameFactory:
 
     Methods
     -------
-    new_blob_surface(radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface
 
     get_blob_universe() -> BlobUniverse
@@ -55,15 +57,20 @@ class BlobPygameFactory:
     """
 
     def __init__(self: Self):
+
+        BlobGlobalVars.set_true_3d(False)
+        BlobGlobalVars.set_au_scale_factor(500)
+
         self.py_display: BlobDisplayPygame = BlobDisplayPygame(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
         )
         self.py_universe: BlobUniversePygame = BlobUniversePygame(
-            UNIVERSE_SIZE_W, UNIVERSE_SIZE_H
+            BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h
         )
 
     def new_blob_surface(
         self: Self,
+        name: str,
         radius: float,
         color: Tuple[int, int, int],
         texture: str = None,
@@ -74,6 +81,7 @@ class BlobPygameFactory:
         return cast(
             BlobSurface,
             BlobSurfacePygame(
+                name,
                 radius,
                 color,
                 self.get_blob_universe(),

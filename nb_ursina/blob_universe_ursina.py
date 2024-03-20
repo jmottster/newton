@@ -12,7 +12,8 @@ import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs.resources import resource_path
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import resource_path
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -69,7 +70,7 @@ class BlobUniverseUrsina:
             shader=shd.unlit_shader,
             position=(0, 0, 0),
             model="sky_dome",
-            scale=CENTER_BLOB_RADIUS * (size_h * 0.5),
+            scale=BlobGlobalVars.background_scale,
             texture="nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg",
             texture_scale=(1, 1),
             rotation_x=90,
@@ -99,9 +100,9 @@ class BlobUniverseUrsina:
 
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the center point x,y,z"""
-        x = self.get_width() * SCALE_UP
-        y = self.get_height() * SCALE_UP
-        z = self.get_height() * SCALE_UP
+        x = self.get_width() * BlobGlobalVars.scale_up
+        y = self.get_height() * BlobGlobalVars.scale_up
+        z = self.get_height() * BlobGlobalVars.scale_up
         return (x / 2, y / 2, z / 2)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:

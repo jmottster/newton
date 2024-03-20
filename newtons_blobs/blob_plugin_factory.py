@@ -32,7 +32,7 @@ class BlobPluginFactory(Protocol):
 
     Methods
     -------
-    new_blob_surface(radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -50,6 +50,7 @@ class BlobPluginFactory(Protocol):
 
     def new_blob_surface(
         self: Self,
+        name: str,
         radius: float,
         color: Tuple[int, int, int],
         texture: str = None,

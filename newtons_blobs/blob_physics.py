@@ -10,6 +10,7 @@ import math
 
 from .massive_blob import MassiveBlob
 from .globals import *
+from .blob_global_vars import BlobGlobalVars
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -82,9 +83,9 @@ class BlobPhysics:
             scaled_universe_size_w = blob.scaled_universe_width
             scaled_universe_size_h = blob.scaled_universe_height
 
-            local_x = blob.x * SCALE_DOWN
-            local_y = blob.y * SCALE_DOWN
-            local_z = blob.z * SCALE_DOWN
+            local_x = blob.x * BlobGlobalVars.scale_down
+            local_y = blob.y * BlobGlobalVars.scale_down
+            local_z = blob.z * BlobGlobalVars.scale_down
 
             # Change x direction if hitting the edge of screen
             if ((local_x - blob.radius) <= zero) and (blob.vx <= 0):
@@ -212,13 +213,13 @@ class BlobPhysics:
             fdy = F * math.sin(theta) * math.sin(phi)
             fdz = F * math.cos(theta)
 
-            blob1.vx += fdx / blob1.mass * TIMESCALE
-            blob1.vy += fdy / blob1.mass * TIMESCALE
-            blob1.vz += fdz / blob1.mass * TIMESCALE
+            blob1.vx += fdx / blob1.mass * BlobGlobalVars.timescale
+            blob1.vy += fdy / blob1.mass * BlobGlobalVars.timescale
+            blob1.vz += fdz / blob1.mass * BlobGlobalVars.timescale
 
-            blob2.vx -= fdx / blob2.mass * TIMESCALE
-            blob2.vy -= fdy / blob2.mass * TIMESCALE
-            blob2.vz -= fdz / blob2.mass * TIMESCALE
+            blob2.vx -= fdx / blob2.mass * BlobGlobalVars.timescale
+            blob2.vy -= fdy / blob2.mass * BlobGlobalVars.timescale
+            blob2.vz -= fdz / blob2.mass * BlobGlobalVars.timescale
 
         elif blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

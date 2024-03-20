@@ -8,9 +8,10 @@ by Jason Mott, copyright 2024
 
 from typing import Any, Callable, Dict, Self
 
+from .globals import *
+from .blob_global_vars import BlobGlobalVars
 from .blob_plugin_factory import BlobPluginFactory
 from .blob_save_load import BlobSaveLoad
-from .globals import *
 from .blob_plotter import BlobPlotter
 from .blob_universe import BlobUniverse
 from .blob_display import BlobDisplay
@@ -344,7 +345,7 @@ class BlobRunner:
         Returns float number of units determined by divisor. E.g., if YEARS is divisor,
         returns number of years elapsed since last start.
         """
-        return round((self.elapsed_time * TIMESCALE) / divisor, 2)
+        return round((self.elapsed_time * BlobGlobalVars.timescale) / divisor, 2)
 
     def display_elapsed_time(self: Self) -> None:
         """Draws the elapsed time to the display instance"""

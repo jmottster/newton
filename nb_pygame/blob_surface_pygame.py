@@ -6,15 +6,18 @@ Class for building the blob objects for display
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 from typing import ClassVar, Tuple, Self, cast
 import numpy as np
 import numpy.typing as npt
 import math, random
 import pygame
 
+
 from newtons_blobs.globals import *
-from newtons_blobs.resources import resource_path
-from newtons_blobs.blob_universe import BlobUniverse
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import resource_path
+from newtons_blobs import BlobUniverse
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -31,6 +34,8 @@ class BlobSurfacePygame:
 
     Attributes
     ----------
+    name: str
+        The name of this instance
     radius : float
         the size of the blob, by radius value
     color : Tuple[int, int, int]
@@ -113,6 +118,7 @@ class BlobSurfacePygame:
         "rotation_speed",
         "rotation_pos",
         "py_universe",
+        "name",
         "radius",
         "width_center",
         "height_center",
@@ -137,13 +143,14 @@ class BlobSurfacePygame:
         "mask_image",
     )
 
-    center_blob_x: ClassVar[float] = UNIVERSE_SIZE_W / 2
-    center_blob_y: ClassVar[float] = UNIVERSE_SIZE_H / 2
-    center_blob_z: ClassVar[float] = UNIVERSE_SIZE_D / 2
+    center_blob_x: ClassVar[float] = BlobGlobalVars.universe_size_w / 2
+    center_blob_y: ClassVar[float] = BlobGlobalVars.universe_size_h / 2
+    center_blob_z: ClassVar[float] = BlobGlobalVars.universe_size_d / 2
     LIGHT_RADIUS_MULTI: ClassVar[float] = 6
 
     def __init__(
         self: Self,
+        name: str,
         radius: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
@@ -159,6 +166,7 @@ class BlobSurfacePygame:
         self.py_universe: pygame.Surface = cast(
             pygame.Surface, universe.get_framework()
         )
+        self.name: str = name
         self.radius: float = radius
         # Double size of box, because radius can get twice the size
         self.width_center: float = radius + (radius)

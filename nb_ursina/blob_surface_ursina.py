@@ -12,11 +12,15 @@ from typing import ClassVar, Tuple, Self, cast
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
-from newtons_blobs.blob_universe import BlobUniverse
+
 from newtons_blobs.globals import *
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobUniverse
 from newtons_blobs import resource_path
+
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL, BLOB_TEXTURES_LARGE
+from .blob_lights import BlobPointLight, BlobAmbientLight
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -39,8 +43,24 @@ class Rotator(urs.Entity):
 
     Methods
     -------
+    create_text_overlay() -> None
+        Instantiates all the objects necessary to display the text overlay.
+        This is called by on_click()
+
+    destroy_text_overlay() -> None
+        Cleans up all the objects related to the text overlay. Called by
+        on_click()
+
     update() -> None
         Called by Ursina engine once per frame
+
+    on_click() -> None
+        Calls the text overlay methods to toggle it on and off. Called when the mouse
+        clicks on this blob while the simulation is paused
+
+    on_disable() -> None
+        Called when this Entity is set to enabled=False. This calls clean up method for
+        text overlay
 
      on_destroy() -> None
         Called when this Entity is destroyed
@@ -59,6 +79,8 @@ class Rotator(urs.Entity):
 
         self.rotation_speed = kwargs.get("rotation_speed")
         self.rotation_pos = kwargs.get("rotation_pos")
+
+        self.blob_name: str = kwargs.get("name")
 
         super().__init__()
 
@@ -81,9 +103,16 @@ class Rotator(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.world_rotation_x: float = random.random() * 360
-        self.world_rotation_y: float = random.random() * 360
-        self.world_rotation_z: float = random.random() * 360
+        self.world_rotation_x: float = 0.0
+        self.world_rotation_y: float = 0.0
+        self.world_rotation_z: float = 0.0
+
+        if self.blob_name == CENTER_BLOB_NAME:
+            self.world_rotation_x = 90
+        else:
+            self.world_rotation_x = random.random() * 360
+            self.world_rotation_y = random.random() * 360
+            self.world_rotation_z = random.random() * 360
 
         if self.rotation_pos is not None:
             self.world_rotation_x, self.world_rotation_y, self.world_rotation_z = (
@@ -99,12 +128,106 @@ class Rotator(urs.Entity):
         if self.rotation_speed is None:
             self.rotation_speed = (random.random() * 5.00) + 1
 
+        self.text_entity: urs.Entity = None
+
+        self.info_text: urs.Text = None
+
+        self.text_light: BlobAmbientLight = None
+
+    def create_text_overlay(self: Self) -> None:
+        """
+        Instantiates all the objects necessary to display the text overlay.
+        This is called by on_click()
+        """
+
+        if self.text_entity is None:
+            self.text_entity = urs.Entity(scale=self.scale)
+
+            self.info_text = urs.Text(
+                f"{self.blob_name}: radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}",
+                parent=self.text_entity,
+                font=DISPLAY_FONT,
+                size=(STAT_FONT_SIZE * 0.1),
+                # resolution=(100 * (STAT_FONT_SIZE * 0.1)),
+                origin=(0, -0.5),
+                position=(0, 0, 0),
+                scale=(0.1, 0.1, 0.1),
+                color=urs.rgb(255, 255, 255, 255),
+                shader=shd.lit_with_shadows_shader,
+                enabled=False,
+            )
+            self.info_text.create_background(
+                self.info_text.size * 0.5,
+                self.info_text.size * 0.25,
+                urs.color.rgb(
+                    BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
+                ),
+            )
+            self.info_text.setShaderAuto()
+            self.text_light = BlobAmbientLight(
+                parent=self.info_text,
+                light_name=self.blob_name,
+                entity_set_light=self.info_text,
+                position=(0, 0, -1),
+                shadows=True,
+                shadow_map_resolution=(4096, 4096),
+                max_distance=2,
+                attenuation=(0, 0, 1),
+                color=(2.5, 2.5, 2.5, 2),
+            )
+        self.text_entity.enabled = True
+        self.info_text.enabled = True
+        self.text_light.enabled = True
+
+    def destroy_text_overlay(self: Self) -> None:
+        """
+        Cleans up all the objects related to the text overlay. Called by
+        on_click()
+        """
+        if self.text_entity is not None:
+            self.text_light.destroy()
+            urs.destroy(self.text_light)
+            self.text_light = None
+            self.info_text.enabled = False
+            urs.destroy(self.info_text)
+            self.info_text = None
+            self.text_entity.enabled = False
+            urs.destroy(self.text_entity)
+            self.text_entity = None
+
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
+
+        if self.text_entity is not None and self.info_text.enabled:
+
+            self.info_text.text = f"{self.blob_name}: radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+            self.text_entity.position = self.position
+            self.text_entity.rotation = urs.camera.parent.rotation
+            self.text_entity.position += self.text_entity.up * 1.1
+
         self.rotate((0, self.rotation_speed, 0))
+
+    def on_click(self: Self) -> None:
+        """
+        Calls the text overlay methods to toggle it on and off. Called when the mouse
+        clicks on this blob while the simulation is paused
+        """
+
+        if self.text_entity is None:
+            self.create_text_overlay()
+        else:
+            self.destroy_text_overlay()
+
+    def on_disable(self: Self) -> None:
+        """
+        Called when this Entity is set to enabled=False. This calls clean up method for
+        text overlay
+        """
+        self.destroy_text_overlay()
 
     def on_destroy(self: Self) -> None:
         """Called when this Entity is destroyed"""
+        self.destroy_text_overlay()
         self.hide()
 
 
@@ -150,6 +273,7 @@ class BlobSurfaceUrsina:
     """
 
     __slots__ = (
+        "name",
         "radius",
         "color",
         "universe",
@@ -166,6 +290,7 @@ class BlobSurfaceUrsina:
 
     def __init__(
         self: Self,
+        name: str,
         radius: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
@@ -174,6 +299,7 @@ class BlobSurfaceUrsina:
         rotation_pos: Tuple[float, float, float] = None,
     ):
 
+        self.name: str = name
         self.radius: float = radius
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
@@ -182,7 +308,7 @@ class BlobSurfaceUrsina:
         if texture is not None:
             self.texture = texture
         else:
-            if self.radius >= (MAX_RADIUS * 0.85):
+            if self.radius >= (BlobGlobalVars.max_radius * 0.85):
                 self.texture = BLOB_TEXTURES_LARGE[
                     random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
                 ]
@@ -198,12 +324,13 @@ class BlobSurfaceUrsina:
         if rotation_pos is not None:
             self.rotation_pos = rotation_pos
 
-        self.ursina_center_blob: urs.PointLight = None
+        self.ursina_center_blob: BlobPointLight = None
         self.ursina_blob: Rotator = None
 
         if color == CENTER_BLOB_COLOR:
             self.texture = "nb_ursina/textures/sun03.png"
             self.ursina_blob = Rotator(
+                blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere.bam",
                 scale=radius,
@@ -215,7 +342,7 @@ class BlobSurfaceUrsina:
                 color=urs.color.rgb(100, 100, 100, 255),
                 shader=shd.lit_with_shadows_shader,
             )
-            self.ursina_center_blob = urs.PointLight(
+            self.ursina_center_blob = BlobPointLight(
                 parent=self.ursina_blob,
                 position=(0, 0, 0),
                 shadows=True,
@@ -226,6 +353,7 @@ class BlobSurfaceUrsina:
             )
         else:
             self.ursina_blob = Rotator(
+                blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere.bam",
                 scale=radius,
@@ -285,8 +413,10 @@ class BlobSurfaceUrsina:
 
     def destroy(self: Self) -> None:
         """Call when getting rid of this instance, so it can clean up"""
+
         if self.ursina_center_blob is not None:
-            self.ursina_center_blob.color = (0, 0, 0, 0)
+            # self.ursina_center_blob.color = (0, 0, 0, 0)
+            self.ursina_center_blob.destroy()
             urs.destroy(self.ursina_center_blob)
             self.ursina_center_blob = None
 

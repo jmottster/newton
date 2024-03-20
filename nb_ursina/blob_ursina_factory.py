@@ -7,19 +7,23 @@ a graphics/drawing library to this simulator
 by Jason Mott, copyright 2024
 """
 
+import random
 from typing import Tuple, Self, cast
 
 import numpy.typing as npt
+import ursina as urs  # type: ignore
+
+from newtons_blobs.globals import *
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import MassiveBlob
+from newtons_blobs import BlobSurface
+from newtons_blobs import BlobDisplay
+from newtons_blobs import BlobUniverse
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
 from .blob_first_person_surface import FirstPersonSurface
 from .blob_surface_ursina import BlobSurfaceUrsina
-from newtons_blobs import MassiveBlob
-from newtons_blobs.blob_surface import BlobSurface
-from newtons_blobs.blob_display import BlobDisplay
-from newtons_blobs.blob_universe import BlobUniverse
-from newtons_blobs.globals import *
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -37,7 +41,7 @@ class BlobUrsinaFactory:
 
     Methods
     -------
-    new_blob_surface(radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -59,30 +63,40 @@ class BlobUrsinaFactory:
         )
 
         self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina(
-            UNIVERSE_SIZE_W, UNIVERSE_SIZE_H
+            BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h
         )
 
         self.urs_display.first_person_surface = FirstPersonSurface(
-            -(DISPLAY_SIZE_H * 3),
+            -(BlobGlobalVars.au_scale_factor * 2),
             (0, 0, 0),
             self.urs_universe,
         )
-        start_pos = self.urs_universe.get_center_blob_start_pos()
         start_pos = (
-            start_pos[0] * SCALE_DOWN,
-            start_pos[1] * SCALE_DOWN,
-            (start_pos[2] * SCALE_DOWN) - (DISPLAY_SIZE_H),
+            urs.Vec3(self.urs_universe.get_center_blob_start_pos())
+            * BlobGlobalVars.scale_down
         )
+        temp_ent = urs.Entity(position=start_pos)
+
+        start_pos = start_pos + urs.Vec3(
+            random.randint(-10, 10),
+            random.randint(-10, 10),
+            random.randint(-10, 10),
+        ).normalized() * (BlobGlobalVars.au_scale_factor * 2)
+
         self.urs_display.first_person_surface.draw(start_pos)
 
+        self.urs_display.first_person_surface.first_person_viewer.look_at(temp_ent)
+
+        urs.destroy(temp_ent)
+
         self.first_person_blob: MassiveBlob = MassiveBlob(
-            UNIVERSE_SIZE_H,
+            BlobGlobalVars.universe_size_h,
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
             MIN_MASS,
-            0,
-            0,
-            -(DISPLAY_SIZE_H * 3) * SCALE_UP,
+            start_pos[0],
+            start_pos[1],
+            start_pos[2],
             0,
             0,
             0,
@@ -90,6 +104,7 @@ class BlobUrsinaFactory:
 
     def new_blob_surface(
         self: Self,
+        name: str,
         radius: float,
         color: Tuple[int, int, int],
         texture: str = None,
@@ -103,6 +118,7 @@ class BlobUrsinaFactory:
         return cast(
             BlobSurface,
             BlobSurfaceUrsina(
+                name,
                 radius,
                 color,
                 self.get_blob_universe(),

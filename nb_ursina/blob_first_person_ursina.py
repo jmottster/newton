@@ -12,12 +12,15 @@ from typing import Callable, Self
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
-from .blob_surface_ursina import BlobSurfaceUrsina
 from newtons_blobs.globals import *
+from newtons_blobs import BlobGlobalVars
 from newtons_blobs import resource_path
+
+from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL
 from .blob_utils_ursina import TempMessage
+from .blob_lights import BlobAmbientLight
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -36,7 +39,7 @@ class BlobFirstPersonUrsina(urs.Entity):
     Attributes
     ----------
     **kwargs
-        Recommended for this class scale and eternal, Specific to this class: start_z and universe
+        Recommended for this class: scale and eternal, Specific to this class: start_z and universe
 
     Methods
     -------
@@ -107,7 +110,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
-        self.flashlight: urs.AmbientLight = urs.AmbientLight(
+        self.flashlight: BlobAmbientLight = BlobAmbientLight(
             parent=self.gimbal,
             position=(0, 0, 0),
             shadows=False,
@@ -129,14 +132,12 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.parent = self
         urs.camera.position = (0, 0, 0)
         urs.camera.rotation = (0, 0, 0)
-        # urs.camera.fov = 90
         urs.camera.ui.collider = "sphere"
-        urs.camera.ui.on_click = self.on_mouse1_click
 
         self.speed: float = 5
-        self.roll_speed: float = 1.5
+        self.roll_speed: float = 20
         self.orig_speed: float = 5
-        self.orig_roll_speed: float = 1.5
+        self.orig_roll_speed: float = 20
         self.direction: urs.Vec3 = None
         # self.m_direction: urs.Vec3 = None
         self.position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
@@ -173,11 +174,12 @@ class BlobFirstPersonUrsina(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.speed *= self.temp_scale * 3
-        self.roll_speed *= self.temp_scale * 3
-        self.orig_speed *= self.temp_scale * 3
-        self.orig_roll_speed *= self.temp_scale * 3
-        self.scroll_smoothness *= self.temp_scale * 3
+        self.speed *= BlobGlobalVars.au_scale_factor * 0.05
+        # self.roll_speed *= self.temp_scale * 4
+        self.orig_speed *= BlobGlobalVars.au_scale_factor * 0.05
+        # self.orig_roll_speed *= self.temp_scale * 4
+        self.scroll_smoothness *= BlobGlobalVars.au_scale_factor * 0.05
+        self.speed_inc = self.orig_speed * 0.04
 
         # self.cam_pos = urs.Text(
         #     f"({self.x},{self.y},{self.z})",
@@ -205,8 +207,8 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             if thrust != 0:
 
-                self.speed += self.scale[0] * thrust
-                self.roll_speed += self.scale[0] * thrust
+                self.speed += self.speed_inc * thrust
+                self.roll_speed += 5 * thrust
 
                 self.speed = urs.clamp(
                     self.speed,
@@ -216,8 +218,8 @@ class BlobFirstPersonUrsina(urs.Entity):
 
                 self.roll_speed = urs.clamp(
                     self.roll_speed,
-                    self.orig_roll_speed * 0.25,
-                    self.orig_roll_speed * 2,
+                    5,
+                    80,
                 )
 
                 self.report_throttle_speed()
@@ -302,11 +304,16 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.roll_speed = self.orig_roll_speed
             self.report_throttle_speed()
 
-        # print(key)
         if key == "scroll up":
             self.mouse_scroll_up = 1
         if key == "scroll down":
             self.mouse_scroll_down = 1
+
+        if key == "space":
+            if urs.camera.ui.collider is None:
+                urs.camera.ui.collider = "sphere"
+            else:
+                urs.camera.ui.collider = None
 
     def report_throttle_speed(self: Self) -> None:
         """
@@ -316,7 +323,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         if self.temp_message is None:
 
             self.temp_message = TempMessage(
-                text=f"Throttle speed: {self.speed}",
+                text=f"Throttle speed: {round(self.speed)}",
                 pos=(
                     (urs.window.size[0] / 2),
                     (urs.window.size[1] * 0.75),
@@ -324,7 +331,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
         else:
             self.temp_message.set_text(
-                f"Throttle speed: {self.speed}",
+                f"Throttle speed: {round(self.speed)}",
                 (
                     (urs.window.size[0] / 2),
                     (urs.window.size[1] * 0.75),
@@ -347,7 +354,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.mouse.enabled = True
 
         if hasattr(self, "_original_camera_transform"):
-            urs.camera.parent = self
+            # urs.camera.parent = self
             urs.camera.transform = self._original_camera_transform
 
     def on_disable(self: Self) -> None:
@@ -359,7 +366,6 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.center_cursor.enabled = False
         self._mouse_position = urs.mouse.position
         urs.mouse.enabled = False
-        self._original_camera_transform = (
-            urs.camera.transform
-        )  # store original position and rotation
-        urs.camera.world_parent = urs.scene
+        # store original position and rotation
+        self._original_camera_transform = urs.camera.transform
+        # urs.camera.world_parent = urs.scene

@@ -11,6 +11,7 @@ with display output functionality added
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 from typing import Any, Callable, Dict, Self, Tuple, cast
 
 import pygame

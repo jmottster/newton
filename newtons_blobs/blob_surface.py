@@ -26,6 +26,8 @@ class BlobSurface(Protocol):
 
     Attributes
     ----------
+    name: str
+        A name for the instance
     radius : float
         the size of the blob, by radius value
     color : Tuple[int, int, int]
@@ -61,6 +63,7 @@ class BlobSurface(Protocol):
         Call to get rid of this instance, so it can clean up
     """
 
+    name: str
     radius: float
     color: Tuple[int, int, int]
     universe: BlobUniverse

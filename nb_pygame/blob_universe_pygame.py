@@ -11,6 +11,7 @@ from typing import Any, Tuple, Self
 import pygame
 
 from newtons_blobs.globals import *
+from newtons_blobs import BlobGlobalVars
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -75,9 +76,9 @@ class BlobUniversePygame:
 
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the center point x,y,z"""
-        x = self.get_width() * SCALE_UP
-        y = self.get_height() * SCALE_UP
-        z = self.get_height() * SCALE_UP
+        x = self.get_width() * BlobGlobalVars.scale_up
+        y = self.get_height() * BlobGlobalVars.scale_up
+        z = self.get_height() * BlobGlobalVars.scale_up
         return (x / 2, y / 2, z / 2)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
