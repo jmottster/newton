@@ -124,7 +124,7 @@ class BlobPlotter:
             dtype=MassiveBlob,
         )
         self.square_grid: bool = SQUARE_BLOB_PLOTTER
-        self.start_perfect_orbit: bool = START_PERFECT_ORBIT
+        self.start_perfect_orbit: bool = BlobGlobalVars.start_perfect_orbit
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
@@ -561,5 +561,14 @@ class BlobPlotter:
             velocityy,
             velocityz,
         )
+
+        if BlobGlobalVars.start_pos_rotate_x:
+            blob.rotate_x()
+
+        if BlobGlobalVars.start_pos_rotate_y:
+            blob.rotate_y()
+
+        if BlobGlobalVars.start_pos_rotate_z:
+            blob.rotate_z()
 
         self.add_z_axis(blob)

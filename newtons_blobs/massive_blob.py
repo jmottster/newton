@@ -74,6 +74,16 @@ class MassiveBlob:
 
     update_pos_vel(x: float, y: float, z: float, vx: float, vy: float, vz: float) -> None
         direct way to update position and velocity values
+
+    rotate_x() -> None
+        For starting position, swap y and z to get a different angle of viewing
+
+    rotate_y() -> None
+        For starting position, swap x and z to get a different angle of viewing
+
+    rotate_z() -> None
+        For starting position, swap x and y to get a different angle of viewing
+
     """
 
     __slots__ = (
@@ -257,3 +267,21 @@ class MassiveBlob:
 
         if not BlobGlobalVars.true_3d:
             self.fake_blob_z()
+
+    def rotate_x(self: Self) -> None:
+        """For starting position, swap y and z to get a different angle of viewing"""
+        self.y, self.z = self.z, self.y
+
+        self.vy, self.vz = self.vz, self.vy
+
+    def rotate_y(self: Self) -> None:
+        """For starting position, swap x and z to get a different angle of viewing"""
+        self.x, self.z = self.z, self.x
+
+        self.vx, self.vz = self.vz, self.vx
+
+    def rotate_z(self: Self) -> None:
+        """For starting position, swap x and y to get a different angle of viewing"""
+        self.x, self.y = self.y, self.x
+
+        self.vx, self.vy = self.vy, self.vx

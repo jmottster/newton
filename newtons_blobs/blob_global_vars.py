@@ -51,6 +51,12 @@ class BlobGlobalVars:
     grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
     grid_key_check_bound: ClassVar[int] - The second to last grid position
 
+    start_pos_rotate_x: bool - whether or not to swap y and z in the starting plot of blobs
+    start_pos_rotate_y: bool - whether or not to swap x and z in the starting plot of blobs
+    start_pos_rotate_z: bool - whether or not to swap x and y in the starting plot of blobs
+
+    start_perfect_orbit: bool - whether or not to start with a perfect orbit of blobs
+
     Methods
     -------
     BlobGlobalVars.set_true_3d(true_3d: bool) -> None
@@ -59,6 +65,18 @@ class BlobGlobalVars:
     BlobGlobalVars.set_au_scale_factor(au_scale_factor: float) -> None
         Class method to set BlobGlobalVars.au_scale_factor. This also
         resets all variables that are set using BlobGlobalVars.au_scale_factor
+
+    BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
+        Class method to set whether or not to swap y and z in the starting plot of blobs
+
+    BlobGlobalVars.set_start_pos_rotate_y(start_pos_rotate_y: bool) -> None
+        Class method to set whether or not to swap x and z in the starting plot of blobs
+
+    BlobGlobalVars.set_start_pos_rotate_z(start_pos_rotate_z: bool) -> None
+        Class method to set whether or not to swap x and y in the starting plot of blobs
+
+    BlobGlobalVars.set_start_perfect_orbit(start_perfect_orbit: bool) -> None
+        Class method to set whether or not to start with a perfect orbit of blobs
 
     """
 
@@ -89,6 +107,12 @@ class BlobGlobalVars:
     grid_cell_size: ClassVar[int] = GRID_CELL_SIZE
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
+
+    start_pos_rotate_x: bool = START_POS_ROTATE_X
+    start_pos_rotate_y: bool = START_POS_ROTATE_Y
+    start_pos_rotate_z: bool = START_POS_ROTATE_Z
+
+    start_perfect_orbit: bool = START_PERFECT_ORBIT
 
     @classmethod
     def set_true_3d(cls, true_3d: bool) -> None:
@@ -126,3 +150,23 @@ class BlobGlobalVars:
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 
         print(f"cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius}")
+
+    @classmethod
+    def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:
+        """Class method to set whether or not to swap y and z in the starting plot of blobs"""
+        cls.start_pos_rotate_x = start_pos_rotate_x
+
+    @classmethod
+    def set_start_pos_rotate_y(cls, start_pos_rotate_y: bool) -> None:
+        """Class method to set whether or not to swap x and z in the starting plot of blobs"""
+        cls.start_pos_rotate_y = start_pos_rotate_y
+
+    @classmethod
+    def set_start_pos_rotate_z(cls, start_pos_rotate_z: bool) -> None:
+        """Class method to set whether or not to swap x and y in the starting plot of blobs"""
+        cls.start_pos_rotate_z = start_pos_rotate_z
+
+    @classmethod
+    def set_start_perfect_orbit(cls, start_perfect_orbit: bool) -> None:
+        """Class method to set whether or not to start with a perfect orbit of blobs"""
+        cls.start_perfect_orbit = start_perfect_orbit

@@ -57,6 +57,10 @@ START_PERFECT_ORBIT = True
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
 SQUARE_BLOB_PLOTTER = False
 
+START_POS_ROTATE_X = False
+START_POS_ROTATE_Y = False
+START_POS_ROTATE_Z = False
+
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000

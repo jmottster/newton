@@ -20,6 +20,7 @@ from newtons_blobs.resources import resource_path
 from newtons_blobs.globals import *
 from newtons_blobs.blob_universe import BlobUniverse
 from newtons_blobs.blob_display import BlobDisplay
+from newtons_blobs.massive_blob import MassiveBlob
 
 from .blob_surface_pygame import BlobSurfacePygame
 
@@ -287,11 +288,12 @@ class BlobDisplayPygame:
         Draw the universe area inside the display area (note that universe may be larger than display),
         for a frame of actual display to monitor.
         """
+
         self.display.blit(
             cast(pygame.Surface, universe.get_framework()),
             (
-                (self.display.get_width() - universe.get_width()) / 2,
-                (self.display.get_height() - universe.get_height()) / 2,
+                (self.display.get_width() / 2) - MassiveBlob.center_blob_x,
+                (self.display.get_height() / 2) - MassiveBlob.center_blob_y,
             ),
         )
 
