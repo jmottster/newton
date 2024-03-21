@@ -60,8 +60,8 @@ class BlobPygameFactory:
 
         BlobGlobalVars.set_true_3d(False)
         BlobGlobalVars.set_au_scale_factor(750)
-        BlobGlobalVars.set_start_pos_rotate_y(True)
-        BlobGlobalVars.set_start_pos_rotate_z(True)
+        # BlobGlobalVars.set_start_pos_rotate_y(True)
+        # BlobGlobalVars.set_start_pos_rotate_z(True)
         BlobGlobalVars.set_start_perfect_orbit(False)
 
         self.py_display: BlobDisplayPygame = BlobDisplayPygame(

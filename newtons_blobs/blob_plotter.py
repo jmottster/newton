@@ -166,7 +166,7 @@ class BlobPlotter:
                 blob_pref["name"],
                 self.blob_factory.new_blob_surface(
                     blob_pref["name"],
-                    blob_pref["radius"],
+                    blob_pref["radius"] * BlobGlobalVars.au_scale_factor,
                     tuple(blob_pref["color"]),  # type: ignore
                     blob_pref.get("texture"),  # Might not exist
                     blob_pref.get("rotation_speed"),  # Might not exist

@@ -95,8 +95,6 @@ class BlobGlobalVars:
     universe_size_w: ClassVar[float] = UNIVERSE_SIZE_W
     universe_size_d: ClassVar[float] = UNIVERSE_SIZE_D
 
-    scaled_universe_size: ClassVar[float] = SCALED_UNIVERSE_SIZE
-
     center_blob_radius: ClassVar[float] = CENTER_BLOB_RADIUS
 
     min_radius: ClassVar[float] = MIN_RADIUS
@@ -134,8 +132,6 @@ class BlobGlobalVars:
         cls.universe_size_h = cls.universe_size
         cls.universe_size_w = cls.universe_size
         cls.universe_size_d = cls.universe_size
-
-        cls.scaled_universe_size = cls.universe_size * cls.scale_up
 
         cls.center_blob_radius = (cls.au_scale_factor * 20) * (S / AU)
 

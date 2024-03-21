@@ -69,8 +69,6 @@ UNIVERSE_SIZE = AU_SCALE_FACTOR * 3
 UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
 UNIVERSE_SIZE_D = UNIVERSE_SIZE
-# Cube size of the universe in real life scale
-SCALED_UNIVERSE_SIZE = UNIVERSE_SIZE * SCALE_UP  # Real height and width in AU
 
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
 # 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!

@@ -71,6 +71,7 @@ class BlobUrsinaFactory:
             (0, 0, 0),
             self.urs_universe,
         )
+
         start_pos = (
             urs.Vec3(self.urs_universe.get_center_blob_start_pos())
             * BlobGlobalVars.scale_down
