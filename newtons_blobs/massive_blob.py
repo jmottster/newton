@@ -232,6 +232,10 @@ class MassiveBlob:
     def advance(self: Self) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
 
+        if not BlobGlobalVars.true_3d and self.name == CENTER_BLOB_NAME:
+            self.fake_blob_z()
+            return
+
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
         self.x += self.vx * BlobGlobalVars.timescale
 

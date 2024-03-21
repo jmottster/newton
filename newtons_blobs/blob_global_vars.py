@@ -29,6 +29,10 @@ class BlobGlobalVars:
     true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
     au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
 
+    center_blob_scale: ClassVar[float] - To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
+    blob_scale: ClassVar[float] - Max and min blob sizes, proportional to (normal would be S,
+                                  but that makes them quite small, to fix this divide S by something)
+
     scale_down: ClassVar[float] - multiply real world space distance (in meters) by this to get the pixel value
 
     scale_up: ClassVar[float] - multiply pixel value by this to get real world space distance (in meters)
@@ -62,6 +66,12 @@ class BlobGlobalVars:
     BlobGlobalVars.set_true_3d(true_3d: bool) -> None
         Class method to set BlobGlobalVars.true_3d
 
+    BlobGlobalVars.set_center_blob_scale(cls, center_blob_scale: float) -> None
+        Class method to set BlobGlobalVars.center_blob_scale
+
+    BlobGlobalVars.set_blob_scale(cls, blob_scale: float) -> None
+        Class method to set BlobGlobalVars.blob_scale
+
     BlobGlobalVars.set_au_scale_factor(au_scale_factor: float) -> None
         Class method to set BlobGlobalVars.au_scale_factor. This also
         resets all variables that are set using BlobGlobalVars.au_scale_factor
@@ -83,6 +93,9 @@ class BlobGlobalVars:
     timescale: ClassVar[int] = TIMESCALE
     true_3d: ClassVar[bool] = TRUE_3D
     au_scale_factor: ClassVar[float] = AU_SCALE_FACTOR
+
+    center_blob_scale: ClassVar[float] = CENTER_BLOB_SCALE
+    blob_scale: ClassVar[float] = BLOB_SCALE
 
     # 1 AU = SCALE_FACTOR pixels
     scale_down: ClassVar[float] = SCALE_DOWN
@@ -118,6 +131,16 @@ class BlobGlobalVars:
         cls.true_3d = true_3d
 
     @classmethod
+    def set_center_blob_scale(cls, center_blob_scale: float) -> None:
+        """Class method to set BlobGlobalVars.center_blob_scale"""
+        cls.center_blob_scale = center_blob_scale
+
+    @classmethod
+    def set_blob_scale(cls, blob_scale: float) -> None:
+        """Class method to set BlobGlobalVars.blob_scale"""
+        cls.blob_scale = blob_scale
+
+    @classmethod
     def set_au_scale_factor(cls, au_scale_factor: float) -> None:
         """
         Class method to set BlobGlobalVars.au_scale_factor. This also
@@ -133,10 +156,12 @@ class BlobGlobalVars:
         cls.universe_size_w = cls.universe_size
         cls.universe_size_d = cls.universe_size
 
-        cls.center_blob_radius = (cls.au_scale_factor * 20) * (S / AU)
+        cls.center_blob_radius = (cls.au_scale_factor * cls.center_blob_scale) * (
+            S / AU
+        )
 
-        cls.min_radius = cls.center_blob_radius * (E / S)
-        cls.max_radius = cls.center_blob_radius * (J / S)
+        cls.min_radius = cls.center_blob_radius * (E / cls.blob_scale)
+        cls.max_radius = cls.center_blob_radius * (J / cls.blob_scale)
 
         cls.first_person_scale = cls.center_blob_radius * 0.1
         cls.background_scale = cls.center_blob_radius * 1000
@@ -145,7 +170,9 @@ class BlobGlobalVars:
         cls.grid_key_upper_bound = int(cls.universe_size / cls.grid_cell_size)
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 
-        print(f"cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius}")
+        print(
+            f"cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
+        )
 
     @classmethod
     def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:

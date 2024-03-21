@@ -29,6 +29,13 @@ E = 6.3781 * 10**6
 TRUE_3D = False
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
+# To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
+CENTER_BLOB_SCALE = 10
+
+# Max and min blob sizes, proportional to (normal would be S,
+# but that makes them quite small, to fix this divide S by something)
+BLOB_SCALE = S / 6
+
 SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 
@@ -72,22 +79,24 @@ UNIVERSE_SIZE_D = UNIVERSE_SIZE
 
 CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
 # 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
-CENTER_BLOB_RADIUS = (AU_SCALE_FACTOR * 20) * (S / AU)
+CENTER_BLOB_RADIUS = (AU_SCALE_FACTOR * CENTER_BLOB_SCALE) * (S / AU)
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
 
-MIN_RADIUS = CENTER_BLOB_RADIUS * (E / S)
-MAX_RADIUS = CENTER_BLOB_RADIUS * (J / S)
+MIN_RADIUS = CENTER_BLOB_RADIUS * (E / BLOB_SCALE)
+MAX_RADIUS = CENTER_BLOB_RADIUS * (J / BLOB_SCALE)
 MIN_MASS = 5.972 * 10**24  # Mass of Earth
 MAX_MASS = 1.899 * 10**27  # mass of Jupiter
-
-print(f"MIN_RADIUS={MIN_RADIUS}  MAX_RADIUS={MAX_RADIUS}")
 
 FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1
 BACKGROUND_SCALE = CENTER_BLOB_RADIUS * 1000
 GRID_CELL_SIZE = int(UNIVERSE_SIZE / 10)
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
+
+print(
+    f"MIN_RADIUS={MIN_RADIUS}  MAX_RADIUS={MAX_RADIUS} GRID_CELL_SIZE={GRID_CELL_SIZE} GRID_KEY_UPPER_BOUND={GRID_KEY_UPPER_BOUND}"
+)
 
 COLORS = [
     (221, 110, 66),  # rgb(221, 110, 66)

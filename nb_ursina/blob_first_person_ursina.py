@@ -133,6 +133,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.position = (0, 0, 0)
         urs.camera.rotation = (0, 0, 0)
         urs.camera.ui.collider = "sphere"
+        urs.camera.ui.position = (0, 0, 0)
 
         self.speed: float = 5
         self.roll_speed: float = 20

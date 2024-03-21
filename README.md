@@ -60,10 +60,10 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * MOUSE MOVE FORWARD - Pitch up
   * MOUSE MOVE BACKWARD - Pitch down
 * Miscellaneous Controls:
-  * Q - Disengage/reengage mouse
-  * V - Toggle ambient light (helps to see dark side of blobs)
   * SPACEBAR - Pause/Unpause
   * ESC - Quit
+  * Q - Disengage/reengage mouse
+  * V - Toggle ambient light (helps to see dark side of blobs)
   * F - Toggle fullscreen/windowed mode
   * 1 - Start over based on options selected with keys 1 and 2
   * 2 - Toggle Start pattern between square and circular (see below)
