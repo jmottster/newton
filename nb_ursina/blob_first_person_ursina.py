@@ -43,6 +43,10 @@ class BlobFirstPersonUrsina(urs.Entity):
 
     Methods
     -------
+    setup_lock() -> None
+        Locks the mouse position while setup completes, because it
+        tends to wonder otherwise and corrupts the starting position
+
     update() -> None
         Called by Ursina engine once per frame
 
@@ -55,6 +59,14 @@ class BlobFirstPersonUrsina(urs.Entity):
 
     on_mouse1_click() -> None
         Called when the mouse1 button is clicked
+
+    pos_lock() -> None
+        Calls on_disable(), which will unlock the mouse from the camera, lock the position
+        by saving it
+
+    pos_unlock() -> None
+        Calls on_enable(), which will lock the mouse to the camera, unlock the position hold,
+        and restore any saved positions
 
     on_enable() -> None
         Called by Ursina when this Entity is enabled
@@ -182,6 +194,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.scroll_smoothness *= BlobGlobalVars.au_scale_factor * 0.05
         self.speed_inc = self.orig_speed * 0.04
 
+        self.setup_stage = True
+
         # self.cam_pos = urs.Text(
         #     f"({self.x},{self.y},{self.z})",
         #     position=(0, 0.03, 0),
@@ -190,8 +204,19 @@ class BlobFirstPersonUrsina(urs.Entity):
         #     scale=0.75,
         # )
 
+    def setup_lock(self: Self) -> None:
+        """
+        Locks the mouse position while setup completes, because it
+        tends to wonder otherwise and corrupts the starting position
+        """
+        self.pos_lock()
+
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
+
+        if self.setup_stage and self.local_disabled:
+            self.pos_unlock()
+            self.setup_stage = False
 
         if urs.mouse.locked:
             self.rotate((0, urs.mouse.velocity[0] * self.mouse_sensitivity[1], 0))
@@ -285,11 +310,9 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         if key == "q":
             if self.local_disabled:
-                self.on_enable()
-                self.local_disabled = False
+                self.pos_unlock()
             else:
-                self.on_disable()
-                self.local_disabled = True
+                self.pos_lock()
 
         if key == "v":
 
@@ -343,6 +366,22 @@ class BlobFirstPersonUrsina(urs.Entity):
     def on_mouse1_click(self: Self) -> None:
         """on_mouse1_click(self: Self) -> None"""
         print(f"click")
+
+    def pos_lock(self: Self) -> None:
+        """
+        Calls on_disable(), which will unlock the mouse from the camera, lock the position
+        by saving it
+        """
+        self.on_disable()
+        self.local_disabled = True
+
+    def pos_unlock(self: Self) -> None:
+        """
+        Calls on_enable(), which will lock the mouse to the camera, unlock the position hold,
+        and restore any saved positions
+        """
+        self.on_enable()
+        self.local_disabled = False
 
     def on_enable(self: Self) -> None:
         """Called by Ursina when this Entity is enabled"""

@@ -119,6 +119,7 @@ class BlobUrsinaFactory:
         self.urs_display.first_person_surface.draw(start_pos)
 
         self.urs_display.first_person_surface.first_person_viewer.look_at(temp_ent)
+        self.urs_display.first_person_surface.first_person_viewer.setup_lock()
 
         urs.destroy(temp_ent)
 
