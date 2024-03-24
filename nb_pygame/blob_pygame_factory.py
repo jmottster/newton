@@ -7,7 +7,7 @@ a graphics/drawing library to this simulator, based on Pygame
 by Jason Mott, copyright 2024
 """
 
-from typing import Tuple, Self, cast
+from typing import Any, Dict, Tuple, Self, cast
 
 import numpy.typing as npt
 
@@ -41,6 +41,16 @@ class BlobPygameFactory:
 
     Methods
     -------
+    get_prefs(data: dict) -> None
+        A dict will be sent to this method. so the implementor can load the dict up with attributes that are desired to be saved (if saving is turned on)
+
+    set_prefs(data: dict) -> None
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+
+    reset(self: Self) -> None
+        Resets to default state
+
     new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface
 
@@ -59,8 +69,9 @@ class BlobPygameFactory:
     def __init__(self: Self):
 
         BlobGlobalVars.set_true_3d(False)
-        BlobGlobalVars.set_blob_scale(S / 3)
-        BlobGlobalVars.set_au_scale_factor(750)
+        BlobGlobalVars.set_blob_scale(S / 4)
+        BlobGlobalVars.set_au_scale_factor(500)
+        BlobGlobalVars.set_universe_scale(10)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)
         # BlobGlobalVars.set_start_perfect_orbit(False)
@@ -71,6 +82,41 @@ class BlobPygameFactory:
         self.py_universe: BlobUniversePygame = BlobUniversePygame(
             BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h
         )
+
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict will be sent to this method. so the implementor can load the dict up with
+        attributes that are desired to be saved (if saving is turned on)
+        """
+        pass
+
+    def set_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+        """
+        self.py_universe = BlobUniversePygame(
+            data["universe_size_w"] * BlobGlobalVars.au_scale_factor,
+            data["universe_size_h"] * BlobGlobalVars.au_scale_factor,
+        )
+
+        x_offset = 0
+        y_offset = 0
+        center_blob_pos = self.py_universe.get_center_blob_start_pos()
+
+        for blob_pref in data["blobs"]:
+            if blob_pref["name"] == CENTER_BLOB_NAME:
+                x_offset = center_blob_pos[0] - blob_pref["x"]
+                y_offset = center_blob_pos[1] - blob_pref["y"]
+                blob_pref["x"] = center_blob_pos[0]
+                blob_pref["y"] = center_blob_pos[1]
+            else:
+                blob_pref["x"] += x_offset
+                blob_pref["y"] += y_offset
+
+    def reset(self: Self) -> None:
+        """Resets to default state"""
+        pass
 
     def new_blob_surface(
         self: Self,
@@ -99,7 +145,6 @@ class BlobPygameFactory:
         """
         Returns a the single instance of a Universe object, intended to be the area that is drawn on.
         Can be larger than the display area, which represents the area shown on one's monitor
-
         """
         return cast(BlobUniverse, self.py_universe)
 

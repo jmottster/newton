@@ -6,9 +6,10 @@
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.4! In this release, there is nothing different in terms of user experience, this was a major code refactoring in preparation for replacing pygame as the graphics engine. In the last version the feature of auto save and load was added, on top of the many improvements from 0.0.2: window resizing and full-screen now supported, many performance tweaks that allow up to 150 blobs at 60/fps, new pallet of colors, "elapsed years" display, and of course, now in 3D! While it's fully 3D under the hood, the graphics are still 2D and the 3D effect is faked by adjusting blob size according to position on the z axis and a lighting effect on the blobs that point to the center blob.
+Alpha release 0.0.5!
 
-To toggle auto save and load, just press the E key.
+
+To toggle auto save and load, just press the 5 key.
 
 #### Installation
 
@@ -17,7 +18,7 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 ###### The easy way (Windows only)
 
 1. Download Windows executable here:
-   1. [Release 0.0.4](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.4/newton.exe)
+   1. [Release 0.0.5](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.5/newton3D.exe)
 2. Save where you want to store it
 3. Double click and enjoy (runs as is, no system installation)
 
@@ -38,7 +39,7 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Moon mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, and distance is scaled when rendered on the screen. :D Time is sped up to about 600 hours per second.
+This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, the sizes are proportional to each other, as well as optionally the center blob as the sun (default makes the center blob smaller in proportion than real space). This can run with real size proportions (but blobs are so small, you can only see one at a time, if you can find any other than the center blob -- just like real space). :D Time is sped up to about 600 hours per second.
 
 This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are some controls here while you watch it go.
 

@@ -7,7 +7,7 @@ a graphics/drawing library to this simulator
 by Jason Mott, copyright 2024
 """
 
-from typing import Tuple, Self, Protocol
+from typing import Any, Dict, Tuple, Self, Protocol
 
 import numpy.typing as npt
 
@@ -32,6 +32,16 @@ class BlobPluginFactory(Protocol):
 
     Methods
     -------
+    get_prefs(data: dict) -> None
+        A dict will be sent to this method. so the implementor can load the dict up with attributes that are desired to be saved (if saving is turned on)
+
+    set_prefs(data: dict) -> None
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+
+    reset(self: Self) -> None
+        Resets to default state
+
     new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
@@ -46,7 +56,27 @@ class BlobPluginFactory(Protocol):
 
     grid_check(proximity_grid: npt.NDArray):
         Gives the graphics layer a chance to traverse the proximity grid for collision detection, etc.
+
     """
+
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict will be sent to this method. so the implementor can load the dict up with
+        attributes that are desired to be saved (if saving is turned on)
+        """
+        pass
+
+    def set_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+
+        """
+        pass
+
+    def reset(self: Self) -> None:
+        """Resets to default state"""
+        pass
 
     def new_blob_surface(
         self: Self,

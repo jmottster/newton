@@ -18,6 +18,7 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars
 from newtons_blobs import resource_path
 from newtons_blobs import BlobUniverse
+from .blob_universe_pygame import BlobUniversePygame
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -163,9 +164,7 @@ class BlobSurfacePygame:
         self.rotation_speed: float = rotation_speed
         self.rotation_pos: Tuple[float, float, float] = rotation_pos
 
-        self.py_universe: pygame.Surface = cast(
-            pygame.Surface, universe.get_framework()
-        )
+        self.py_universe: BlobUniversePygame = cast(BlobUniversePygame, universe)
         self.name: str = name
         self.radius: float = radius
         # Double size of box, because radius can get twice the size
@@ -425,7 +424,7 @@ class BlobSurfacePygame:
             self.position = pos
 
         if lighting:
-            self.py_universe.blit(
+            self.py_universe.universe.blit(
                 self.get_lighting_blob(),
                 (
                     self.position[0] - self.width_center,
@@ -436,7 +435,7 @@ class BlobSurfacePygame:
             self.alpha_image.blit(
                 self.mask_image, (0, 0), special_flags=pygame.BLEND_RGBA_MIN
             )
-            self.py_universe.blit(
+            self.py_universe.universe.blit(
                 self.alpha_image,
                 (
                     self.position[0] - self.width_center,
@@ -471,7 +470,7 @@ class BlobSurfacePygame:
             self.position = pos
 
         pygame.draw.circle(
-            self.py_universe,
+            self.py_universe.universe,
             self.color,
             (self.position[0], self.position[1]),
             self.radius,
@@ -486,7 +485,7 @@ class BlobSurfacePygame:
 
         pygame.draw.circle(surf, self.color, (glow_radius, glow_radius), glow_radius)
 
-        self.py_universe.blit(
+        self.py_universe.universe.blit(
             surf,
             (
                 self.position[0] - glow_radius,

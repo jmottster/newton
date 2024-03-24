@@ -8,7 +8,7 @@ by Jason Mott, copyright 2024
 """
 
 import random
-from typing import Tuple, Self, cast
+from typing import Any, Dict, Tuple, Self, cast
 
 import numpy.typing as npt
 import ursina as urs  # type: ignore
@@ -41,6 +41,19 @@ class BlobUrsinaFactory:
 
     Methods
     -------
+    def setup_start_pos() -> None
+        Configures the starting position of the first person viewer
+
+    get_prefs(data: dict) -> None
+        A dict will be sent to this method. so the implementor can load the dict up with attributes that are desired to be saved (if saving is turned on)
+
+    set_prefs(data: dict) -> None
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+
+    reset(self: Self) -> None
+        Resets to default state
+
     new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
@@ -72,10 +85,29 @@ class BlobUrsinaFactory:
             self.urs_universe,
         )
 
-        start_pos = (
+        self.first_person_blob: MassiveBlob = MassiveBlob(
+            BlobGlobalVars.universe_size_h,
+            "first_person",
+            cast(BlobSurface, self.urs_display.first_person_surface),
+            MIN_MASS,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        )
+
+        self.default_start_pos: urs.Vec3 = (
             urs.Vec3(self.urs_universe.get_center_blob_start_pos())
             * BlobGlobalVars.scale_down
         )
+
+        self.setup_start_pos(self.default_start_pos)
+
+    def setup_start_pos(self: Self, start_pos: urs.Vec3) -> None:
+        """Configures the starting position of the first person viewer"""
+
         temp_ent = urs.Entity(position=start_pos)
 
         start_pos = start_pos + urs.Vec3(
@@ -90,11 +122,7 @@ class BlobUrsinaFactory:
 
         urs.destroy(temp_ent)
 
-        self.first_person_blob: MassiveBlob = MassiveBlob(
-            BlobGlobalVars.universe_size_h,
-            "first_person",
-            cast(BlobSurface, self.urs_display.first_person_surface),
-            MIN_MASS,
+        self.first_person_blob.update_pos_vel(
             start_pos[0],
             start_pos[1],
             start_pos[2],
@@ -102,6 +130,44 @@ class BlobUrsinaFactory:
             0,
             0,
         )
+
+    def get_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict will be sent to this method. so the implementor can load the dict up with
+        attributes that are desired to be saved (if saving is turned on)
+        """
+        pass
+
+    def set_prefs(self: Self, data: Dict[str, Any]) -> None:
+        """
+        A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
+        populating dict in get_prefs()) (if saving is turned on)
+
+        """
+        self.urs_universe.width = (
+            data["universe_size_w"] * BlobGlobalVars.au_scale_factor
+        )
+        self.urs_universe.height = (
+            data["universe_size_h"] * BlobGlobalVars.au_scale_factor
+        )
+
+        self.urs_universe.set_universe_entity(
+            (data["blobs"][0]["radius"] * BlobGlobalVars.au_scale_factor) * 1000
+        )
+
+        self.setup_start_pos(
+            urs.Vec3(
+                data["blobs"][0]["x"], data["blobs"][0]["y"], data["blobs"][0]["z"]
+            )
+            * BlobGlobalVars.scale_down
+        )
+
+        if data["paused"]:
+            urs.camera.ui.collider = None
+
+    def reset(self: Self) -> None:
+        """Resets to default state"""
+        self.setup_start_pos(self.default_start_pos)
 
     def new_blob_surface(
         self: Self,

@@ -88,6 +88,7 @@ class MassiveBlob:
 
     __slots__ = (
         "scaled_universe_size_half_z",
+        "universe_size",
         "name",
         "blob_surface",
         "radius",
@@ -127,6 +128,7 @@ class MassiveBlob:
         self.scaled_universe_size_half_z: float = (
             universe_size * BlobGlobalVars.scale_up
         ) / 2
+        self.universe_size = universe_size
 
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface

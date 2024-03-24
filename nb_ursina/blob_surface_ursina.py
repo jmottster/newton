@@ -163,6 +163,7 @@ class Rotator(urs.Entity):
                     BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
                 ),
             )
+            self.info_text._background.z = 0.5
             self.info_text.setShaderAuto()
             self.text_light = BlobAmbientLight(
                 parent=self.info_text,

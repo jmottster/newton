@@ -73,6 +73,7 @@ class BlobRunner:
     def __init__(self: Self, blob_factory: BlobPluginFactory):
 
         # Set up the rendering objects
+        self.blob_factory: BlobPluginFactory = blob_factory
         self.universe: BlobUniverse = blob_factory.get_blob_universe()
         self.display: BlobDisplay = blob_factory.get_blob_display()
 
@@ -84,7 +85,9 @@ class BlobRunner:
             self.display.get_height(),
             blob_factory,
         )
-        self.blob_save_load: BlobSaveLoad = BlobSaveLoad([self, self.blob_plotter])
+        self.blob_save_load: BlobSaveLoad = BlobSaveLoad(
+            [blob_factory, self, self.blob_plotter]
+        )
 
         # Store keyboard events
         self.keyboard_events: Dict[int, Callable[[], None]] = (
@@ -235,6 +238,7 @@ class BlobRunner:
         if self.auto_save_load:
             if not self.blob_save_load.load():
                 self.blob_plotter.plot_blobs()
+            self.universe = self.blob_factory.get_blob_universe()
         else:
             self.blob_plotter.plot_blobs()
 

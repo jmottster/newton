@@ -87,4 +87,6 @@ class BlobUniversePygame:
 
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
-        pass
+        self.universe = pygame.Surface(
+            [BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h]
+        )

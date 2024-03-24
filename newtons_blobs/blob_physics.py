@@ -65,23 +65,24 @@ class BlobPhysics:
         if wrap:
             # TODO fix wrapping for scale
             # Move real x to other side of screen if it's gone off the edge
+            universe_size = blob.universe_size * BlobGlobalVars.scale_up
             if blob.vx < 0 and blob.x < 0:
-                blob.x = blob.scaled_universe_width
-            elif blob.vx > 0 and blob.x > blob.scaled_universe_width:
+                blob.x = universe_size
+            elif blob.vx > 0 and blob.x > universe_size:
                 blob.x = 0
 
             # Move real y to other side of screen if it's gone off the edge
             if blob.vy < 0 and blob.y < 0:
-                blob.y = blob.scaled_universe_height
-            elif blob.vy > 0 and blob.y > blob.scaled_universe_height:
+                blob.y = universe_size
+            elif blob.vy > 0 and blob.y > universe_size:
                 blob.y = 0
 
         else:
             zero = 0
-            universe_size_w = blob.universe_size_width
-            universe_size_h = blob.universe_size_height
-            scaled_universe_size_w = blob.scaled_universe_width
-            scaled_universe_size_h = blob.scaled_universe_height
+            universe_size_w = blob.universe_size
+            universe_size_h = blob.universe_size
+            scaled_universe_size_w = blob.universe_size
+            scaled_universe_size_h = blob.universe_size
 
             local_x = blob.x * BlobGlobalVars.scale_down
             local_y = blob.y * BlobGlobalVars.scale_down

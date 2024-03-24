@@ -26,8 +26,11 @@ S = 6.96 * 10**8
 J = 7.1492 * 10**7
 E = 6.3781 * 10**6
 
-TRUE_3D = False
+TRUE_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
+
+# Number of AU to equal universe size
+UNIVERSE_SCALE = 3
 
 # To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
 CENTER_BLOB_SCALE = 10
@@ -72,7 +75,7 @@ START_POS_ROTATE_Z = False
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000
 # Cube size of Universe in pixels
-UNIVERSE_SIZE = AU_SCALE_FACTOR * 3
+UNIVERSE_SIZE = AU_SCALE_FACTOR * UNIVERSE_SCALE
 UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
 UNIVERSE_SIZE_D = UNIVERSE_SIZE

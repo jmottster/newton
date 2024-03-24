@@ -29,6 +29,8 @@ class BlobGlobalVars:
     true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
     au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
 
+    universe_scale: ClassVar[float] - Number of AU to equal universe size
+
     center_blob_scale: ClassVar[float] - To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
     blob_scale: ClassVar[float] - Max and min blob sizes, proportional to (normal would be S,
                                   but that makes them quite small, to fix this divide S by something)
@@ -66,15 +68,22 @@ class BlobGlobalVars:
     BlobGlobalVars.set_true_3d(true_3d: bool) -> None
         Class method to set BlobGlobalVars.true_3d
 
-    BlobGlobalVars.set_center_blob_scale(cls, center_blob_scale: float) -> None
+    BlobGlobalVars.set_center_blob_scale(center_blob_scale: float) -> None
         Class method to set BlobGlobalVars.center_blob_scale
 
-    BlobGlobalVars.set_blob_scale(cls, blob_scale: float) -> None
+    BlobGlobalVars.set_universe_scale(universe_scale: float) -> None
+        Class method to set BlobGlobalVars.universe_scale
+
+    BlobGlobalVars.set_blob_scale(blob_scale: float) -> None
         Class method to set BlobGlobalVars.blob_scale
 
     BlobGlobalVars.set_au_scale_factor(au_scale_factor: float) -> None
         Class method to set BlobGlobalVars.au_scale_factor. This also
         resets all variables that are set using BlobGlobalVars.au_scale_factor
+
+    BlobGlobalVars.apply_configure() -> None
+        Resets all variables that are calculated based on other variables
+        Automatically called after making changes to relevant vars
 
     BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
         Class method to set whether or not to swap y and z in the starting plot of blobs
@@ -93,6 +102,8 @@ class BlobGlobalVars:
     timescale: ClassVar[int] = TIMESCALE
     true_3d: ClassVar[bool] = TRUE_3D
     au_scale_factor: ClassVar[float] = AU_SCALE_FACTOR
+
+    universe_scale: ClassVar[float] = UNIVERSE_SCALE
 
     center_blob_scale: ClassVar[float] = CENTER_BLOB_SCALE
     blob_scale: ClassVar[float] = BLOB_SCALE
@@ -129,29 +140,42 @@ class BlobGlobalVars:
     def set_true_3d(cls, true_3d: bool) -> None:
         """Class method to set BlobGlobalVars.true_3d"""
         cls.true_3d = true_3d
+        cls.apply_configure()
 
     @classmethod
     def set_center_blob_scale(cls, center_blob_scale: float) -> None:
         """Class method to set BlobGlobalVars.center_blob_scale"""
         cls.center_blob_scale = center_blob_scale
+        cls.apply_configure()
+
+    @classmethod
+    def set_universe_scale(cls, universe_scale: float) -> None:
+        """Class method to set BlobGlobalVars.universe_scale"""
+        cls.universe_scale = universe_scale
+        cls.apply_configure()
 
     @classmethod
     def set_blob_scale(cls, blob_scale: float) -> None:
         """Class method to set BlobGlobalVars.blob_scale"""
         cls.blob_scale = blob_scale
+        cls.apply_configure()
 
     @classmethod
     def set_au_scale_factor(cls, au_scale_factor: float) -> None:
         """
-        Class method to set BlobGlobalVars.au_scale_factor. This also
-        resets all variables that are set using BlobGlobalVars.au_scale_factor
+        Class method to set BlobGlobalVars.au_scale_factor.
         """
         cls.au_scale_factor = au_scale_factor
+        cls.apply_configure()
+
+    @classmethod
+    def apply_configure(cls) -> None:
+        """This resets all variables that are calculated based on other variables (use after making changes to vars)"""
 
         cls.scale_down = cls.au_scale_factor / AU
         cls.scale_up = AU / cls.au_scale_factor
 
-        cls.universe_size = cls.au_scale_factor * 3
+        cls.universe_size = cls.au_scale_factor * cls.universe_scale
         cls.universe_size_h = cls.universe_size
         cls.universe_size_w = cls.universe_size
         cls.universe_size_d = cls.universe_size

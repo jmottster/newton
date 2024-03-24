@@ -99,8 +99,6 @@ class BlobPlotter:
 
         self.universe_size_w: float = universe_w
         self.universe_size_h: float = universe_h
-        self.scaled_universe_width: float = universe_w * BlobGlobalVars.scale_up
-        self.scaled_universe_height: float = universe_h * BlobGlobalVars.scale_up
         self.scaled_display_width: float = display_w * BlobGlobalVars.scale_up
         self.scaled_display_height: float = display_h * BlobGlobalVars.scale_up
         self.blob_factory: BlobPluginFactory = blob_factory
@@ -108,7 +106,7 @@ class BlobPlotter:
         MassiveBlob.center_blob_x = universe_w / 2
         MassiveBlob.center_blob_y = universe_h / 2
         MassiveBlob.center_blob_z = universe_h / 2
-        bp.set_gravitational_range(self.scaled_universe_height)
+        bp.set_gravitational_range(universe_h * BlobGlobalVars.scale_up)
 
         # Preferences/states
         self.blobs: npt.NDArray = np.empty([NUM_BLOBS], dtype=MassiveBlob)
@@ -128,10 +126,8 @@ class BlobPlotter:
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
-        data["universe_size_w"] = self.universe_size_w
-        data["universe_size_h"] = self.universe_size_h
-        data["scaled_universe_width"] = self.scaled_universe_width
-        data["scaled_universe_height"] = self.scaled_universe_height
+        data["universe_size_w"] = self.universe_size_w / BlobGlobalVars.au_scale_factor
+        data["universe_size_h"] = self.universe_size_h / BlobGlobalVars.au_scale_factor
         data["blobs_swallowed"] = self.blobs_swallowed
         data["blobs_escaped"] = self.blobs_escaped
         data["square_grid"] = self.square_grid
@@ -148,16 +144,15 @@ class BlobPlotter:
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it
         """
-        self.universe_size_w = data["universe_size_w"]
-        self.universe_size_h = data["universe_size_h"]
-        self.scaled_universe_width = data["scaled_universe_width"]
-        self.scaled_universe_height = data["scaled_universe_height"]
+        self.universe_size_w = data["universe_size_w"] * BlobGlobalVars.au_scale_factor
+        self.universe_size_h = data["universe_size_h"] * BlobGlobalVars.au_scale_factor
         self.blobs_swallowed = data["blobs_swallowed"]
         self.blobs_escaped = data["blobs_escaped"]
         self.square_grid = data["square_grid"]
         self.start_perfect_orbit = data["start_perfect_orbit"]
         self.blobs = np.empty([len(data["blobs"])], dtype=MassiveBlob)
         self.z_axis.clear()
+        bp.set_gravitational_range(self.universe_size_h * BlobGlobalVars.scale_up)
 
         i = 0
         for blob_pref in data["blobs"]:
@@ -188,12 +183,16 @@ class BlobPlotter:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
 
         display = self.blob_factory.get_blob_display()
+        universe = self.blob_factory.get_blob_universe()
         for blob in self.blobs:
             blob.destroy()
             display.update()
         display.update()
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
-        self.blob_factory.get_blob_universe().clear()
+        universe.clear()
+        self.universe_size_w = universe.get_width()
+        self.universe_size_h = universe.get_height()
+        self.blob_factory.reset()
         display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
