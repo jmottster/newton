@@ -393,17 +393,13 @@ class BlobPlotter:
 
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 5:
-            blob_partition = round(
-                ((self.scaled_display_height) / math.sqrt(NUM_BLOBS))
-            )
+            blob_partition = round(((AU * 2) / math.sqrt(NUM_BLOBS)))
         else:
-            blob_partition = self.scaled_display_height / 4
+            blob_partition = (AU * 2) / 4
 
-        if blob_partition < (
-            (BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 12
-        ):
+        if blob_partition < ((BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 3):
             blob_partition = round(
-                (BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 12
+                (BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 3
             )
 
         clearance = float(round(AU * 0.5 / blob_partition))

@@ -209,6 +209,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         Locks the mouse position while setup completes, because it
         tends to wonder otherwise and corrupts the starting position
         """
+        self.setup_stage = True
         self.pos_lock()
 
     def update(self: Self) -> None:

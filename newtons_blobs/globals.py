@@ -58,7 +58,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 100
+NUM_BLOBS = 102
 
 # If true all blobs will start
 # with a perfect orbital velocity

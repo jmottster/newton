@@ -69,7 +69,7 @@ class BlobPygameFactory:
     def __init__(self: Self):
 
         BlobGlobalVars.set_true_3d(False)
-        BlobGlobalVars.set_blob_scale(S / 4)
+        BlobGlobalVars.set_blob_scale(S / 6)
         BlobGlobalVars.set_au_scale_factor(500)
         BlobGlobalVars.set_universe_scale(10)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
