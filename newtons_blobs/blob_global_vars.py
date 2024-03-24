@@ -190,7 +190,7 @@ class BlobGlobalVars:
         cls.first_person_scale = cls.center_blob_radius * 0.1
         cls.background_scale = cls.center_blob_radius * 1000
 
-        cls.grid_cell_size = int(cls.universe_size / 10)
+        cls.grid_cell_size = int(cls.universe_size / (cls.universe_scale * 10))
         cls.grid_key_upper_bound = int(cls.universe_size / cls.grid_cell_size)
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 

@@ -30,7 +30,7 @@ TRUE_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
 # Number of AU to equal universe size
-UNIVERSE_SCALE = 3
+UNIVERSE_SCALE = 4
 
 # To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
 CENTER_BLOB_SCALE = 10
@@ -93,7 +93,7 @@ MAX_MASS = 1.899 * 10**27  # mass of Jupiter
 
 FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1
 BACKGROUND_SCALE = CENTER_BLOB_RADIUS * 1000
-GRID_CELL_SIZE = int(UNIVERSE_SIZE / 10)
+GRID_CELL_SIZE = int(UNIVERSE_SIZE / (UNIVERSE_SCALE * 10))
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
 
