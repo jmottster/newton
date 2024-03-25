@@ -58,7 +58,10 @@ class WindowHandler(DirectObject.DirectObject):
         """
 
         if urs.window.size[0] != self.last_size[0]:
-            self.display.first_person_surface.first_person_viewer.pos_lock()
+            pos_lock = urs.mouse.locked
+
+            if pos_lock:
+                self.display.first_person_surface.first_person_viewer.pos_lock()
             urs.camera.fov = urs.camera.fov * (urs.window.size[0] / self.last_size[0])
 
             if urs.window.fullscreen:
@@ -74,7 +77,8 @@ class WindowHandler(DirectObject.DirectObject):
                 urs.destroy(item)
 
             self.display.text_entity_cache.clear()
-            self.display.first_person_surface.first_person_viewer.pos_unlock()
+            if pos_lock:
+                self.display.first_person_surface.first_person_viewer.pos_unlock()
 
 
 class BlobDisplayUrsina:
@@ -328,7 +332,10 @@ class BlobDisplayUrsina:
     def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
         """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
 
-        self.first_person_surface.first_person_viewer.pos_lock()
+        pos_lock = urs.mouse.locked
+
+        if pos_lock:
+            self.first_person_surface.first_person_viewer.pos_lock()
         adjusted_height = urs.window.main_monitor.height - 70
         if adjusted_height < size[1]:
             size = (size[0], adjusted_height)
@@ -344,7 +351,8 @@ class BlobDisplayUrsina:
             self.windowed_width = size[0]
             self.windowed_height = size[1]
 
-        self.first_person_surface.first_person_viewer.pos_unlock()
+        if pos_lock:
+            self.first_person_surface.first_person_viewer.pos_unlock()
 
     def is_fullscreen(self: Self) -> bool:
         """Whether or not the display is in fullscreen mode (False if in windowed mode)"""

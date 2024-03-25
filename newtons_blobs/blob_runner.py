@@ -115,6 +115,12 @@ class BlobRunner:
         self.toggle_start_random_orbit_t: str = (
             f"Toggled starting orbit to random velocities"
         )
+        self.toggle_start_angular_chaos_t: str = (
+            f"Toggled starting orbit with angular chaos"
+        )
+        self.toggle_start_no_angular_chaos_t: str = (
+            f"Toggled starting orbit without angular chaos"
+        )
         self.toggle_save_load_on: str = f"Toggled auto save/load to on"
         self.toggle_save_load_off: str = f"Toggled auto save/load to off"
 
@@ -193,6 +199,16 @@ class BlobRunner:
                 self.message = self.toggle_start_random_orbit_t
             self.message_counter = 60 * 3
 
+        def toggle_angular_chaos() -> None:
+            self.blob_plotter.start_angular_chaos = (
+                not self.blob_plotter.start_angular_chaos
+            )
+            if self.blob_plotter.start_angular_chaos:
+                self.message = self.toggle_start_angular_chaos_t
+            else:
+                self.message = self.toggle_start_no_angular_chaos_t
+            self.message_counter = 60 * 3
+
         def toggle_fullscreen() -> None:
             if self.fullscreen:
                 self.display.set_mode(
@@ -220,10 +236,11 @@ class BlobRunner:
         keyboard_events[self.display.get_key_code("space")] = pause_game
         keyboard_events[self.display.get_key_code("f")] = toggle_fullscreen
         keyboard_events[self.display.get_key_code("1")] = start_over
-        keyboard_events[self.display.get_key_code("2")] = toggle_square_grid
-        keyboard_events[self.display.get_key_code("3")] = toggle_perfect_orbit
-        keyboard_events[self.display.get_key_code("4")] = toggle_stats
-        keyboard_events[self.display.get_key_code("5")] = toggle_auto_save_load
+        keyboard_events[self.display.get_key_code("2")] = toggle_stats
+        keyboard_events[self.display.get_key_code("3")] = toggle_auto_save_load
+        keyboard_events[self.display.get_key_code("4")] = toggle_square_grid
+        keyboard_events[self.display.get_key_code("5")] = toggle_perfect_orbit
+        keyboard_events[self.display.get_key_code("6")] = toggle_angular_chaos
 
         return keyboard_events
 

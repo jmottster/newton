@@ -68,13 +68,17 @@ class BlobPygameFactory:
 
     def __init__(self: Self):
 
-        BlobGlobalVars.set_true_3d(False)
         BlobGlobalVars.set_blob_scale(S / 6)
-        BlobGlobalVars.set_au_scale_factor(500)
+        BlobGlobalVars.set_au_scale_factor(175)
         BlobGlobalVars.set_universe_scale(10)
+        BlobGlobalVars.set_center_blob_scale(20)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)
+        BlobGlobalVars.set_timescale(HOURS * 10)
+        BlobGlobalVars.set_true_3d(False)
         # BlobGlobalVars.set_start_perfect_orbit(False)
+        # BlobGlobalVars.set_start_angular_chaos(True)
+        # BlobGlobalVars.set_square_blob_plotter(True)
 
         self.py_display: BlobDisplayPygame = BlobDisplayPygame(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H

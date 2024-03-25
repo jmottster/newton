@@ -80,7 +80,7 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.temp_scale: float = kwargs["scale"]
         self.start_z: float = kwargs["start_z"]
-        self.flashlight_color: urs.Vec3 = urs.color.rgb(0.175, 0.175, 0.175, 0.3)
+        self.flashlight_color: urs.Vec3 = urs.color.rgb(0.3, 0.3, 0.3, 0.3)
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
 

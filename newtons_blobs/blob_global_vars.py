@@ -25,8 +25,6 @@ class BlobGlobalVars:
 
     Attributes
     ----------
-    timescale: ClassVar[int] - number of seconds to pass with each frame
-    true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
     au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
 
     universe_scale: ClassVar[float] - Number of AU to equal universe size
@@ -57,17 +55,18 @@ class BlobGlobalVars:
     grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
     grid_key_check_bound: ClassVar[int] - The second to last grid position
 
-    start_pos_rotate_x: bool - whether or not to swap y and z in the starting plot of blobs
-    start_pos_rotate_y: bool - whether or not to swap x and z in the starting plot of blobs
-    start_pos_rotate_z: bool - whether or not to swap x and y in the starting plot of blobs
+    start_pos_rotate_x: ClassVar[bool] - whether or not to swap y and z in the starting plot of blobs
+    start_pos_rotate_y: ClassVar[bool] - whether or not to swap x and z in the starting plot of blobs
+    start_pos_rotate_z: ClassVar[bool] - whether or not to swap x and y in the starting plot of blobs
 
-    start_perfect_orbit: bool - whether or not to start with a perfect orbit of blobs
+    timescale: ClassVar[int] - number of seconds to pass with each frame
+    true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
+    start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
+    start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
+    square_blob_plotter: ClassVar[bool] - whether to start blobs in a square formation
 
     Methods
     -------
-    BlobGlobalVars.set_true_3d(true_3d: bool) -> None
-        Class method to set BlobGlobalVars.true_3d
-
     BlobGlobalVars.set_center_blob_scale(center_blob_scale: float) -> None
         Class method to set BlobGlobalVars.center_blob_scale
 
@@ -94,13 +93,23 @@ class BlobGlobalVars:
     BlobGlobalVars.set_start_pos_rotate_z(start_pos_rotate_z: bool) -> None
         Class method to set whether or not to swap x and y in the starting plot of blobs
 
+    BlobGlobalVars.set_true_3d(true_3d: bool) -> None
+        Class method to set BlobGlobalVars.true_3d
+
+    BlobGlobalVars.set_timescale(cls, timescale: int) -> None
+        Class method to set BlobGlobalVars.timescale
+
     BlobGlobalVars.set_start_perfect_orbit(start_perfect_orbit: bool) -> None
         Class method to set whether or not to start with a perfect orbit of blobs
 
+    BlobGlobalVars.set_start_angular_chaos(start_angular_chaos: bool) -> None
+        Class method to set whether or not to start orbit with a perpendicular push
+
+    BlobGlobalVars.set_square_blob_plotter(square_blob_plotter: bool) -> None
+        Class method to set whether to start blobs in a square formation
+
     """
 
-    timescale: ClassVar[int] = TIMESCALE
-    true_3d: ClassVar[bool] = TRUE_3D
     au_scale_factor: ClassVar[float] = AU_SCALE_FACTOR
 
     universe_scale: ClassVar[float] = UNIVERSE_SCALE
@@ -130,17 +139,15 @@ class BlobGlobalVars:
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
 
-    start_pos_rotate_x: bool = START_POS_ROTATE_X
-    start_pos_rotate_y: bool = START_POS_ROTATE_Y
-    start_pos_rotate_z: bool = START_POS_ROTATE_Z
+    start_pos_rotate_x: ClassVar[bool] = START_POS_ROTATE_X
+    start_pos_rotate_y: ClassVar[bool] = START_POS_ROTATE_Y
+    start_pos_rotate_z: ClassVar[bool] = START_POS_ROTATE_Z
 
-    start_perfect_orbit: bool = START_PERFECT_ORBIT
-
-    @classmethod
-    def set_true_3d(cls, true_3d: bool) -> None:
-        """Class method to set BlobGlobalVars.true_3d"""
-        cls.true_3d = true_3d
-        cls.apply_configure()
+    timescale: ClassVar[int] = TIMESCALE
+    true_3d: ClassVar[bool] = TRUE_3D
+    start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
+    start_angular_chaos: ClassVar[bool] = START_ANGULAR_CHAOS
+    square_blob_plotter: ClassVar[bool] = SQUARE_BLOB_PLOTTER
 
     @classmethod
     def set_center_blob_scale(cls, center_blob_scale: float) -> None:
@@ -214,6 +221,26 @@ class BlobGlobalVars:
         cls.start_pos_rotate_z = start_pos_rotate_z
 
     @classmethod
+    def set_true_3d(cls, true_3d: bool) -> None:
+        """Class method to set BlobGlobalVars.true_3d"""
+        cls.true_3d = true_3d
+
+    @classmethod
+    def set_timescale(cls, timescale: int) -> None:
+        """Class method to set BlobGlobalVars.timescale"""
+        cls.timescale = timescale
+
+    @classmethod
     def set_start_perfect_orbit(cls, start_perfect_orbit: bool) -> None:
         """Class method to set whether or not to start with a perfect orbit of blobs"""
         cls.start_perfect_orbit = start_perfect_orbit
+
+    @classmethod
+    def set_start_angular_chaos(cls, start_angular_chaos: bool) -> None:
+        """Class method to set whether or not to start orbit with a perpendicular push"""
+        cls.start_angular_chaos = start_angular_chaos
+
+    @classmethod
+    def set_square_blob_plotter(cls, square_blob_plotter: bool) -> None:
+        """Class method to set whether to start blobs in a square formation"""
+        cls.square_blob_plotter = square_blob_plotter

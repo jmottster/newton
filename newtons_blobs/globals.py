@@ -63,6 +63,10 @@ NUM_BLOBS = 102
 # If true all blobs will start
 # with a perfect orbital velocity
 START_PERFECT_ORBIT = True
+
+# whether or not to start orbit with a perpendicular push
+START_ANGULAR_CHAOS = False
+
 # Plot blobs in a square grid to start
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
 SQUARE_BLOB_PLOTTER = False

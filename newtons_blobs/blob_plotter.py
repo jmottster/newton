@@ -121,8 +121,9 @@ class BlobPlotter:
             ],
             dtype=MassiveBlob,
         )
-        self.square_grid: bool = SQUARE_BLOB_PLOTTER
+        self.square_grid: bool = BlobGlobalVars.square_blob_plotter
         self.start_perfect_orbit: bool = BlobGlobalVars.start_perfect_orbit
+        self.start_angular_chaos: bool = BlobGlobalVars.start_angular_chaos
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
@@ -132,6 +133,7 @@ class BlobPlotter:
         data["blobs_escaped"] = self.blobs_escaped
         data["square_grid"] = self.square_grid
         data["start_perfect_orbit"] = self.start_perfect_orbit
+        data["start_angular_chaos"] = self.start_angular_chaos
         data["blobs"] = []
 
         for blob in self.blobs:
@@ -150,6 +152,7 @@ class BlobPlotter:
         self.blobs_escaped = data["blobs_escaped"]
         self.square_grid = data["square_grid"]
         self.start_perfect_orbit = data["start_perfect_orbit"]
+        self.start_angular_chaos = data["start_angular_chaos"]
         self.blobs = np.empty([len(data["blobs"])], dtype=MassiveBlob)
         self.z_axis.clear()
         bp.set_gravitational_range(self.universe_size_h * BlobGlobalVars.scale_up)
@@ -393,9 +396,9 @@ class BlobPlotter:
 
         # split the screen up into enough partitions for every blob
         if NUM_BLOBS > 5:
-            blob_partition = round(((AU * 2) / math.sqrt(NUM_BLOBS)))
+            blob_partition = round(((AU * 6) / math.sqrt(NUM_BLOBS)))
         else:
-            blob_partition = (AU * 2) / 4
+            blob_partition = (AU * 6) / 4
 
         if blob_partition < ((BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 3):
             blob_partition = round(
@@ -458,10 +461,10 @@ class BlobPlotter:
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition = AU * 0.25  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition = AU * 1  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
-        plot_radius = AU * 0.5
+        plot_radius = AU * 1
 
         # How far apart each blob will be on each circumference
         chord_scaled = (math.pi * (plot_radius * 2)) / (orbiting_blobs / 4)
@@ -542,9 +545,10 @@ class BlobPlotter:
         theta = math.acos(dz / d)
         phi = math.atan2(dy, dx)
 
-        if not self.start_perfect_orbit:
+        if self.start_angular_chaos:
             # Add some chaos to starting trajectory
             theta = theta - (math.pi * 0.15)
+
         # turn 90 degrees from pointing center for beginning velocity (orbit)
         phi = phi - (math.pi * 0.5)
 
