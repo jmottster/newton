@@ -179,6 +179,9 @@ class BlobUrsinaFactory:
         if data["paused"]:
             urs.camera.ui.collider = None
 
+        if not data["show_stats"]:
+            self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
+
     def reset(self: Self) -> None:
         """Resets to default state"""
         self.setup_start_pos(self.default_start_pos)

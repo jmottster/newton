@@ -67,10 +67,12 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * V - Toggle ambient light (helps to see dark side of blobs)
   * F - Toggle fullscreen/windowed mode
   * 1 - Start over based on options selected with keys 1 and 2
-  * 2 - Toggle Start pattern between square and circular (see below)
-  * 3 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
-  * 4 - Toggle stat displays
-  * 5 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
+  * 2 - Toggle stat displays
+  * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
+  * 4 - Toggle Start pattern between square and circular (see below)
+  * 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+  * 6 - Toggle start orbit with angular chaos
+
 
 Some screen shots:
 

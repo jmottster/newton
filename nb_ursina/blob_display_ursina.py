@@ -261,7 +261,7 @@ class BlobDisplayUrsina:
                 self.text_entity_cache.clear()
 
         keyboard_events[self.get_key_code("space")] = pause_game
-        keyboard_events[self.get_key_code("4")] = toggle_stats
+        keyboard_events[self.get_key_code("2")] = toggle_stats
 
         return keyboard_events
 

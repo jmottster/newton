@@ -333,7 +333,7 @@ class BlobSurfaceUrsina:
             self.ursina_blob = Rotator(
                 blob_name=self.name,
                 position=(0, 0, 0),
-                model="local_uvsphere.bam",
+                model="local_uvsphere",
                 scale=radius,
                 texture=self.texture,
                 rotation_speed=self.rotation_speed,
@@ -356,7 +356,7 @@ class BlobSurfaceUrsina:
             self.ursina_blob = Rotator(
                 blob_name=self.name,
                 position=(0, 0, 0),
-                model="local_uvsphere.bam",
+                model="local_uvsphere",
                 scale=radius,
                 texture=self.texture,
                 rotation_speed=self.rotation_speed,
