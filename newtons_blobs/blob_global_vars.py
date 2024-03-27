@@ -51,6 +51,8 @@ class BlobGlobalVars:
 
     first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
     background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
+
+    grid_cells_per_au: ClassVar[int] - the number of cubed grid cells for every AU
     grid_cell_size: ClassVar[int] - the size (in pixels) the each cell in the proximity grid should be (see BlobPlotter.update_blobs())
     grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
     grid_key_check_bound: ClassVar[int] - The second to last grid position
@@ -79,6 +81,9 @@ class BlobGlobalVars:
     BlobGlobalVars.set_au_scale_factor(au_scale_factor: float) -> None
         Class method to set BlobGlobalVars.au_scale_factor. This also
         resets all variables that are set using BlobGlobalVars.au_scale_factor
+
+    BlobGlobalVars.set_grid_cells_per_au(grid_cells_per_au: int) -> None
+        Class method to set BlobGlobalVars.grid_cells_per_au
 
     BlobGlobalVars.apply_configure() -> None
         Resets all variables that are calculated based on other variables
@@ -135,6 +140,8 @@ class BlobGlobalVars:
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE
+
+    grid_cells_per_au: ClassVar[int] = GRID_CELLS_PER_AU
     grid_cell_size: ClassVar[int] = GRID_CELL_SIZE
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
@@ -176,6 +183,14 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
+    def set_grid_cells_per_au(cls, grid_cells_per_au: int) -> None:
+        """
+        Class method to set BlobGlobalVars.grid_cells_per_au.
+        """
+        cls.grid_cells_per_au = grid_cells_per_au
+        cls.apply_configure()
+
+    @classmethod
     def apply_configure(cls) -> None:
         """This resets all variables that are calculated based on other variables (use after making changes to vars)"""
 
@@ -197,7 +212,9 @@ class BlobGlobalVars:
         cls.first_person_scale = cls.center_blob_radius * 0.1
         cls.background_scale = cls.center_blob_radius * 1000
 
-        cls.grid_cell_size = int(cls.universe_size / (cls.universe_scale * 10))
+        cls.grid_cell_size = int(
+            cls.universe_size / (cls.universe_scale * cls.grid_cells_per_au)
+        )
         cls.grid_key_upper_bound = int(cls.universe_size / cls.grid_cell_size)
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 
