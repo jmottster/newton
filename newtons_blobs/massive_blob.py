@@ -7,7 +7,10 @@ by Jason Mott, copyright 2024
 """
 
 from typing import Any, ClassVar, Dict, Tuple, Self
+
+
 from .globals import *
+from .blob_global_vars import BlobGlobalVars
 from .blob_surface import BlobSurface
 
 __author__ = "Jason Mott"
@@ -66,37 +69,47 @@ class MassiveBlob:
     advance() -> None
         Applies velocity to blob, changing its x,y coordinates for next frame draw
 
+    destroy() -> None
+        Call when no longer needed, so it can clean up and disappear
+
     update_pos_vel(x: float, y: float, z: float, vx: float, vy: float, vz: float) -> None
         direct way to update position and velocity values
+
+    rotate_x() -> None
+        For starting position, swap y and z to get a different angle of viewing
+
+    rotate_y() -> None
+        For starting position, swap x and z to get a different angle of viewing
+
+    rotate_z() -> None
+        For starting position, swap x and y to get a different angle of viewing
+
     """
 
     __slots__ = (
-        "universe_size_width",
-        "universe_size_height",
-        "scaled_universe_width",
-        "scaled_universe_height",
         "scaled_universe_size_half_z",
+        "universe_size",
         "name",
+        "blob_surface",
         "radius",
         "scaled_radius",
+        "orig_radius",
         "mass",
         "x",
         "y",
         "z",
-        "orig_radius",
         "vx",
         "vy",
         "vz",
         "dead",
         "swallowed",
         "escaped",
-        "blob_surface",
         "pause",
     )
 
-    center_blob_x: ClassVar[float] = UNIVERSE_SIZE_W / 2
-    center_blob_y: ClassVar[float] = UNIVERSE_SIZE_H / 2
-    center_blob_z: ClassVar[float] = UNIVERSE_SIZE_D / 2
+    center_blob_x: ClassVar[float] = BlobGlobalVars.universe_size_w / 2
+    center_blob_y: ClassVar[float] = BlobGlobalVars.universe_size_h / 2
+    center_blob_z: ClassVar[float] = BlobGlobalVars.universe_size_d / 2
 
     def __init__(
         self: Self,
@@ -111,25 +124,26 @@ class MassiveBlob:
         vy: float,
         vz: float,
     ):
-        self.universe_size_width: float = universe_size
-        self.universe_size_height: float = universe_size
-        self.scaled_universe_width: float = universe_size * SCALE_UP
-        self.scaled_universe_height: float = universe_size * SCALE_UP
-        self.scaled_universe_size_half_z: float = self.scaled_universe_height / 2
+
+        self.scaled_universe_size_half_z: float = (
+            universe_size * BlobGlobalVars.scale_up
+        ) / 2
+        self.universe_size = universe_size
 
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
-        self.scaled_radius: float = self.radius * SCALE_UP
-        self.mass: float = mass
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
+        self.scaled_radius: float = self.radius * BlobGlobalVars.scale_up
         self.orig_radius: Tuple[float, float, float] = (
             self.scaled_radius,
             self.scaled_radius / 2,
             self.radius,
         )
+        self.mass: float = mass
+        self.x: float = x
+        self.y: float = y
+        self.z: float = z
+
         self.vx: float = vx  # x velocity per frame
         self.vy: float = vy  # y velocity per frame
         self.vz: float = vz  # z velocity per frame
@@ -138,13 +152,20 @@ class MassiveBlob:
         self.escaped: bool = False
         self.pause: bool = False
 
-        self.fake_blob_z()
+        if not BlobGlobalVars.true_3d:
+            self.fake_blob_z()
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
-        data["radius"] = self.orig_radius[2]
+        data["radius"] = self.orig_radius[2] / BlobGlobalVars.au_scale_factor
         data["color"] = self.blob_surface.color
+        if getattr(self.blob_surface, "texture"):
+            data["texture"] = self.blob_surface.texture
+        if getattr(self.blob_surface, "rotation_speed"):
+            data["rotation_speed"] = self.blob_surface.rotation_speed
+        if getattr(self.blob_surface, "rotation_pos"):
+            data["rotation_pos"] = self.blob_surface.rotation_pos
         data["mass"] = self.mass
         data["x"] = self.x
         data["y"] = self.y
@@ -155,24 +176,24 @@ class MassiveBlob:
 
     def grid_key(self: Self) -> Tuple[int, int, int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
-        x = int((self.x * SCALE_DOWN) / GRID_CELL_SIZE)
-        y = int((self.y * SCALE_DOWN) / GRID_CELL_SIZE)
-        z = int((self.z * SCALE_DOWN) / GRID_CELL_SIZE)
+        x = int((self.x * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
+        y = int((self.y * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
+        z = int((self.z * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
 
         if x <= 0:
             x = 1
-        if x >= GRID_KEY_CHECK_BOUND:
-            x = GRID_KEY_CHECK_BOUND - 1
+        if x >= BlobGlobalVars.grid_key_check_bound:
+            x = BlobGlobalVars.grid_key_check_bound - 1
 
         if y <= 0:
             y = 1
-        if y >= GRID_KEY_CHECK_BOUND:
-            y = GRID_KEY_CHECK_BOUND - 1
+        if y >= BlobGlobalVars.grid_key_check_bound:
+            y = BlobGlobalVars.grid_key_check_bound - 1
 
         if z <= 0:
             z = 1
-        if z >= GRID_KEY_CHECK_BOUND:
-            z = GRID_KEY_CHECK_BOUND - 1
+        if z >= BlobGlobalVars.grid_key_check_bound:
+            z = BlobGlobalVars.grid_key_check_bound - 1
 
         return (
             x,
@@ -182,9 +203,9 @@ class MassiveBlob:
 
     def draw(self: Self) -> None:
         """Tells the instance to call draw on the BlobSurface instance"""
-        x = self.x * SCALE_DOWN
-        y = self.y * SCALE_DOWN
-        z = self.z * SCALE_DOWN
+        x = self.x * BlobGlobalVars.scale_down
+        y = self.y * BlobGlobalVars.scale_down
+        z = self.z * BlobGlobalVars.scale_down
 
         if self.name != CENTER_BLOB_NAME:
             self.blob_surface.draw((x, y, z), LIGHTING)
@@ -207,22 +228,32 @@ class MassiveBlob:
         self.scaled_radius = self.orig_radius[0] + (
             self.orig_radius[1] * (diff / self.scaled_universe_size_half_z)
         )
-        self.radius = round(self.scaled_radius * SCALE_DOWN)
+        self.radius = round(self.scaled_radius * BlobGlobalVars.scale_down)
         self.blob_surface.resize(self.radius)
 
     def advance(self: Self) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
 
+        if not BlobGlobalVars.true_3d and self.name == CENTER_BLOB_NAME:
+            self.fake_blob_z()
+            return
+
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
-        self.x += self.vx * TIMESCALE
+        self.x += self.vx * BlobGlobalVars.timescale
 
         # Advance y by velocity (one frame, with TIMESCALE elapsed time)
-        self.y += self.vy * TIMESCALE
+        self.y += self.vy * BlobGlobalVars.timescale
 
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
-        self.z += self.vz * TIMESCALE
+        self.z += self.vz * BlobGlobalVars.timescale
 
-        self.fake_blob_z()
+        if not BlobGlobalVars.true_3d:
+            self.fake_blob_z()
+
+    def destroy(self: Self) -> None:
+        """Call when no longer needed, so it can clean up and disappear"""
+        self.blob_surface.destroy()
+        # self.blob_surface = None
 
     def update_pos_vel(
         self: Self, x: float, y: float, z: float, vx: float, vy: float, vz: float
@@ -235,4 +266,23 @@ class MassiveBlob:
         self.vy = vy
         self.vz = vz
 
-        self.fake_blob_z()
+        if not BlobGlobalVars.true_3d:
+            self.fake_blob_z()
+
+    def rotate_x(self: Self) -> None:
+        """For starting position, swap y and z to get a different angle of viewing"""
+        self.y, self.z = self.z, self.y
+
+        self.vy, self.vz = self.vz, self.vy
+
+    def rotate_y(self: Self) -> None:
+        """For starting position, swap x and z to get a different angle of viewing"""
+        self.x, self.z = self.z, self.x
+
+        self.vx, self.vz = self.vz, self.vx
+
+    def rotate_z(self: Self) -> None:
+        """For starting position, swap x and y to get a different angle of viewing"""
+        self.x, self.y = self.y, self.x
+
+        self.vx, self.vy = self.vy, self.vx

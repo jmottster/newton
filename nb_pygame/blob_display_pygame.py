@@ -11,6 +11,7 @@ with display output functionality added
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 from typing import Any, Callable, Dict, Self, Tuple, cast
 
 import pygame
@@ -19,6 +20,9 @@ from newtons_blobs.resources import resource_path
 from newtons_blobs.globals import *
 from newtons_blobs.blob_universe import BlobUniverse
 from newtons_blobs.blob_display import BlobDisplay
+from newtons_blobs.massive_blob import MassiveBlob
+
+from .blob_surface_pygame import BlobSurfacePygame
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -45,7 +49,7 @@ class FPS:
     def __init__(self: Self):
         self.clock: pygame.time.Clock = pygame.time.Clock()
         self.font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), STAT_FONT_SIZE
         )
         self.text: pygame.Surface = self.font.render(
             f"FPS {round(self.clock.get_fps(), 2)}",
@@ -82,49 +86,58 @@ class BlobDisplayPygame:
     init_display() -> pygame.Surface
         Initiates and returns a pygame display instance configured for the current monitor.
 
-    set_mode(self: Self, size: Tuple[float, float], mode: int) -> None
-        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
-
     get_framework(self: Self) -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
 
-    get_width(self: Self) -> float
+    get_windowed_width() -> float
+        Returns the default width of the non-fullscreen display object
+
+    get_windowed_height() -> float
+        Returns the default height of the non-fullscreen display object
+
+    get_width() -> float
         Returns the current width of the display object
 
-    get_height(self: Self) -> float
+    get_height() -> float
         Returns the current height of the display object
 
-    get_key_code(self: Self, key: str) -> int
+    get_key_code(key: str) -> int
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
 
-    check_events(self: Self, keyboard_events: Dict[int, Callable[[], None]]) -> None
+    check_events(keyboard_events: Dict[int, Callable[[], None]]) -> None
         Send a dict that has codes from get_key_codes (i.e. keyboard key codes) as the keys (i.e. dict keys),
         and something to do upon that key being pressed.
         This is presumed to be used for each iteration of a frame before drawing.
 
-    fps_clock_tick(self: Self, fps: int) -> None
+    fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
 
-    fps_render(self: Self, pos: Tuple[float, float]) -> None
+    fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
 
-    fill(self: Self, color: Tuple[int, int, int]) -> None
+    set_mode(size: Tuple[float, float], mode: int) -> None
+        Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)
+
+    is_fullscreen() -> bool:
+        Whether of not the display is in fullscreen mode (False if in windowed mode)
+
+    fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
-    blit_text(self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
+    blit_text(text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
         Print the proved text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
 
-    draw_universe(self: Self, universe: BlobUniverse) -> None
+    draw_universe(universe: BlobUniverse) -> None
         Draw the universe area inside the display area (note that universe may be larger than display)
 
-    update(self: Self) -> None
+    update() -> None
         Draw the prepared frame to the screen/window
 
-    quit(self: Self) -> None
+    quit() -> None
         Exit the application
     """
 
@@ -134,11 +147,13 @@ class BlobDisplayPygame:
 
         self.width: float = size_w
         self.height: float = size_h
+        self.windowed_width = size_w
+        self.windowed_height = size_h
         self.display: pygame.Surface = self.init_display()
-        self.img: pygame.Surface = pygame.image.load(resource_path(WINDOW_ICON))
+        self.img: pygame.Surface = pygame.image.load(resource_path(Path(WINDOW_ICON)))
         self.fps: FPS = FPS()
         self.stat_font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), STAT_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), STAT_FONT_SIZE
         )
 
         pygame.display.set_caption(WINDOW_TITLE)
@@ -160,16 +175,24 @@ class BlobDisplayPygame:
 
         return pygame.display.set_mode([self.width, self.height], pygame.RESIZABLE)
 
-    def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
-        """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
-        pygame.display.set_mode(size, self.modes[mode])
-
     def get_framework(self: Self) -> Any:
         """
         Returns the pygame.Surface instance that represents the display area. Must cast it since the interface requires
         a return type of Any
         """
         return self.display
+
+    def get_windowed_width(self: Self) -> float:
+        """
+        Returns the default width of the non-fullscreen display object
+        """
+        return self.windowed_width
+
+    def get_windowed_height(self: Self) -> float:
+        """
+        Returns the default height of the non-fullscreen display object
+        """
+        return self.windowed_height
 
     def get_width(self: Self) -> float:
         """Returns the current width of the display object"""
@@ -197,7 +220,7 @@ class BlobDisplayPygame:
         # Check for events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                keyboard_events[pygame.K_q]()
+                keyboard_events[pygame.K_ESCAPE]()
             if event.type == pygame.KEYDOWN:
                 if keyboard_events.get(event.key) is not None:
                     keyboard_events[event.key]()
@@ -209,6 +232,14 @@ class BlobDisplayPygame:
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
         self.fps.render(self.display, pos[0], pos[1] - (self.fps.text.get_height() * 2))
+
+    def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
+        """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
+        pygame.display.set_mode(size, self.modes[mode])
+
+    def is_fullscreen(self: Self) -> bool:
+        """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
+        return pygame.display.is_fullscreen()
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
@@ -257,11 +288,12 @@ class BlobDisplayPygame:
         Draw the universe area inside the display area (note that universe may be larger than display),
         for a frame of actual display to monitor.
         """
+
         self.display.blit(
             cast(pygame.Surface, universe.get_framework()),
             (
-                (self.display.get_width() - universe.get_width()) / 2,
-                (self.display.get_height() - universe.get_height()) / 2,
+                (self.display.get_width() / 2) - MassiveBlob.center_blob_x,
+                (self.display.get_height() / 2) - MassiveBlob.center_blob_y,
             ),
         )
 

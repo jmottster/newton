@@ -42,8 +42,14 @@ class BlobUniverse(Protocol):
     get_height(self: Self) -> float
         Returns the current height of the universe object
 
+    get_center_blob_start_pos() -> Tuple[float,float,float]
+        Returns a tuple of the center point x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
+
+    clear() -> None
+        Used to delete and properly clean up blobs (for a start over, for example)
 
     """
 
@@ -69,6 +75,14 @@ class BlobUniverse(Protocol):
         """
         pass
 
+    def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
+        """Returns a tuple of the center point x,y,z"""
+        pass
+
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
+        pass
+
+    def clear(self: Self) -> None:
+        """Used to delete and properly clean up blobs (for a start over, for example)"""
         pass

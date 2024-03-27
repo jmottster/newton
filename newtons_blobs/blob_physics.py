@@ -10,6 +10,7 @@ import math
 
 from .massive_blob import MassiveBlob
 from .globals import *
+from .blob_global_vars import BlobGlobalVars
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -29,6 +30,9 @@ class BlobPhysics:
 
     Methods
     -------
+    set_gravitational_range(scaled_universe_height: float) -> None
+        Sets the gravitational range of the center blob. Blobs that go beyond this limit
+        are flagged as "escaped" and are deleted
     edge_detection(blob: MassiveBlob, wrap: bool) -> None
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
@@ -46,7 +50,11 @@ class BlobPhysics:
 
     @classmethod
     def set_gravitational_range(cls, scaled_universe_height: float) -> None:
-        cls.GRAVITATIONAL_RANGE = (scaled_universe_height / 8) * 6
+        """
+        Sets the gravitational range of the center blob. Blobs that go beyond this limit
+        are flagged as "escaped" and are deleted
+        """
+        cls.GRAVITATIONAL_RANGE = scaled_universe_height
 
     @staticmethod
     def edge_detection(blob: MassiveBlob, wrap: bool) -> None:
@@ -57,27 +65,28 @@ class BlobPhysics:
         if wrap:
             # TODO fix wrapping for scale
             # Move real x to other side of screen if it's gone off the edge
+            universe_size = blob.universe_size * BlobGlobalVars.scale_up
             if blob.vx < 0 and blob.x < 0:
-                blob.x = blob.scaled_universe_width
-            elif blob.vx > 0 and blob.x > blob.scaled_universe_width:
+                blob.x = universe_size
+            elif blob.vx > 0 and blob.x > universe_size:
                 blob.x = 0
 
             # Move real y to other side of screen if it's gone off the edge
             if blob.vy < 0 and blob.y < 0:
-                blob.y = blob.scaled_universe_height
-            elif blob.vy > 0 and blob.y > blob.scaled_universe_height:
+                blob.y = universe_size
+            elif blob.vy > 0 and blob.y > universe_size:
                 blob.y = 0
 
         else:
             zero = 0
-            universe_size_w = blob.universe_size_width
-            universe_size_h = blob.universe_size_height
-            scaled_universe_size_w = blob.scaled_universe_width
-            scaled_universe_size_h = blob.scaled_universe_height
+            universe_size_w = blob.universe_size
+            universe_size_h = blob.universe_size
+            scaled_universe_size_w = blob.universe_size
+            scaled_universe_size_h = blob.universe_size
 
-            local_x = blob.x * SCALE_DOWN
-            local_y = blob.y * SCALE_DOWN
-            local_z = blob.z * SCALE_DOWN
+            local_x = blob.x * BlobGlobalVars.scale_down
+            local_y = blob.y * BlobGlobalVars.scale_down
+            local_z = blob.z * BlobGlobalVars.scale_down
 
             # Change x direction if hitting the edge of screen
             if ((local_x - blob.radius) <= zero) and (blob.vx <= 0):
@@ -178,7 +187,7 @@ class BlobPhysics:
                 if blob1.name == CENTER_BLOB_NAME:
                     smaller_blob = blob2
                     larger_blob = blob1
-                if abs(dd - d) >= (smaller_blob.orig_radius[0] * 0.6):
+                if d <= dd:
                     larger_blob.mass += smaller_blob.mass
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True
@@ -205,13 +214,13 @@ class BlobPhysics:
             fdy = F * math.sin(theta) * math.sin(phi)
             fdz = F * math.cos(theta)
 
-            blob1.vx += fdx / blob1.mass * TIMESCALE
-            blob1.vy += fdy / blob1.mass * TIMESCALE
-            blob1.vz += fdz / blob1.mass * TIMESCALE
+            blob1.vx += fdx / blob1.mass * BlobGlobalVars.timescale
+            blob1.vy += fdy / blob1.mass * BlobGlobalVars.timescale
+            blob1.vz += fdz / blob1.mass * BlobGlobalVars.timescale
 
-            blob2.vx -= fdx / blob2.mass * TIMESCALE
-            blob2.vy -= fdy / blob2.mass * TIMESCALE
-            blob2.vz -= fdz / blob2.mass * TIMESCALE
+            blob2.vx -= fdx / blob2.mass * BlobGlobalVars.timescale
+            blob2.vy -= fdy / blob2.mass * BlobGlobalVars.timescale
+            blob2.vz -= fdz / blob2.mass * BlobGlobalVars.timescale
 
         elif blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

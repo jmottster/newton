@@ -6,15 +6,19 @@ Class for building the blob objects for display
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 from typing import ClassVar, Tuple, Self, cast
 import numpy as np
 import numpy.typing as npt
 import math, random
 import pygame
 
+
 from newtons_blobs.globals import *
-from newtons_blobs.resources import resource_path
-from newtons_blobs.blob_universe import BlobUniverse
+from newtons_blobs import BlobGlobalVars
+from newtons_blobs import resource_path
+from newtons_blobs import BlobUniverse
+from .blob_universe_pygame import BlobUniversePygame
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -31,12 +35,20 @@ class BlobSurfacePygame:
 
     Attributes
     ----------
+    name: str
+        The name of this instance
     radius : float
         the size of the blob, by radius value
-    color : tuple
+    color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe : BlobUniverse
         object representing the universe space to draw blobs onto
+    texture : str = None
+        Not used, this is a 2d implementation
+    rotation_speed : float = None
+        Not used, this is a 2d implementation
+    rotation_pos : Tuple[float, float, float] = None
+        Not used, this is a 2d implementation
 
     Methods
     -------
@@ -97,10 +109,17 @@ class BlobSurfacePygame:
     draw_as_center_blob(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
+
+    destroy() -> None
+        Call to get rid of this instance, so it can clean up
     """
 
     __slots__ = (
+        "texture",
+        "rotation_speed",
+        "rotation_pos",
         "py_universe",
+        "name",
         "radius",
         "width_center",
         "height_center",
@@ -125,24 +144,35 @@ class BlobSurfacePygame:
         "mask_image",
     )
 
-    center_blob_x: ClassVar[float] = UNIVERSE_SIZE_W / 2
-    center_blob_y: ClassVar[float] = UNIVERSE_SIZE_H / 2
-    center_blob_z: ClassVar[float] = UNIVERSE_SIZE_D / 2
+    center_blob_x: ClassVar[float] = BlobGlobalVars.universe_size_w / 2
+    center_blob_y: ClassVar[float] = BlobGlobalVars.universe_size_h / 2
+    center_blob_z: ClassVar[float] = BlobGlobalVars.universe_size_d / 2
     LIGHT_RADIUS_MULTI: ClassVar[float] = 6
 
     def __init__(
-        self: Self, radius: float, color: Tuple[int, int, int], universe: BlobUniverse
+        self: Self,
+        name: str,
+        radius: float,
+        color: Tuple[int, int, int],
+        universe: BlobUniverse,
+        texture: str = None,
+        rotation_speed: float = None,
+        rotation_pos: Tuple[float, float, float] = None,
     ):
-        self.py_universe: pygame.Surface = cast(
-            pygame.Surface, universe.get_framework()
-        )
+
+        self.texture: str = texture
+        self.rotation_speed: float = rotation_speed
+        self.rotation_pos: Tuple[float, float, float] = rotation_pos
+
+        self.py_universe: BlobUniversePygame = cast(BlobUniversePygame, universe)
+        self.name: str = name
         self.radius: float = radius
         # Double size of box, because radius can get twice the size
         self.width_center: float = radius + (radius)
         self.height_center: float = radius + (radius)
         self.size: Tuple[float, float] = (self.width_center * 2, self.height_center * 2)
         self.blob_font: pygame.font.Font = pygame.font.Font(
-            resource_path(DISPLAY_FONT), BLOB_FONT_SIZE
+            resource_path(Path(DISPLAY_FONT)), BLOB_FONT_SIZE
         )
         self.position: Tuple[float, float, float] = (0, 0, 0)
         self.animation_scale_div: float = 0.15
@@ -394,7 +424,7 @@ class BlobSurfacePygame:
             self.position = pos
 
         if lighting:
-            self.py_universe.blit(
+            self.py_universe.universe.blit(
                 self.get_lighting_blob(),
                 (
                     self.position[0] - self.width_center,
@@ -405,7 +435,7 @@ class BlobSurfacePygame:
             self.alpha_image.blit(
                 self.mask_image, (0, 0), special_flags=pygame.BLEND_RGBA_MIN
             )
-            self.py_universe.blit(
+            self.py_universe.universe.blit(
                 self.alpha_image,
                 (
                     self.position[0] - self.width_center,
@@ -440,7 +470,7 @@ class BlobSurfacePygame:
             self.position = pos
 
         pygame.draw.circle(
-            self.py_universe,
+            self.py_universe.universe,
             self.color,
             (self.position[0], self.position[1]),
             self.radius,
@@ -455,7 +485,7 @@ class BlobSurfacePygame:
 
         pygame.draw.circle(surf, self.color, (glow_radius, glow_radius), glow_radius)
 
-        self.py_universe.blit(
+        self.py_universe.universe.blit(
             surf,
             (
                 self.position[0] - glow_radius,
@@ -463,3 +493,7 @@ class BlobSurfacePygame:
             ),
             special_flags=pygame.BLEND_RGB_ADD,
         )
+
+    def destroy(self: Self) -> None:
+        """Call to get rid of this instance, so it can clean up"""
+        pass
