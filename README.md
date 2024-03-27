@@ -1,15 +1,14 @@
 # Newton's Blobs
 
-### Version 0.0.4 Alpha Prototype 3D
+### Version 0.0.5 Alpha Prototype 3D
 
 *A simulator of Newton's laws of physics, using space scale objects*
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.5!
+Alpha release 0.0.5! This is the full 3D version. And now there is full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Pause and click on a blob to get its name, size, and position. Much more to come in the future!
 
-
-To toggle auto save and load, just press the 5 key.
+To toggle auto save and load, just press the 3 key. To pause, press the spacebar. Full instructions below.
 
 #### Installation
 
@@ -39,9 +38,9 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, the sizes are proportional to each other, as well as optionally the center blob as the sun (default makes the center blob smaller in proportion than real space). This can run with real size proportions (but blobs are so small, you can only see one at a time, if you can find any other than the center blob -- just like real space). :D Time is sped up to about 600 hours per second.
+This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes are properly proportional to each other from Jupiter sized to Earth sized (however,, the center blob is smaller in proportion than the sun would be to them). Time is sped up to about 600 hours per second for the fake 3D version, and 900 hours per second for the 3D version.
 
-This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are some controls here while you watch it go.
+This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are movement controls here while you watch it go.
 
 * Movement controls:
   * W - Move forward
@@ -73,15 +72,14 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
   * 6 - Toggle start orbit with angular chaos
 
-
 Some screen shots:
 
-<img src="./resources/screen_shot004.png"/>
+<img src="./resources/screen_shot009.png"/>
 
-<img src="./resources/screen_shot005.png"/>
+<img src="./resources/screen_shot010.png"/>
 
-<img src="./resources/screen_shot006.png"/>
+<img src="./resources/screen_shot011.png"/>
 
-<img src="./resources/screen_shot007.png"/>
+<img src="./resources/screen_shot012.png"/>
 
-<img src="./resources/screen_shot008.png"/>
+<img src="./resources/screen_shot013.png"/>
