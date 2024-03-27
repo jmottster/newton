@@ -79,11 +79,13 @@ class BlobUrsinaFactory:
         BlobGlobalVars.set_grid_cells_per_au(5)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)
-        BlobGlobalVars.set_timescale(HOURS * 10)
+        BlobGlobalVars.set_timescale(HOURS * 15)
         BlobGlobalVars.set_true_3d(True)
         # BlobGlobalVars.set_start_perfect_orbit(False)
         # BlobGlobalVars.set_start_angular_chaos(True)
         # BlobGlobalVars.set_square_blob_plotter(True)
+
+        self.start_distance = (BlobGlobalVars.universe_size) / 2
 
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
@@ -94,7 +96,7 @@ class BlobUrsinaFactory:
         )
 
         self.urs_display.first_person_surface = FirstPersonSurface(
-            -(BlobGlobalVars.au_scale_factor * 5),
+            self.start_distance,
             (0, 0, 0),
             self.urs_universe,
         )
@@ -128,7 +130,7 @@ class BlobUrsinaFactory:
             random.randint(-10, 10),
             random.randint(-10, 10),
             random.randint(-10, 10),
-        ).normalized() * (BlobGlobalVars.au_scale_factor * 5)
+        ).normalized() * (self.start_distance)
 
         self.urs_display.first_person_surface.draw(start_pos)
 
