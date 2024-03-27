@@ -11,6 +11,7 @@ from typing import Any, Tuple, Self
 import pygame
 
 from newtons_blobs.globals import *
+from newtons_blobs import BlobGlobalVars
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -44,8 +45,14 @@ class BlobUniversePygame:
     get_height(self: Self) -> float
         Returns the current height of the universe object
 
+    get_center_blob_start_pos() -> Tuple[float,float,float]
+        Returns a tuple of the center point x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
+
+    clear() -> None
+        Used to delete and properly clean up blobs (for a start over, for example)
 
     """
 
@@ -67,6 +74,19 @@ class BlobUniversePygame:
         """Returns the current height of the universe object"""
         return self.universe.get_height()
 
+    def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
+        """Returns a tuple of the center point x,y,z"""
+        x = self.get_width() * BlobGlobalVars.scale_up
+        y = self.get_height() * BlobGlobalVars.scale_up
+        z = self.get_height() * BlobGlobalVars.scale_up
+        return (x / 2, y / 2, z / 2)
+
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
         self.universe.fill(color)
+
+    def clear(self: Self) -> None:
+        """Used to delete and properly clean up blobs (for a start over, for example)"""
+        self.universe = pygame.Surface(
+            [BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h]
+        )

@@ -20,6 +20,19 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
+def relative_resource_path_str(relative_path: str, leading_char: str = ".") -> str:
+    """Get string version of absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
+    my_str = str(resource_path(Path(relative_path))).replace(
+        str(Path().absolute()), leading_char
+    )
+    return my_str
+
+
+def resource_path_str(relative_path: str) -> str:
+    """Get string version of absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
+    return str(resource_path(Path(relative_path)))
+
+
 def resource_path(relative_path: Path) -> Path:
     """Get absolute path to resource, works for local drive and for PyInstaller by automatically detecting context"""
     mypath = Path()
@@ -28,7 +41,14 @@ def resource_path(relative_path: Path) -> Path:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = mypath.absolute()
+
+        try:
+            base_path = Path(__file__).parent
+            if not mypath.joinpath(base_path, relative_path).exists():
+                base_path = Path(__file__).parent.parent
+
+        except Exception:
+            base_path = mypath.absolute()
 
     return mypath.joinpath(base_path, relative_path)
 
