@@ -113,11 +113,14 @@ class BlobPygameFactory:
             if blob_pref["name"] == CENTER_BLOB_NAME:
                 x_offset = center_blob_pos[0] - blob_pref["x"]
                 y_offset = center_blob_pos[1] - blob_pref["y"]
+                z_offset = center_blob_pos[2] - blob_pref["z"]
                 blob_pref["x"] = center_blob_pos[0]
                 blob_pref["y"] = center_blob_pos[1]
+                blob_pref["z"] = center_blob_pos[2]
             else:
                 blob_pref["x"] += x_offset
                 blob_pref["y"] += y_offset
+                blob_pref["z"] += z_offset
 
     def reset(self: Self) -> None:
         """Resets to default state"""
