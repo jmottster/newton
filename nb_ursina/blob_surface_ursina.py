@@ -303,20 +303,21 @@ class BlobSurfaceUrsina:
         self.name: str = name
         self.radius: float = radius
         self.color: Tuple[int, int, int] = color
-        self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.texture: str = None
+        self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
 
-        if texture is not None:
-            self.texture = texture
-        else:
-            if self.radius >= (BlobGlobalVars.max_radius * 0.85):
-                self.texture = BLOB_TEXTURES_LARGE[
-                    random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
-                ]
+        if BlobGlobalVars.textures_3d:
+            if texture is not None:
+                self.texture = texture
             else:
-                self.texture = BLOB_TEXTURES_SMALL[
-                    random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
-                ]
+                if self.radius >= (BlobGlobalVars.max_radius * 0.85):
+                    self.texture = BLOB_TEXTURES_LARGE[
+                        random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
+                    ]
+                else:
+                    self.texture = BLOB_TEXTURES_SMALL[
+                        random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
+                    ]
         self.rotation_speed: float = None
         self.rotation_pos: Tuple[float, float, float] = None
 
@@ -329,18 +330,24 @@ class BlobSurfaceUrsina:
         self.ursina_blob: Rotator = None
 
         if color == CENTER_BLOB_COLOR:
-            self.texture = "nb_ursina/textures/sun03.png"
+            texture: str = "nb_ursina/textures/sun03.png"
+            color: urs.Color = urs.color.rgb(100, 100, 100, 255)
+            if not BlobGlobalVars.textures_3d:
+                color = urs.rgb(
+                    CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
+                )
+                texture = None
             self.ursina_blob = Rotator(
                 blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere",
                 scale=radius,
-                texture=self.texture,
+                texture=texture,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
                 collider="mesh",
-                color=urs.color.rgb(100, 100, 100, 255),
+                color=color,
                 shader=shd.lit_with_shadows_shader,
             )
             self.ursina_center_blob = BlobPointLight(
@@ -353,12 +360,19 @@ class BlobSurfaceUrsina:
                 color=(2.5, 2.5, 2.5, 2),
             )
         else:
+            color: str = None
+            texture: str = self.texture
+            if not BlobGlobalVars.textures_3d:
+                color = urs.rgb(self.color[0], self.color[1], self.color[2])
+                texture = None
+
             self.ursina_blob = Rotator(
                 blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere",
                 scale=radius,
-                texture=self.texture,
+                texture=texture,
+                color=color,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),

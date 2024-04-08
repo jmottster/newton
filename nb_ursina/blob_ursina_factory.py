@@ -81,6 +81,7 @@ class BlobUrsinaFactory:
         # BlobGlobalVars.set_start_pos_rotate_z(True)
         BlobGlobalVars.set_timescale(HOURS * 15)
         BlobGlobalVars.set_true_3d(True)
+        BlobGlobalVars.set_textures_3d(True)
         # BlobGlobalVars.set_start_perfect_orbit(False)
         # BlobGlobalVars.set_start_angular_chaos(True)
         # BlobGlobalVars.set_square_blob_plotter(True)

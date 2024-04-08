@@ -72,12 +72,20 @@ class BlobUniverseUrsina:
         # urs.scene.scale = urs.Vec3(self.width, self.height, self.height)
 
     def set_universe_entity(self: Self, scale: float) -> None:
+
+        texture: str = (
+            "nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg"
+        )
+        model: str = "sky_dome"
+        if not BlobGlobalVars.textures_3d:
+            model = None
+            texture = None
         self.universe = urs.Entity(
             shader=shd.unlit_shader,
             position=(0, 0, 0),
-            model="sky_dome",
+            model=model,
             scale=scale,
-            texture="nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg",
+            texture=texture,
             texture_scale=(1, 1),
             rotation_x=90,
             eternal=True,

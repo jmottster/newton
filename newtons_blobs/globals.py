@@ -27,6 +27,7 @@ J = 7.1492 * 10**7
 E = 6.3781 * 10**6
 
 TRUE_3D = True
+TEXTURES_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
 # Number of AU to equal universe size

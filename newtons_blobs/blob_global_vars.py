@@ -63,6 +63,7 @@ class BlobGlobalVars:
 
     timescale: ClassVar[int] - number of seconds to pass with each frame
     true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
+    textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
     start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
     start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
     square_blob_plotter: ClassVar[bool] - whether to start blobs in a square formation
@@ -100,6 +101,9 @@ class BlobGlobalVars:
 
     BlobGlobalVars.set_true_3d(true_3d: bool) -> None
         Class method to set BlobGlobalVars.true_3d
+
+    BlobGlobalVars.set_textures_3d(textures_3d: bool) -> None
+        Class method to set BlobGlobalVars.textures_3d
 
     BlobGlobalVars.set_timescale(cls, timescale: int) -> None
         Class method to set BlobGlobalVars.timescale
@@ -152,6 +156,7 @@ class BlobGlobalVars:
 
     timescale: ClassVar[int] = TIMESCALE
     true_3d: ClassVar[bool] = TRUE_3D
+    textures_3d: ClassVar[bool] = TEXTURES_3D
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
     start_angular_chaos: ClassVar[bool] = START_ANGULAR_CHAOS
     square_blob_plotter: ClassVar[bool] = SQUARE_BLOB_PLOTTER
@@ -241,6 +246,11 @@ class BlobGlobalVars:
     def set_true_3d(cls, true_3d: bool) -> None:
         """Class method to set BlobGlobalVars.true_3d"""
         cls.true_3d = true_3d
+
+    @classmethod
+    def set_textures_3d(cls, textures_3d: bool) -> None:
+        """Class method to set BlobGlobalVars.textures_3d"""
+        cls.textures_3d = textures_3d
 
     @classmethod
     def set_timescale(cls, timescale: int) -> None:
