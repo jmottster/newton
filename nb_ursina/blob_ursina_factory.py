@@ -74,17 +74,21 @@ class BlobUrsinaFactory:
 
         BlobGlobalVars.set_blob_scale(S / 6)
         # BlobGlobalVars.set_au_scale_factor(200)
-        BlobGlobalVars.set_universe_scale(10)
+        BlobGlobalVars.set_universe_scale(15)
         BlobGlobalVars.set_center_blob_scale(20)
         BlobGlobalVars.set_grid_cells_per_au(5)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)
-        BlobGlobalVars.set_timescale(HOURS * 15)
+        BlobGlobalVars.set_timescale(HOURS * 10)
         BlobGlobalVars.set_true_3d(True)
         BlobGlobalVars.set_textures_3d(True)
         # BlobGlobalVars.set_start_perfect_orbit(False)
         # BlobGlobalVars.set_start_angular_chaos(True)
         # BlobGlobalVars.set_square_blob_plotter(True)
+        BlobGlobalVars.set_center_blob_escape(False)
+        BlobGlobalVars.set_wrap_if_no_escape(True)
+
+        BlobGlobalVars.print_info()
 
         self.start_distance = (BlobGlobalVars.universe_size) / 2
 

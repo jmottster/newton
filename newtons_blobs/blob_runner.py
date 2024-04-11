@@ -350,15 +350,16 @@ class BlobRunner:
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM),
         )
 
-        # Bottom right, showing number of blobs escaped the sun
-        self.display.blit_text(
-            f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
-            (
-                self.display.get_width() - 20,
-                self.display.get_height() - 20,
-            ),
-            (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
-        )
+        if BlobGlobalVars.center_blob_escape:
+            # Bottom right, showing number of blobs escaped the sun
+            self.display.blit_text(
+                f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
+                (
+                    self.display.get_width() - 20,
+                    self.display.get_height() - 20,
+                ),
+                (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
+            )
 
     def get_elapsed_time_in(self: Self, divisor: float) -> float:
         """

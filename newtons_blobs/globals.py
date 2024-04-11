@@ -72,6 +72,10 @@ START_ANGULAR_CHAOS = False
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
 SQUARE_BLOB_PLOTTER = False
 
+CENTER_BLOB_ESCAPE = True
+# whether to wrap objects at edge detection or bounce them, if escape is False
+WRAP_IF_NO_ESCAPE = True and not CENTER_BLOB_ESCAPE
+
 START_POS_ROTATE_X = False
 START_POS_ROTATE_Y = False
 START_POS_ROTATE_Z = False
@@ -152,7 +156,3 @@ WINDOW_ICON = "newtons_blobs/img/newton_icon.ico"
 WINDOW_TITLE = "Newton's Blobs"
 STAT_FONT_SIZE = round(24)
 BLOB_FONT_SIZE = round(16)
-
-
-# TODO get this working, keep false for now
-wrap = False  # whether to wrap objects at edge detection or bounce them

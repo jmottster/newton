@@ -57,32 +57,57 @@ class BlobPhysics:
         cls.GRAVITATIONAL_RANGE = scaled_universe_height
 
     @staticmethod
-    def edge_detection(blob: MassiveBlob, wrap: bool) -> None:
+    def edge_detection(blob: MassiveBlob) -> None:
         """
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
         """
-        if wrap:
-            # TODO fix wrapping for scale
+        velocity_loss = 0.75
+
+        if BlobGlobalVars.wrap_if_no_escape:
             # Move real x to other side of screen if it's gone off the edge
             universe_size = blob.universe_size * BlobGlobalVars.scale_up
             if blob.vx < 0 and blob.x < 0:
-                blob.x = universe_size
+                blob.x += universe_size
+                blob.vx = blob.vx * velocity_loss
+                blob.vy = -blob.vy
+                blob.vz = -blob.vz
             elif blob.vx > 0 and blob.x > universe_size:
-                blob.x = 0
+                blob.x -= universe_size
+                blob.vx = blob.vx * velocity_loss
+                blob.vy = -blob.vy
+                blob.vz = -blob.vz
 
             # Move real y to other side of screen if it's gone off the edge
             if blob.vy < 0 and blob.y < 0:
-                blob.y = universe_size
+                blob.y += universe_size
+                blob.vy = blob.vy * velocity_loss
+                blob.vx = -blob.vx
+                blob.vz = -blob.vz
             elif blob.vy > 0 and blob.y > universe_size:
-                blob.y = 0
+                blob.y -= universe_size
+                blob.vy = blob.vy * velocity_loss
+                blob.vx = -blob.vx
+                blob.vz = -blob.vz
+
+            # Move real z to other side of screen if it's gone off the edge
+            if blob.vz < 0 and blob.z < 0:
+                blob.z += universe_size
+                blob.vz = blob.vz * velocity_loss
+                blob.vx = -blob.vx
+                blob.vy = -blob.vy
+            elif blob.vz > 0 and blob.z > universe_size:
+                blob.z -= universe_size
+                blob.vz = blob.vz * velocity_loss
+                blob.vx = -blob.vx
+                blob.vy = -blob.vy
 
         else:
             zero = 0
             universe_size_w = blob.universe_size
             universe_size_h = blob.universe_size
-            scaled_universe_size_w = blob.universe_size
-            scaled_universe_size_h = blob.universe_size
+            scaled_universe_size_w = blob.universe_size * BlobGlobalVars.scale_up
+            scaled_universe_size_h = blob.universe_size * BlobGlobalVars.scale_up
 
             local_x = blob.x * BlobGlobalVars.scale_down
             local_y = blob.y * BlobGlobalVars.scale_down
@@ -92,34 +117,34 @@ class BlobPhysics:
             if ((local_x - blob.radius) <= zero) and (blob.vx <= 0):
                 blob.vx = -blob.vx
                 blob.x = blob.scaled_radius
-                blob.vx = blob.vx * 0.995
+                blob.vx = blob.vx * velocity_loss
 
             if ((local_x + blob.radius) >= universe_size_w) and (blob.vx >= 0):
                 blob.vx = -blob.vx
                 blob.x = scaled_universe_size_w - blob.scaled_radius
-                blob.vx = blob.vx * 0.995
+                blob.vx = blob.vx * velocity_loss
 
             # Change y direction if hitting the edge of screen
             if ((local_y - blob.radius) <= zero) and (blob.vy <= 0):
                 blob.vy = -blob.vy
                 blob.y = blob.scaled_radius
-                blob.vy = blob.vy * 0.995
+                blob.vy = blob.vy * velocity_loss
 
             if ((local_y + blob.radius) >= universe_size_h) and blob.vy >= 0:
                 blob.vy = -blob.vy
                 blob.y = scaled_universe_size_h - blob.scaled_radius
-                blob.vy = blob.vy * 0.995
+                blob.vy = blob.vy * velocity_loss
 
             # Change z direction if hitting the edge of screen
             if ((local_z - blob.radius) <= zero) and (blob.vz <= 0):
                 blob.vz = -blob.vz
                 blob.z = blob.scaled_radius
-                blob.vz = blob.vz * 0.995
+                blob.vz = blob.vz * velocity_loss
 
             if ((local_z + blob.radius) >= universe_size_h) and blob.vz >= 0:
                 blob.vz = -blob.vz
                 blob.z = scaled_universe_size_h - blob.scaled_radius
-                blob.vz = blob.vz * 0.995
+                blob.vz = blob.vz * velocity_loss
 
     @staticmethod
     def collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None:
@@ -222,7 +247,7 @@ class BlobPhysics:
             blob2.vy -= fdy / blob2.mass * BlobGlobalVars.timescale
             blob2.vz -= fdz / blob2.mass * BlobGlobalVars.timescale
 
-        elif blob1.name == CENTER_BLOB_NAME:
+        elif BlobGlobalVars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it
             blob2.dead = True
             blob2.escaped = True

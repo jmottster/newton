@@ -80,6 +80,10 @@ class BlobPygameFactory:
         # BlobGlobalVars.set_start_perfect_orbit(False)
         # BlobGlobalVars.set_start_angular_chaos(True)
         # BlobGlobalVars.set_square_blob_plotter(True)
+        BlobGlobalVars.set_center_blob_escape(False)
+        BlobGlobalVars.set_wrap_if_no_escape(True)
+
+        BlobGlobalVars.print_info()
 
         self.py_display: BlobDisplayPygame = BlobDisplayPygame(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
@@ -107,6 +111,7 @@ class BlobPygameFactory:
 
         x_offset = 0
         y_offset = 0
+        z_offset = 0
         center_blob_pos = self.py_universe.get_center_blob_start_pos()
 
         for blob_pref in data["blobs"]:

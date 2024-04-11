@@ -67,6 +67,8 @@ class BlobGlobalVars:
     start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
     start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
     square_blob_plotter: ClassVar[bool] - whether to start blobs in a square formation
+    center_blob_escape: ClassVar[bool] - whether blobs can escape the center blob or use edge detection
+    wrap_if_no_escape: ClassVar[bool] - whether to wrap around at edges (or bounce) when edge detection is used
 
     Methods
     -------
@@ -90,6 +92,9 @@ class BlobGlobalVars:
         Resets all variables that are calculated based on other variables
         Automatically called after making changes to relevant vars
 
+    BlobGlobalVars.print_info() -> None
+        Prints info about settings
+
     BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
         Class method to set whether or not to swap y and z in the starting plot of blobs
 
@@ -105,7 +110,7 @@ class BlobGlobalVars:
     BlobGlobalVars.set_textures_3d(textures_3d: bool) -> None
         Class method to set BlobGlobalVars.textures_3d
 
-    BlobGlobalVars.set_timescale(cls, timescale: int) -> None
+    BlobGlobalVars.set_timescale(timescale: int) -> None
         Class method to set BlobGlobalVars.timescale
 
     BlobGlobalVars.set_start_perfect_orbit(start_perfect_orbit: bool) -> None
@@ -116,6 +121,12 @@ class BlobGlobalVars:
 
     BlobGlobalVars.set_square_blob_plotter(square_blob_plotter: bool) -> None
         Class method to set whether to start blobs in a square formation
+
+    BlobGlobalVars.set_center_blob_escape(center_blob_escape: bool) -> None
+        Class method to set whether blobs can escape the center blob or use edge detection
+
+    BlobGlobalVars.set_wrap_if_no_escape(wrap_if_no_escape: bool) -> None
+        Class method to set whether to wrap around at edges (or bounce) when edge detection is used
 
     """
 
@@ -160,6 +171,8 @@ class BlobGlobalVars:
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
     start_angular_chaos: ClassVar[bool] = START_ANGULAR_CHAOS
     square_blob_plotter: ClassVar[bool] = SQUARE_BLOB_PLOTTER
+    center_blob_escape: ClassVar[bool] = CENTER_BLOB_ESCAPE
+    wrap_if_no_escape: ClassVar[bool] = WRAP_IF_NO_ESCAPE
 
     @classmethod
     def set_center_blob_scale(cls, center_blob_scale: float) -> None:
@@ -196,6 +209,18 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
+    def set_center_blob_escape(cls, center_blob_escape: bool) -> None:
+        """Class method to set whether blobs can escape the center blob or use edge detection"""
+        cls.center_blob_escape = center_blob_escape
+        cls.apply_configure()
+
+    @classmethod
+    def set_wrap_if_no_escape(cls, wrap_if_no_escape: bool) -> None:
+        """Class method to set whether to wrap around at edges (or bounce) when edge detection is used"""
+        cls.wrap_if_no_escape = wrap_if_no_escape
+        cls.apply_configure()
+
+    @classmethod
     def apply_configure(cls) -> None:
         """This resets all variables that are calculated based on other variables (use after making changes to vars)"""
 
@@ -223,8 +248,13 @@ class BlobGlobalVars:
         cls.grid_key_upper_bound = int(cls.universe_size / cls.grid_cell_size)
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 
+        cls.wrap_if_no_escape = cls.wrap_if_no_escape and not cls.center_blob_escape
+
+    @classmethod
+    def print_info(cls) -> None:
+        """Prints info about settings"""
         print(
-            f"cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
+            f"cls.universe_size={cls.universe_size} cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
         )
 
     @classmethod

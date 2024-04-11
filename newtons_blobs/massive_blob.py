@@ -180,20 +180,20 @@ class MassiveBlob:
         y = int((self.y * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
         z = int((self.z * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
 
-        if x <= 0:
-            x = 1
-        if x >= BlobGlobalVars.grid_key_check_bound:
-            x = BlobGlobalVars.grid_key_check_bound - 1
+        # if x <= 0:
+        #     x = 1
+        if x > BlobGlobalVars.grid_key_check_bound:
+            x = BlobGlobalVars.grid_key_check_bound
 
-        if y <= 0:
-            y = 1
-        if y >= BlobGlobalVars.grid_key_check_bound:
-            y = BlobGlobalVars.grid_key_check_bound - 1
+        # if y <= 0:
+        #     y = 1
+        if y > BlobGlobalVars.grid_key_check_bound:
+            y = BlobGlobalVars.grid_key_check_bound
 
-        if z <= 0:
-            z = 1
-        if z >= BlobGlobalVars.grid_key_check_bound:
-            z = BlobGlobalVars.grid_key_check_bound - 1
+        # if z <= 0:
+        #     z = 1
+        if z > BlobGlobalVars.grid_key_check_bound:
+            z = BlobGlobalVars.grid_key_check_bound
 
         return (
             x,

@@ -317,14 +317,30 @@ class BlobPlotter:
         self.z_axis.clear()
         pg = self.proximity_grid
 
-        def check_blobs(blob1: MassiveBlob, blobs: npt.NDArray) -> None:
+        def check_blobs(
+            blob1: MassiveBlob,
+            blobs: npt.NDArray,
+            pos_offsets: Tuple[float, float, float],
+        ) -> None:
             if blobs is None:
                 return
+
             for blob2 in blobs:
                 if (id(blob2) != id(blob1)) and (checked.get(id(blob2)) is None):
 
+                    blob2.x += pos_offsets[0]
+                    blob2.y += pos_offsets[1]
+                    blob2.z += pos_offsets[2]
+
                     bp.gravitational_pull(blob1, blob2)
                     bp.collision_detection(blob1, blob2)
+
+                    blob2.x -= pos_offsets[0]
+                    blob2.y -= pos_offsets[1]
+                    blob2.z -= pos_offsets[2]
+
+            if not BlobGlobalVars.center_blob_escape:
+                bp.edge_detection(blob1)
 
         def check_grid(blob: MassiveBlob) -> None:
 
@@ -333,20 +349,54 @@ class BlobPlotter:
             # Using the grid approach for optimization. Instead of every blob checking every blob,
             # every blob only checks the blobs in their own grid cell and the grid cells surrounding them.
 
-            for z_offset in range(-1, 2):
-                for x_offset in range(-1, 2):
-                    for y_offset in range(-1, 2):
+            z_pos_offset: float = 0
+            x_pos_offset: float = 0
+            y_pos_offset: float = 0
+            scaled_universe: float = (
+                BlobGlobalVars.universe_size * BlobGlobalVars.scale_up
+            )
+            for z_i_offset in range(-1, 2):
+                z = gk[2] + z_i_offset
+                if z > BlobGlobalVars.grid_key_check_bound:
+                    z = 0
+                    z_pos_offset = scaled_universe
+                elif z < 0:
+                    z_pos_offset = -scaled_universe
+                else:
+                    z_pos_offset = 0
+                for x_i_offset in range(-1, 2):
+                    x = gk[0] + x_i_offset
+                    if x > BlobGlobalVars.grid_key_check_bound:
+                        x = 0
+                        x_pos_offset = scaled_universe
+                    elif x < 0:
+                        x_pos_offset = -scaled_universe
+                    else:
+                        x_pos_offset = 0
+                    for y_i_offset in range(-1, 2):
+                        y = gk[1] + y_i_offset
+                        if y > BlobGlobalVars.grid_key_check_bound:
+                            y = 0
+                            y_pos_offset = scaled_universe
+                        elif y < 0:
+                            y_pos_offset = -scaled_universe
+                        else:
+                            y_pos_offset = 0
                         # Skip the corners of the cube, worth risking the occasional miss for the performance boost
-                        if x_offset != 0 and y_offset != 0 and z_offset != 0:
+                        if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                             continue
                         check_blobs(
                             blob,
-                            pg[gk[0] + x_offset][gk[1] + y_offset][gk[2] + z_offset],
+                            pg[x][y][z],
+                            (x_pos_offset, y_pos_offset, z_pos_offset),
                         )
 
         for i in range(1, len(self.blobs)):
             bp.gravitational_pull(self.blobs[0], self.blobs[i])
             bp.collision_detection(self.blobs[0], self.blobs[i])
+
+        if not BlobGlobalVars.center_blob_escape:
+            bp.edge_detection(self.blobs[0])
 
         self.blobs[0].advance()
         self.add_z_axis(self.blobs[0])
