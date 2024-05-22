@@ -80,9 +80,9 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.temp_scale: float = kwargs["scale"]
         self.start_z: float = kwargs["start_z"]
-        self.flashlight_color: urs.Vec3 = urs.color.rgb(0.3, 0.3, 0.3, 0.3)
+        self.flashlight_color: urs.Vec3 = urs.color.rgba(0.3, 0.3, 0.3, 0.3)
         if not BlobGlobalVars.textures_3d:
-            self.flashlight_color = urs.color.rgb(0.7, 0.7, 0.7, 0.3)
+            self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
 
@@ -96,10 +96,10 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
-        color: urs.Color = urs.color.rgb(200, 200, 200, 150)
+        color: urs.Color = urs.color.rgba(200, 200, 200, 150)
         texture: str = "nb_ursina/textures/sun03.png"
         if not BlobGlobalVars.textures_3d:
-            color = urs.rgb(
+            color = urs.rgba(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
             )
             texture = None

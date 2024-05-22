@@ -31,6 +31,73 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
+class TrailRenderer(urs.Entity):
+    def __init__(
+        self,
+        size=[1, 1, 1],
+        segments=2,
+        min_spacing=0.05,
+        fade_speed=0,
+        color_gradient=[urs.color.white, urs.color.white.tint(-0.5), urs.color.clear],
+        **kwargs,
+    ):
+
+        super().__init__(**kwargs)
+        if color_gradient:
+            color_gradient = color_gradient[::-1]
+
+        self.renderer = urs.Entity(
+            model=urs.Pipe(
+                base_shape=urs.Quad(segments=0, scale=size),
+                path=[self.world_position, self.world_position],
+                color_gradient=color_gradient,
+                static=False,
+                cap_ends=False,
+            ),
+        )
+
+        self._t = 0
+        self.segments = segments
+        self.update_step = 0.05
+        self.min_spacing = min_spacing
+        self.fade_speed = fade_speed
+        self.render = False
+
+        self.on_enable = self.renderer.enable
+        self.on_disable = self.renderer.disable
+
+        # self.enabled = False
+
+    def update(self):
+        self._t += urs.time.dt
+        if self._t >= self.update_step:
+
+            self._t = 0
+
+            if (
+                urs.distance(self.world_position, self.renderer.model.path[-1])
+                > self.min_spacing
+            ):
+                self.renderer.model.path.append(self.world_position)
+                if len(self.renderer.model.path) > self.segments:
+                    self.renderer.model.path.pop(0)
+
+            if self.fade_speed:
+                for i, v in enumerate(self.renderer.model.path):
+                    if i >= len(self.renderer.model.path) - 1:
+                        continue
+                    self.renderer.model.path[i] = urs.lerp(
+                        v,
+                        self.renderer.model.path[i + 1],
+                        urs.time.dt * self.fade_speed,
+                    )
+
+            self.renderer.model.generate()
+
+    def on_destroy(self):
+        urs.destroy(self.renderer)
+
+
 class Rotator(urs.Entity):
     """
     A class to create a blob Entity that rotates
@@ -67,10 +134,7 @@ class Rotator(urs.Entity):
 
     """
 
-    __slots__ = (
-        "rotation_speed",
-        "rotation_pos",
-    )
+    __slots__ = ("rotation_speed", "rotation_pos", "trail_color")
 
     def __init__(self: Self, **kwargs):
 
@@ -81,6 +145,8 @@ class Rotator(urs.Entity):
         self.rotation_pos = kwargs.get("rotation_pos")
 
         self.blob_name: str = kwargs.get("name")
+
+        self.trail_color: urs.Color = kwargs.get("trail_color")
 
         super().__init__()
 
@@ -102,6 +168,8 @@ class Rotator(urs.Entity):
 
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+        self.trail: TrailRenderer = None
 
         self.world_rotation_x: float = 0.0
         self.world_rotation_y: float = 0.0
@@ -228,6 +296,9 @@ class Rotator(urs.Entity):
 
     def on_destroy(self: Self) -> None:
         """Called when this Entity is destroyed"""
+        if self.trail is not None:
+            self.trail.enabled = False
+        urs.destroy(self.trail)
         self.destroy_text_overlay()
         self.hide()
 
@@ -330,8 +401,10 @@ class BlobSurfaceUrsina:
         self.ursina_blob: Rotator = None
 
         if color == CENTER_BLOB_COLOR:
+
             texture: str = "nb_ursina/textures/sun03.png"
-            color: urs.Color = urs.color.rgb(100, 100, 100, 255)
+            color: urs.Color = urs.color.rgba(100, 100, 100, 255)
+            trail_color: urs.Color = color
             if not BlobGlobalVars.textures_3d:
                 color = urs.rgb(
                     CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
@@ -348,6 +421,7 @@ class BlobSurfaceUrsina:
                 texture_scale=(1, 1),
                 collider="mesh",
                 color=color,
+                trail_color=trail_color,
                 shader=shd.lit_with_shadows_shader,
             )
             self.ursina_center_blob = BlobPointLight(
@@ -360,7 +434,10 @@ class BlobSurfaceUrsina:
                 color=(2.5, 2.5, 2.5, 2),
             )
         else:
-            color: str = None
+            trail_color: urs.Color = urs.color.rgba(
+                self.color[0], self.color[1], self.color[2], 255
+            )
+            color: urs.Color = None
             texture: str = self.texture
             if not BlobGlobalVars.textures_3d:
                 color = urs.rgb(self.color[0], self.color[1], self.color[2])
@@ -373,6 +450,7 @@ class BlobSurfaceUrsina:
                 scale=radius,
                 texture=texture,
                 color=color,
+                trail_color=trail_color,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
@@ -406,6 +484,9 @@ class BlobSurfaceUrsina:
         """
         self.ursina_blob.position = urs.Vec3(pos)
 
+        # if self.ursina_blob.trail is None:
+        #     self.create_trail()
+
     def draw_as_center_blob(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
     ) -> None:
@@ -425,6 +506,28 @@ class BlobSurfaceUrsina:
         # print(f"center blob light: {self.ursina_center_blob.world_position}")
 
         self.ursina_blob.position = urs.Vec3(pos)
+
+        # if self.ursina_blob.trail is None:
+        #     self.create_trail()
+
+    def create_trail(self) -> None:
+
+        self.ursina_blob.trail = TrailRenderer(
+            size=[
+                BlobGlobalVars.blob_trail_girth,
+                BlobGlobalVars.blob_trail_girth,
+                BlobGlobalVars.blob_trail_girth,
+            ],
+            segments=4,
+            min_spacing=BlobGlobalVars.blob_trail_girth,
+            fade_speed=0,
+            parent=self.ursina_blob,
+            # color_gradient=[
+            #     self.trail_color,
+            #     self.trail_color.tint(-0.75),
+            #     urs.color.rgba(0, 0, 0, 100),
+            # ],
+        )
 
     def destroy(self: Self) -> None:
         """Call when getting rid of this instance, so it can clean up"""

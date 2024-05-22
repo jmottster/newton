@@ -72,10 +72,11 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        BlobGlobalVars.set_blob_scale(S / 6)
         # BlobGlobalVars.set_au_scale_factor(200)
-        BlobGlobalVars.set_universe_scale(15)
-        BlobGlobalVars.set_center_blob_scale(20)
+        BlobGlobalVars.set_universe_scale(20)
+        BlobGlobalVars.set_center_blob_scale(10)
+        BlobGlobalVars.set_blob_scale(60)
+        BlobGlobalVars.set_blob_trail_scale(20)
         BlobGlobalVars.set_grid_cells_per_au(5)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)

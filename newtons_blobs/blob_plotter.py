@@ -102,6 +102,7 @@ class BlobPlotter:
         self.scaled_display_width: float = display_w * BlobGlobalVars.scale_up
         self.scaled_display_height: float = display_h * BlobGlobalVars.scale_up
         self.blob_factory: BlobPluginFactory = blob_factory
+        self.display = self.blob_factory.get_blob_display()
 
         MassiveBlob.center_blob_x = universe_w / 2
         MassiveBlob.center_blob_y = universe_h / 2
@@ -185,18 +186,17 @@ class BlobPlotter:
     def start_over(self: Self) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
 
-        display = self.blob_factory.get_blob_display()
         universe = self.blob_factory.get_blob_universe()
         for blob in self.blobs:
             blob.destroy()
-            display.update()
-        display.update()
+            self.display.update()
+        self.display.update()
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         universe.clear()
         self.universe_size_w = universe.get_width()
         self.universe_size_h = universe.get_height()
         self.blob_factory.reset()
-        display.update()
+        self.display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
         self.z_axis.clear()
@@ -522,6 +522,9 @@ class BlobPlotter:
         if chord_scaled < ((BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up):
             chord_scaled = (BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up
 
+        if chord_scaled > (plot_radius * 2):
+            chord_scaled = (BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up
+
         # How many radians to increase for each blob around the circumference (such that
         # we get chord_scaled length between each blob center)
         pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
@@ -533,6 +536,8 @@ class BlobPlotter:
             pi_inc = (math.pi * 2) / (orbiting_blobs)
 
         for i in range(1, NUM_BLOBS):
+
+            self.display.update()
 
             # Circular grid x,y plot for this blob
             # Get x and y for this blob, vars set up from last iteration or initial setting
@@ -626,3 +631,5 @@ class BlobPlotter:
             blob.rotate_z()
 
         self.add_z_axis(blob)
+
+        self.display.update()

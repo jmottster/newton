@@ -136,6 +136,7 @@ class BlobGlobalVars:
 
     center_blob_scale: ClassVar[float] = CENTER_BLOB_SCALE
     blob_scale: ClassVar[float] = BLOB_SCALE
+    blob_trail_scale: ClassVar[float] = BLOB_TRAIL_SCALE
 
     # 1 AU = SCALE_FACTOR pixels
     scale_down: ClassVar[float] = SCALE_DOWN
@@ -152,6 +153,7 @@ class BlobGlobalVars:
 
     min_radius: ClassVar[float] = MIN_RADIUS
     max_radius: ClassVar[float] = MAX_RADIUS
+    blob_trail_girth: ClassVar[float] = BLOB_TRAIL_GIRTH
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE
@@ -190,6 +192,12 @@ class BlobGlobalVars:
     def set_blob_scale(cls, blob_scale: float) -> None:
         """Class method to set BlobGlobalVars.blob_scale"""
         cls.blob_scale = blob_scale
+        cls.apply_configure()
+
+    @classmethod
+    def set_blob_trail_scale(cls, blob_trail_scale: float) -> None:
+        """Class method to set BlobGlobalVars.blob_trail_scale"""
+        cls.blob_trail_scale = blob_trail_scale
         cls.apply_configure()
 
     @classmethod
@@ -236,8 +244,9 @@ class BlobGlobalVars:
             S / AU
         )
 
-        cls.min_radius = cls.center_blob_radius * (E / cls.blob_scale)
-        cls.max_radius = cls.center_blob_radius * (J / cls.blob_scale)
+        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
+        cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
+        cls.blob_trail_girth = (cls.au_scale_factor * cls.blob_trail_scale) * (J / AU)
 
         cls.first_person_scale = cls.center_blob_radius * 0.1
         cls.background_scale = cls.center_blob_radius * 1000
@@ -254,7 +263,7 @@ class BlobGlobalVars:
     def print_info(cls) -> None:
         """Prints info about settings"""
         print(
-            f"cls.universe_size={cls.universe_size} cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
+            f"cls.universe_size={cls.universe_size} cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.blob_trail_girth={cls.blob_trail_girth} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
         )
 
     @classmethod
