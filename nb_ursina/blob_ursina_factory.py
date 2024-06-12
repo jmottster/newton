@@ -14,7 +14,7 @@ import numpy.typing as npt
 import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import MassiveBlob
 from newtons_blobs import BlobSurface
 from newtons_blobs import BlobDisplay
@@ -24,6 +24,7 @@ from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
 from .blob_first_person_surface import FirstPersonSurface
 from .blob_surface_ursina import BlobSurfaceUrsina
+from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -51,10 +52,10 @@ class BlobUrsinaFactory:
         A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
         populating dict in get_prefs()) (if saving is turned on)
 
-    reset(self: Self) -> None
+    reset(num_blobs: int = NUM_BLOBS) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -72,33 +73,40 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        # BlobGlobalVars.set_au_scale_factor(200)
-        BlobGlobalVars.set_universe_scale(20)
-        BlobGlobalVars.set_center_blob_scale(10)
-        BlobGlobalVars.set_blob_scale(60)
-        BlobGlobalVars.set_blob_trail_scale(20)
-        BlobGlobalVars.set_grid_cells_per_au(5)
-        # BlobGlobalVars.set_start_pos_rotate_y(True)
-        # BlobGlobalVars.set_start_pos_rotate_z(True)
-        BlobGlobalVars.set_timescale(HOURS * 10)
-        BlobGlobalVars.set_true_3d(True)
-        BlobGlobalVars.set_textures_3d(True)
-        # BlobGlobalVars.set_start_perfect_orbit(False)
-        # BlobGlobalVars.set_start_angular_chaos(True)
-        # BlobGlobalVars.set_square_blob_plotter(True)
-        BlobGlobalVars.set_center_blob_escape(False)
-        BlobGlobalVars.set_wrap_if_no_escape(True)
+        bg_vars.set_au_scale_factor(2000)
+        bg_vars.set_universe_scale(40)
+        bg_vars.set_center_blob_scale(30)
+        bg_vars.set_scale_center_blob_mass_with_size(True)
+        bg_vars.set_black_hole_mode(False)
+        bg_vars.set_blob_scale(100)
+        bg_vars.set_scale_blob_mass_with_size(True)
+        bg_vars.set_blob_trail_scale(20)
+        bg_vars.set_grid_cells_per_au(1)
+        # bg_vars.set_start_pos_rotate_y(True)
+        # bg_vars.set_start_pos_rotate_z(True)
+        bg_vars.set_timescale(HOURS)
+        bg_vars.set_timescale_inc(MINUTES)
+        bg_vars.set_true_3d(True)
+        bg_vars.set_textures_3d(True)
+        bg_vars.set_start_perfect_orbit(True)
+        bg_vars.set_start_angular_chaos(False)
+        bg_vars.set_square_blob_plotter(False)
+        bg_vars.set_center_blob_escape(False)
+        bg_vars.set_wrap_if_no_escape(True)
 
-        BlobGlobalVars.print_info()
+        bg_vars.print_info()
 
-        self.start_distance = (BlobGlobalVars.universe_size) / 2
+        self.start_distance = bg_vars.au_scale_factor * 5
 
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
         )
 
+        urs.Text.default_font = DISPLAY_FONT
+        # urs.Text.size = 0.5
+
         self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina(
-            BlobGlobalVars.universe_size_w, BlobGlobalVars.universe_size_h
+            bg_vars.universe_size_w, bg_vars.universe_size_h
         )
 
         self.urs_display.first_person_surface = FirstPersonSurface(
@@ -108,10 +116,10 @@ class BlobUrsinaFactory:
         )
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
-            BlobGlobalVars.universe_size_h,
+            bg_vars.universe_size_h,
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
-            MIN_MASS,
+            bg_vars.min_mass,
             0,
             0,
             0,
@@ -121,11 +129,18 @@ class BlobUrsinaFactory:
         )
 
         self.default_start_pos: urs.Vec3 = (
-            urs.Vec3(self.urs_universe.get_center_blob_start_pos())
-            * BlobGlobalVars.scale_down
+            urs.Vec3(self.urs_universe.get_center_blob_start_pos()) * bg_vars.scale_down
         )
 
         self.setup_start_pos(self.default_start_pos)
+
+        self.loading_screen: BlobLoadingScreenUrsina = BlobLoadingScreenUrsina(
+            max_value=NUM_BLOBS
+        )
+
+        self.loading_screen.enabled = True
+
+        self.urs_display.update()
 
     def setup_start_pos(self: Self, start_pos: urs.Vec3) -> None:
         """Configures the starting position of the first person viewer"""
@@ -167,22 +182,18 @@ class BlobUrsinaFactory:
         populating dict in get_prefs()) (if saving is turned on)
 
         """
-        self.urs_universe.width = (
-            data["universe_size_w"] * BlobGlobalVars.au_scale_factor
-        )
-        self.urs_universe.height = (
-            data["universe_size_h"] * BlobGlobalVars.au_scale_factor
-        )
+        self.urs_universe.width = data["universe_size_w"] * bg_vars.au_scale_factor
+        self.urs_universe.height = data["universe_size_h"] * bg_vars.au_scale_factor
 
         self.urs_universe.set_universe_entity(
-            (data["blobs"][0]["radius"] * BlobGlobalVars.au_scale_factor) * 1000
+            (data["blobs"][0]["radius"] * bg_vars.au_scale_factor) * 1000
         )
 
         self.setup_start_pos(
             urs.Vec3(
                 data["blobs"][0]["x"], data["blobs"][0]["y"], data["blobs"][0]["z"]
             )
-            * BlobGlobalVars.scale_down
+            * bg_vars.scale_down
         )
 
         if data["paused"]:
@@ -191,14 +202,27 @@ class BlobUrsinaFactory:
         if not data["show_stats"]:
             self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
 
-    def reset(self: Self) -> None:
+    def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
+
+        if self.loading_screen is not None:
+            self.loading_screen.enabled = False
+            urs.destroy(self.loading_screen)
+            self.loading_screen = None
+
+        self.loading_screen = BlobLoadingScreenUrsina(max_value=num_blobs)
+
+        self.loading_screen.enabled = True
+
+        self.urs_display.update()
+
         self.setup_start_pos(self.default_start_pos)
 
     def new_blob_surface(
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
         rotation_speed: float = None,
@@ -208,17 +232,31 @@ class BlobUrsinaFactory:
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
         """
+
+        new_blob: BlobSurfaceUrsina = BlobSurfaceUrsina(
+            name,
+            radius,
+            mass,
+            color,
+            self.get_blob_universe(),
+            texture,
+            rotation_speed,
+            rotation_pos,
+        )
+
+        self.loading_screen.add_to_bar(1)
+
+        if self.loading_screen.bar_at_max() and self.loading_screen.enabled:
+            self.setup_start_pos(self.default_start_pos)
+            self.loading_screen.enabled = False
+            urs.destroy(self.loading_screen)
+            self.loading_screen = None
+
+        self.urs_display.update()
+
         return cast(
             BlobSurface,
-            BlobSurfaceUrsina(
-                name,
-                radius,
-                color,
-                self.get_blob_universe(),
-                texture,
-                rotation_speed,
-                rotation_pos,
-            ),
+            new_blob,
         )
 
     def get_blob_universe(self: Self) -> BlobUniverse:

@@ -39,6 +39,8 @@ class BlobSurfacePygame:
         The name of this instance
     radius : float
         the size of the blob, by radius value
+    mass : float
+        the mass of the blob, in kg
     color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe : BlobUniverse
@@ -121,6 +123,7 @@ class BlobSurfacePygame:
         "py_universe",
         "name",
         "radius",
+        "mass",
         "width_center",
         "height_center",
         "size",
@@ -153,6 +156,7 @@ class BlobSurfacePygame:
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
         texture: str = None,
@@ -167,6 +171,7 @@ class BlobSurfacePygame:
         self.py_universe: BlobUniversePygame = cast(BlobUniversePygame, universe)
         self.name: str = name
         self.radius: float = radius
+        self.mass: float = mass
         # Double size of box, because radius can get twice the size
         self.width_center: float = radius + (radius)
         self.height_center: float = radius + (radius)

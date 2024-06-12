@@ -6,6 +6,7 @@ A class used to represent an object that draws a blob, with a distinction of the
 by Jason Mott, copyright 2024
 """
 
+import math
 import random
 from typing import ClassVar, Tuple, Self, cast
 
@@ -14,7 +15,7 @@ import ursina.shaders as shd  # type: ignore
 
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
 from newtons_blobs import resource_path
 
@@ -134,7 +135,7 @@ class Rotator(urs.Entity):
 
     """
 
-    __slots__ = ("rotation_speed", "rotation_pos", "trail_color")
+    __slots__ = ("mass", "rotation_speed", "rotation_pos", "trail_color", "trail")
 
     def __init__(self: Self, **kwargs):
 
@@ -145,6 +146,8 @@ class Rotator(urs.Entity):
         self.rotation_pos = kwargs.get("rotation_pos")
 
         self.blob_name: str = kwargs.get("name")
+
+        self.mass: float = kwargs.get("mass")
 
         self.trail_color: urs.Color = kwargs.get("trail_color")
 
@@ -202,6 +205,11 @@ class Rotator(urs.Entity):
 
         self.text_light: BlobAmbientLight = None
 
+        self.text: str = None
+
+        self.all_on: bool = False
+        self.full_details: bool = False
+
     def create_text_overlay(self: Self) -> None:
         """
         Instantiates all the objects necessary to display the text overlay.
@@ -211,8 +219,13 @@ class Rotator(urs.Entity):
         if self.text_entity is None:
             self.text_entity = urs.Entity(scale=self.scale)
 
+            self.text = f"{self.blob_name}"
+
+            if self.full_details:
+                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+
             self.info_text = urs.Text(
-                f"{self.blob_name}: radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}",
+                self.text,
                 parent=self.text_entity,
                 font=DISPLAY_FONT,
                 size=(STAT_FONT_SIZE * 0.1),
@@ -224,15 +237,6 @@ class Rotator(urs.Entity):
                 shader=shd.lit_with_shadows_shader,
                 enabled=False,
             )
-            self.info_text.create_background(
-                self.info_text.size * 0.5,
-                self.info_text.size * 0.25,
-                urs.color.rgb(
-                    BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
-                ),
-            )
-            self.info_text._background.z = 0.5
-            self.info_text.setShaderAuto()
             self.text_light = BlobAmbientLight(
                 parent=self.info_text,
                 light_name=self.blob_name,
@@ -247,6 +251,26 @@ class Rotator(urs.Entity):
         self.text_entity.enabled = True
         self.info_text.enabled = True
         self.text_light.enabled = True
+        self.update_text_background()
+
+    def update_text_background(self: Self):
+        if self.info_text is not None:
+
+            self.text = f"{self.blob_name}"
+
+            if self.full_details:
+                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+
+            self.info_text.text = self.text
+            self.info_text.create_background(
+                self.info_text.size * 0.5,
+                self.info_text.size * 0.25,
+                urs.color.rgb(
+                    BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
+                ),
+            )
+            self.info_text._background.z = 0.5
+            self.info_text.setShaderAuto()
 
     def destroy_text_overlay(self: Self) -> None:
         """
@@ -269,10 +293,22 @@ class Rotator(urs.Entity):
 
         if self.text_entity is not None and self.info_text.enabled:
 
-            self.info_text.text = f"{self.blob_name}: radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+            self.text = f"{self.blob_name}"
+
+            if self.full_details:
+                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+
             self.text_entity.position = self.position
             self.text_entity.rotation = urs.camera.parent.rotation
-            self.text_entity.position += self.text_entity.up * 1.1
+            dx = urs.camera.parent.world_x - self.text_entity.world_x
+            dy = urs.camera.parent.world_y - self.text_entity.world_y
+            dz = urs.camera.parent.world_z - self.text_entity.world_z
+            d = math.sqrt(dx**2 + dy**2 + dz**2)
+            self.text_entity.scale = 0.1 * d
+            self.text_entity.position += self.text_entity.up * (
+                (self.world_scale_x * 11) / d
+            )
+            self.info_text.text = self.text
 
         self.rotate((0, self.rotation_speed, 0))
 
@@ -281,11 +317,28 @@ class Rotator(urs.Entity):
         Calls the text overlay methods to toggle it on and off. Called when the mouse
         clicks on this blob while the simulation is paused
         """
+        self.full_details = not self.full_details
 
-        if self.text_entity is None:
+        if self.full_details:
             self.create_text_overlay()
         else:
-            self.destroy_text_overlay()
+            if not self.all_on:
+                self.destroy_text_overlay()
+            else:
+                self.update_text_background()
+
+    def input(self: Self, key: str) -> None:
+        """Called by Ursina when a keyboard event happens"""
+        if key == "b":
+            self.all_on = not self.all_on
+
+            if self.all_on:
+                self.create_text_overlay()
+            else:
+                if not self.full_details:
+                    self.destroy_text_overlay()
+                else:
+                    self.update_text_background()
 
     def on_disable(self: Self) -> None:
         """
@@ -309,8 +362,12 @@ class BlobSurfaceUrsina:
 
     Attributes
     ----------
+    name: str
+        A name for the instance
     radius : float
         the size of the blob, by radius value
+    mass : float
+        the mass of the blob, in kg
     color : tuple
         a three value tuple for RGB color value of blob
     universe: BlobUniverse
@@ -340,6 +397,9 @@ class BlobSurfaceUrsina:
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
 
+    on_destroy() -> None
+        Call when getting rid of this instance, so it can clean up
+
     destroy() -> None
         Call when getting rid of this instance, so it can clean up
     """
@@ -347,7 +407,9 @@ class BlobSurfaceUrsina:
     __slots__ = (
         "name",
         "radius",
+        "mass",
         "color",
+        "trail_color",
         "universe",
         "texture",
         "rotation_speed",
@@ -364,6 +426,7 @@ class BlobSurfaceUrsina:
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
         texture: str = None,
@@ -373,15 +436,21 @@ class BlobSurfaceUrsina:
 
         self.name: str = name
         self.radius: float = radius
+        self.mass: float = mass
         self.color: Tuple[int, int, int] = color
+        self.trail_color: urs.Color = urs.color.rgba(
+            self.color[0], self.color[1], self.color[2], 255
+        )
         self.texture: str = None
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
 
-        if BlobGlobalVars.textures_3d:
+        urs_color = urs.color.rgba(self.color[0], self.color[1], self.color[2])
+
+        if bg_vars.textures_3d:
             if texture is not None:
                 self.texture = texture
             else:
-                if self.radius >= (BlobGlobalVars.max_radius * 0.85):
+                if self.radius >= (bg_vars.max_radius * 0.85):
                     self.texture = BLOB_TEXTURES_LARGE[
                         random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
                     ]
@@ -402,11 +471,20 @@ class BlobSurfaceUrsina:
 
         if color == CENTER_BLOB_COLOR:
 
-            texture: str = "nb_ursina/textures/sun03.png"
-            color: urs.Color = urs.color.rgba(100, 100, 100, 255)
-            trail_color: urs.Color = color
-            if not BlobGlobalVars.textures_3d:
-                color = urs.rgb(
+            urs_color = urs.color.rgba(150, 150, 150, 255)
+
+            enabled: bool = not bg_vars.black_hole_mode
+            self.texture = "nb_ursina/textures/sun03.png"
+
+            self.trail_color = urs.color.rgba(
+                self.color[0], self.color[1], self.color[2], 255
+            )
+
+            if not enabled:
+                urs_color = urs.color.rgba(100, 100, 100, 0)
+
+            if not bg_vars.textures_3d:
+                urs_color = urs.rgb(
                     CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
                 )
                 texture = None
@@ -415,42 +493,47 @@ class BlobSurfaceUrsina:
                 position=(0, 0, 0),
                 model="local_uvsphere",
                 scale=radius,
-                texture=texture,
+                mass=self.mass,
+                texture=self.texture,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
                 collider="mesh",
-                color=color,
-                trail_color=trail_color,
+                color=urs_color,
+                trail_color=self.trail_color,
                 shader=shd.lit_with_shadows_shader,
+                enabled=enabled,
             )
             self.ursina_center_blob = BlobPointLight(
-                parent=self.ursina_blob,
+                # parent=self.ursina_blob,
+                scale=400,
                 position=(0, 0, 0),
                 shadows=True,
                 shadow_map_resolution=(4096, 4096),
-                max_distance=2000,
-                attenuation=(0, 0, 1),
-                color=(2.5, 2.5, 2.5, 2),
+                max_distance=bg_vars.universe_size * 1000,
+                attenuation=(1, 0, 0),
+                color=(5, 5, 5, 5),
             )
         else:
-            trail_color: urs.Color = urs.color.rgba(
+
+            self.trail_color = urs.color.rgba(
                 self.color[0], self.color[1], self.color[2], 255
             )
-            color: urs.Color = None
-            texture: str = self.texture
-            if not BlobGlobalVars.textures_3d:
-                color = urs.rgb(self.color[0], self.color[1], self.color[2])
-                texture = None
+
+            if not bg_vars.textures_3d:
+                self.texture = None
+            else:
+                urs_color = urs.color.rgba(255, 255, 255, 255)
 
             self.ursina_blob = Rotator(
                 blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere",
                 scale=radius,
-                texture=texture,
-                color=color,
-                trail_color=trail_color,
+                mass=self.mass,
+                texture=self.texture,
+                color=urs_color,
+                trail_color=self.trail_color,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 texture_scale=(1, 1),
@@ -505,6 +588,7 @@ class BlobSurfaceUrsina:
                 self.ursina_center_blob.enabled = False
         # print(f"center blob light: {self.ursina_center_blob.world_position}")
 
+        self.ursina_center_blob.position = urs.Vec3(pos)
         self.ursina_blob.position = urs.Vec3(pos)
 
         # if self.ursina_blob.trail is None:
@@ -514,12 +598,12 @@ class BlobSurfaceUrsina:
 
         self.ursina_blob.trail = TrailRenderer(
             size=[
-                BlobGlobalVars.blob_trail_girth,
-                BlobGlobalVars.blob_trail_girth,
-                BlobGlobalVars.blob_trail_girth,
+                bg_vars.blob_trail_girth,
+                bg_vars.blob_trail_girth,
+                bg_vars.blob_trail_girth,
             ],
             segments=4,
-            min_spacing=BlobGlobalVars.blob_trail_girth,
+            min_spacing=bg_vars.blob_trail_girth,
             fade_speed=0,
             parent=self.ursina_blob,
             # color_gradient=[
@@ -528,6 +612,10 @@ class BlobSurfaceUrsina:
             #     urs.color.rgba(0, 0, 0, 100),
             # ],
         )
+
+    def on_destroy(self: Self) -> None:
+        """Call when getting rid of this instance, so it can clean up"""
+        self.destroy()
 
     def destroy(self: Self) -> None:
         """Call when getting rid of this instance, so it can clean up"""

@@ -30,6 +30,8 @@ class BlobSurface(Protocol):
         A name for the instance
     radius : float
         the size of the blob, by radius value
+    mass : float
+        the mass of the blob, in kg
     color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe: BlobUniverse
@@ -65,6 +67,7 @@ class BlobSurface(Protocol):
 
     name: str
     radius: float
+    mass: float
     color: Tuple[int, int, int]
     universe: BlobUniverse
     texture: str = None

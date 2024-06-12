@@ -25,68 +25,86 @@ class BlobGlobalVars:
 
     Attributes
     ----------
-    au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
+    BlobGlobalVars.au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
 
-    universe_scale: ClassVar[float] - Number of AU to equal universe size
+    BlobGlobalVars.universe_scale: ClassVar[float] - Number of AU to equal universe size
 
-    center_blob_scale: ClassVar[float] - To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
-    blob_scale: ClassVar[float] - Max and min blob sizes, proportional to (normal would be S,
+    BlobGlobalVars.center_blob_scale: ClassVar[float] - To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
+    BlobGlobalVars.scale_center_blob_mass_with_size: ClassVar[bool] - Whether or not to scale the mass in proportion to radius scaling
+    BlobGlobalVars.black_hole_mode: ClassVar[bool] - If true, center blob is invisible and mass will not scale
+
+
+    BlobGlobalVars.blob_scale: ClassVar[float] - Max and min blob sizes, proportional to (normal would be S,
                                   but that makes them quite small, to fix this divide S by something)
+    BlobGlobalVars.scale_blob_mass_with_size: ClassVar[bool] - Whether or not to scale the mass in proportion to radius scaling
 
-    scale_down: ClassVar[float] - multiply real world space distance (in meters) by this to get the pixel value
+    BlobGlobalVars.scale_down: ClassVar[float] - multiply real world space distance (in meters) by this to get the pixel value
 
-    scale_up: ClassVar[float] - multiply pixel value by this to get real world space distance (in meters)
+    BlobGlobalVars.scale_up: ClassVar[float] - multiply pixel value by this to get real world space distance (in meters)
 
-    universe_size: ClassVar[float] - size of universe in pixels
-    universe_size_h: ClassVar[float] - height of universe in pixels
-    universe_size_w: ClassVar[float] - width of universe in pixels
-    universe_size_d: ClassVar[float] - depth of universe in pixels
+    BlobGlobalVars.universe_size: ClassVar[float] - size of universe in pixels
+    BlobGlobalVars.universe_size_h: ClassVar[float] - height of universe in pixels
+    BlobGlobalVars.universe_size_w: ClassVar[float] - width of universe in pixels
+    BlobGlobalVars.universe_size_d: ClassVar[float] - depth of universe in pixels
 
-    scaled_universe_size: ClassVar[float] - size of universe in meters (universe_size * scale_up)
+    BlobGlobalVars.center_blob_radius: ClassVar[float] - Starting radius (in pixels) of the center blob
 
-    center_blob_radius: ClassVar[float] - radius (in pixels) of the center blob
+    BlobGlobalVars.center_blob_mass: ClassVar[float] -  Starting mass (in kg) of the center blob, subject to change
+    BlobGlobalVars.org_center_blob_mass: ClassVar[float] -  Original starting mass (in kg) of the center blob. doesn't change
 
-    min_radius: ClassVar[float] - minimum radius (in pixels) that a blob can be
-    max_radius: ClassVar[float] - maximum radius (in pixels) that a blob can be
+    BlobGlobalVars.min_radius: ClassVar[float] - minimum radius (in pixels) that a blob can be
+    BlobGlobalVars.max_radius: ClassVar[float] - maximum radius (in pixels) that a blob can be
 
-    first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
-    background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
+    BlobGlobalVars.min_mass: ClassVar[float] - Minimum mass (in kg) of blobs, subject ot change
+    BlobGlobalVars.max_mass: ClassVar[float] - Maximum mass (in kg) of blobs, subject ot change
+    BlobGlobalVars.org_min_mass: ClassVar[float] - Original minimum mass (in kg) of blobs, doesn't change
+    BlobGlobalVars.org_max_mass: ClassVar[float] - Original maximum mass (in kg) of blobs, doesn't change
 
-    grid_cells_per_au: ClassVar[int] - the number of cubed grid cells for every AU
-    grid_cell_size: ClassVar[int] - the size (in pixels) the each cell in the proximity grid should be (see BlobPlotter.update_blobs())
-    grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
-    grid_key_check_bound: ClassVar[int] - The second to last grid position
+    BlobGlobalVars.first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
+    BlobGlobalVars.background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
 
-    start_pos_rotate_x: ClassVar[bool] - whether or not to swap y and z in the starting plot of blobs
-    start_pos_rotate_y: ClassVar[bool] - whether or not to swap x and z in the starting plot of blobs
-    start_pos_rotate_z: ClassVar[bool] - whether or not to swap x and y in the starting plot of blobs
+    BlobGlobalVars.grid_cells_per_au: ClassVar[int] - the number of cubed grid cells for every AU
+    BlobGlobalVars.grid_cell_size: ClassVar[int] - the size (in pixels) the each cell in the proximity grid should be (see BlobPlotter.update_blobs())
+    BlobGlobalVars.grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
+    BlobGlobalVars.grid_key_check_bound: ClassVar[int] - The second to last grid position
 
-    timescale: ClassVar[int] - number of seconds to pass with each frame
-    true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
-    textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
-    start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
-    start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
-    square_blob_plotter: ClassVar[bool] - whether to start blobs in a square formation
-    center_blob_escape: ClassVar[bool] - whether blobs can escape the center blob or use edge detection
-    wrap_if_no_escape: ClassVar[bool] - whether to wrap around at edges (or bounce) when edge detection is used
+    BlobGlobalVars.start_pos_rotate_x: ClassVar[bool] - whether or not to swap y and z in the starting plot of blobs
+    BlobGlobalVars.start_pos_rotate_y: ClassVar[bool] - whether or not to swap x and z in the starting plot of blobs
+    BlobGlobalVars.start_pos_rotate_z: ClassVar[bool] - whether or not to swap x and y in the starting plot of blobs
+
+    BlobGlobalVars.timescale: ClassVar[int] - number of seconds to pass with each frame
+    BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
+    BlobGlobalVars.true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
+    BlobGlobalVars.textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
+    BlobGlobalVars.start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
+    BlobGlobalVars.start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
+    BlobGlobalVars.square_blob_plotter: ClassVar[bool] - whether to start blobs in a square formation
+    BlobGlobalVars.center_blob_escape: ClassVar[bool] - whether blobs can escape the center blob or use edge detection
+    BlobGlobalVars.wrap_if_no_escape: ClassVar[bool] - whether to wrap around at edges (or bounce) when edge detection is used
 
     Methods
     -------
-    BlobGlobalVars.set_center_blob_scale(center_blob_scale: float) -> None
-        Class method to set BlobGlobalVars.center_blob_scale
-
-    BlobGlobalVars.set_universe_scale(universe_scale: float) -> None
-        Class method to set BlobGlobalVars.universe_scale
-
-    BlobGlobalVars.set_blob_scale(blob_scale: float) -> None
-        Class method to set BlobGlobalVars.blob_scale
-
     BlobGlobalVars.set_au_scale_factor(au_scale_factor: float) -> None
         Class method to set BlobGlobalVars.au_scale_factor. This also
         resets all variables that are set using BlobGlobalVars.au_scale_factor
 
+    BlobGlobalVars.set_universe_scale(universe_scale: float) -> None
+        Class method to set BlobGlobalVars.universe_scale
+
+    BlobGlobalVars.set_center_blob_scale(center_blob_scale: float) -> None
+        Class method to set BlobGlobalVars.center_blob_scale
+
+    BlobGlobalVars.set_blob_scale(blob_scale: float) -> None
+        Class method to set BlobGlobalVars.blob_scale
+
     BlobGlobalVars.set_grid_cells_per_au(grid_cells_per_au: int) -> None
         Class method to set BlobGlobalVars.grid_cells_per_au
+
+    BlobGlobalVars.set_center_blob_escape(center_blob_escape: bool) -> None
+        Class method to set whether blobs can escape the center blob or use edge detection
+
+    BlobGlobalVars.set_wrap_if_no_escape(wrap_if_no_escape: bool) -> None
+        Class method to set whether to wrap around at edges (or bounce) when edge detection is used
 
     BlobGlobalVars.apply_configure() -> None
         Resets all variables that are calculated based on other variables
@@ -94,6 +112,15 @@ class BlobGlobalVars:
 
     BlobGlobalVars.print_info() -> None
         Prints info about settings
+
+    BlobGlobalVars.set_scale_center_blob_mass_with_size(scale_center_blob_mass_with_size: bool) -> None
+        Class method to set whether or not to scale the mass in proportion to radius scaling
+
+    BlobGlobalVars.set_black_hole_mode(black_hole_mode: bool) -> None
+        Class method to set whether or not center blob is invisible and mass will not scale
+
+    BlobGlobalVars.set_scale_blob_mass_with_size(scale_blob_mass_with_size: bool) -> None
+        Class method to set whether or not to scale the mass in proportion to radius scaling
 
     BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
         Class method to set whether or not to swap y and z in the starting plot of blobs
@@ -104,14 +131,17 @@ class BlobGlobalVars:
     BlobGlobalVars.set_start_pos_rotate_z(start_pos_rotate_z: bool) -> None
         Class method to set whether or not to swap x and y in the starting plot of blobs
 
+    BlobGlobalVars.set_timescale(timescale: int) -> None
+        Class method to set BlobGlobalVars.timescale
+
+    BlobGlobalVars.set_timescale_inc(timescale_inc: int) -> None
+        Class method to set BlobGlobalVars.timescale_inc
+
     BlobGlobalVars.set_true_3d(true_3d: bool) -> None
         Class method to set BlobGlobalVars.true_3d
 
     BlobGlobalVars.set_textures_3d(textures_3d: bool) -> None
         Class method to set BlobGlobalVars.textures_3d
-
-    BlobGlobalVars.set_timescale(timescale: int) -> None
-        Class method to set BlobGlobalVars.timescale
 
     BlobGlobalVars.set_start_perfect_orbit(start_perfect_orbit: bool) -> None
         Class method to set whether or not to start with a perfect orbit of blobs
@@ -122,12 +152,6 @@ class BlobGlobalVars:
     BlobGlobalVars.set_square_blob_plotter(square_blob_plotter: bool) -> None
         Class method to set whether to start blobs in a square formation
 
-    BlobGlobalVars.set_center_blob_escape(center_blob_escape: bool) -> None
-        Class method to set whether blobs can escape the center blob or use edge detection
-
-    BlobGlobalVars.set_wrap_if_no_escape(wrap_if_no_escape: bool) -> None
-        Class method to set whether to wrap around at edges (or bounce) when edge detection is used
-
     """
 
     au_scale_factor: ClassVar[float] = AU_SCALE_FACTOR
@@ -135,7 +159,11 @@ class BlobGlobalVars:
     universe_scale: ClassVar[float] = UNIVERSE_SCALE
 
     center_blob_scale: ClassVar[float] = CENTER_BLOB_SCALE
+    scale_center_blob_mass_with_size: ClassVar[bool] = True
+    black_hole_mode: ClassVar[bool] = False
+
     blob_scale: ClassVar[float] = BLOB_SCALE
+    scale_blob_mass_with_size: ClassVar[bool] = True
     blob_trail_scale: ClassVar[float] = BLOB_TRAIL_SCALE
 
     # 1 AU = SCALE_FACTOR pixels
@@ -151,9 +179,17 @@ class BlobGlobalVars:
 
     center_blob_radius: ClassVar[float] = CENTER_BLOB_RADIUS
 
+    center_blob_mass: ClassVar[float] = CENTER_BLOB_MASS
+    org_center_blob_mass: ClassVar[float] = center_blob_mass
+
     min_radius: ClassVar[float] = MIN_RADIUS
     max_radius: ClassVar[float] = MAX_RADIUS
     blob_trail_girth: ClassVar[float] = BLOB_TRAIL_GIRTH
+
+    min_mass: ClassVar[float] = MIN_MASS
+    max_mass: ClassVar[float] = MAX_MASS
+    org_min_mass: ClassVar[float] = min_mass
+    org_max_mass: ClassVar[float] = max_mass
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE
@@ -168,6 +204,7 @@ class BlobGlobalVars:
     start_pos_rotate_z: ClassVar[bool] = START_POS_ROTATE_Z
 
     timescale: ClassVar[int] = TIMESCALE
+    timescale_inc: ClassVar[int] = MINUTES
     true_3d: ClassVar[bool] = TRUE_3D
     textures_3d: ClassVar[bool] = TEXTURES_3D
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
@@ -177,15 +214,23 @@ class BlobGlobalVars:
     wrap_if_no_escape: ClassVar[bool] = WRAP_IF_NO_ESCAPE
 
     @classmethod
-    def set_center_blob_scale(cls, center_blob_scale: float) -> None:
-        """Class method to set BlobGlobalVars.center_blob_scale"""
-        cls.center_blob_scale = center_blob_scale
+    def set_au_scale_factor(cls, au_scale_factor: float) -> None:
+        """
+        Class method to set BlobGlobalVars.au_scale_factor.
+        """
+        cls.au_scale_factor = au_scale_factor
         cls.apply_configure()
 
     @classmethod
     def set_universe_scale(cls, universe_scale: float) -> None:
         """Class method to set BlobGlobalVars.universe_scale"""
         cls.universe_scale = universe_scale
+        cls.apply_configure()
+
+    @classmethod
+    def set_center_blob_scale(cls, center_blob_scale: float) -> None:
+        """Class method to set BlobGlobalVars.center_blob_scale"""
+        cls.center_blob_scale = center_blob_scale
         cls.apply_configure()
 
     @classmethod
@@ -198,14 +243,6 @@ class BlobGlobalVars:
     def set_blob_trail_scale(cls, blob_trail_scale: float) -> None:
         """Class method to set BlobGlobalVars.blob_trail_scale"""
         cls.blob_trail_scale = blob_trail_scale
-        cls.apply_configure()
-
-    @classmethod
-    def set_au_scale_factor(cls, au_scale_factor: float) -> None:
-        """
-        Class method to set BlobGlobalVars.au_scale_factor.
-        """
-        cls.au_scale_factor = au_scale_factor
         cls.apply_configure()
 
     @classmethod
@@ -244,12 +281,19 @@ class BlobGlobalVars:
             S / AU
         )
 
-        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
+        if cls.scale_center_blob_mass_with_size and not cls.black_hole_mode:
+            cls.center_blob_mass = cls.org_center_blob_mass * cls.center_blob_scale
+
+        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (M / AU)
         cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
         cls.blob_trail_girth = (cls.au_scale_factor * cls.blob_trail_scale) * (J / AU)
 
-        cls.first_person_scale = cls.center_blob_radius * 0.1
-        cls.background_scale = cls.center_blob_radius * 1000
+        if cls.scale_blob_mass_with_size:
+            cls.min_mass = cls.org_min_mass * cls.blob_scale
+            cls.max_mass = cls.org_max_mass * cls.blob_scale
+
+        cls.first_person_scale = cls.max_radius
+        cls.background_scale = cls.universe_size
 
         cls.grid_cell_size = int(
             cls.universe_size / (cls.universe_scale * cls.grid_cells_per_au)
@@ -263,8 +307,25 @@ class BlobGlobalVars:
     def print_info(cls) -> None:
         """Prints info about settings"""
         print(
-            f"cls.universe_size={cls.universe_size} cls.min_radius={cls.min_radius}  cls.max_radius={cls.max_radius} cls.blob_trail_girth={cls.blob_trail_girth} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
+            f"cls.universe_size={cls.universe_size} cls.min_mass={cls.min_mass}  cls.max_mass={cls.max_mass} cls.min_radius={round(cls.min_radius,2)}  cls.max_radius={round(cls.max_radius,2)} cls.blob_trail_girth={round(cls.blob_trail_girth,2)} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
         )
+
+    @classmethod
+    def set_scale_center_blob_mass_with_size(
+        cls, scale_center_blob_mass_with_size: bool
+    ) -> None:
+        """Class method to set whether or not to scale the mass in proportion to radius scaling"""
+        cls.scale_center_blob_mass_with_size = scale_center_blob_mass_with_size
+
+    @classmethod
+    def set_black_hole_mode(cls, black_hole_mode: bool) -> None:
+        """Class method to set whether or not center blob is invisible and mass will not scale"""
+        cls.black_hole_mode = black_hole_mode
+
+    @classmethod
+    def set_scale_blob_mass_with_size(cls, scale_blob_mass_with_size: bool) -> None:
+        """Class method to set whether or not to scale the mass in proportion to radius scaling"""
+        cls.scale_blob_mass_with_size = scale_blob_mass_with_size
 
     @classmethod
     def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:
@@ -282,6 +343,16 @@ class BlobGlobalVars:
         cls.start_pos_rotate_z = start_pos_rotate_z
 
     @classmethod
+    def set_timescale(cls, timescale: int) -> None:
+        """Class method to set BlobGlobalVars.timescale"""
+        cls.timescale = timescale
+
+    @classmethod
+    def set_timescale_inc(cls, timescale_inc: int) -> None:
+        """Class method to set BlobGlobalVars.timescale_inc"""
+        cls.timescale_inc = timescale_inc
+
+    @classmethod
     def set_true_3d(cls, true_3d: bool) -> None:
         """Class method to set BlobGlobalVars.true_3d"""
         cls.true_3d = true_3d
@@ -290,11 +361,6 @@ class BlobGlobalVars:
     def set_textures_3d(cls, textures_3d: bool) -> None:
         """Class method to set BlobGlobalVars.textures_3d"""
         cls.textures_3d = textures_3d
-
-    @classmethod
-    def set_timescale(cls, timescale: int) -> None:
-        """Class method to set BlobGlobalVars.timescale"""
-        cls.timescale = timescale
 
     @classmethod
     def set_start_perfect_orbit(cls, start_perfect_orbit: bool) -> None:

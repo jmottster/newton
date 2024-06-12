@@ -207,7 +207,11 @@ class BlobDisplayPygame:
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
         """
-        return pygame.key.key_code(key)
+
+        try:
+            return pygame.key.key_code(key)
+        except:
+            return -1
 
     def check_events(
         self: Self, keyboard_events: Dict[int, Callable[[], None]]

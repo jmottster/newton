@@ -221,7 +221,7 @@ class BlobDisplayUrsina:
     def load_key_ints(self: Self) -> Dict[str, int]:
         """Loads up the Dict that holds integers that represent keys. (see get_key_code)"""
         mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
-        morekeys = ("escape", "space")
+        morekeys = ("escape", "space", "up arrow", "down arrow")
 
         key_ints: Dict[str, int] = {}
         i = 0
@@ -301,7 +301,11 @@ class BlobDisplayUrsina:
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
         """
-        return self.key_ints[key]
+
+        try:
+            return self.key_ints[key]
+        except:
+            return -1
 
     def check_events(
         self: Self, keyboard_events: Dict[int, Callable[[], None]]

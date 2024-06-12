@@ -12,7 +12,7 @@ import numpy.typing as npt
 import math, random
 
 from .globals import *
-from .blob_global_vars import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from .blob_plugin_factory import BlobPluginFactory
 from .massive_blob import MassiveBlob
 from .blob_physics import BlobPhysics as bp
@@ -99,15 +99,15 @@ class BlobPlotter:
 
         self.universe_size_w: float = universe_w
         self.universe_size_h: float = universe_h
-        self.scaled_display_width: float = display_w * BlobGlobalVars.scale_up
-        self.scaled_display_height: float = display_h * BlobGlobalVars.scale_up
+        self.scaled_display_width: float = display_w * bg_vars.scale_up
+        self.scaled_display_height: float = display_h * bg_vars.scale_up
         self.blob_factory: BlobPluginFactory = blob_factory
         self.display = self.blob_factory.get_blob_display()
 
         MassiveBlob.center_blob_x = universe_w / 2
         MassiveBlob.center_blob_y = universe_h / 2
         MassiveBlob.center_blob_z = universe_h / 2
-        bp.set_gravitational_range(universe_h * BlobGlobalVars.scale_up)
+        bp.set_gravitational_range(universe_h * bg_vars.scale_up)
 
         # Preferences/states
         self.blobs: npt.NDArray = np.empty([NUM_BLOBS], dtype=MassiveBlob)
@@ -116,20 +116,20 @@ class BlobPlotter:
         self.z_axis: Dict[float, npt.NDArray] = {}
         self.proximity_grid: npt.NDArray = np.empty(
             [
-                int(BlobGlobalVars.grid_key_upper_bound),
-                int(BlobGlobalVars.grid_key_upper_bound),
-                int(BlobGlobalVars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
             ],
             dtype=MassiveBlob,
         )
-        self.square_grid: bool = BlobGlobalVars.square_blob_plotter
-        self.start_perfect_orbit: bool = BlobGlobalVars.start_perfect_orbit
-        self.start_angular_chaos: bool = BlobGlobalVars.start_angular_chaos
+        self.square_grid: bool = bg_vars.square_blob_plotter
+        self.start_perfect_orbit: bool = bg_vars.start_perfect_orbit
+        self.start_angular_chaos: bool = bg_vars.start_angular_chaos
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
-        data["universe_size_w"] = self.universe_size_w / BlobGlobalVars.au_scale_factor
-        data["universe_size_h"] = self.universe_size_h / BlobGlobalVars.au_scale_factor
+        data["universe_size_w"] = self.universe_size_w / bg_vars.au_scale_factor
+        data["universe_size_h"] = self.universe_size_h / bg_vars.au_scale_factor
         data["blobs_swallowed"] = self.blobs_swallowed
         data["blobs_escaped"] = self.blobs_escaped
         data["square_grid"] = self.square_grid
@@ -147,8 +147,11 @@ class BlobPlotter:
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it
         """
-        self.universe_size_w = data["universe_size_w"] * BlobGlobalVars.au_scale_factor
-        self.universe_size_h = data["universe_size_h"] * BlobGlobalVars.au_scale_factor
+
+        self.blob_factory.reset(len(data["blobs"]))
+        self.display.update()
+        self.universe_size_w = data["universe_size_w"] * bg_vars.au_scale_factor
+        self.universe_size_h = data["universe_size_h"] * bg_vars.au_scale_factor
         self.blobs_swallowed = data["blobs_swallowed"]
         self.blobs_escaped = data["blobs_escaped"]
         self.square_grid = data["square_grid"]
@@ -156,7 +159,7 @@ class BlobPlotter:
         self.start_angular_chaos = data["start_angular_chaos"]
         self.blobs = np.empty([len(data["blobs"])], dtype=MassiveBlob)
         self.z_axis.clear()
-        bp.set_gravitational_range(self.universe_size_h * BlobGlobalVars.scale_up)
+        bp.set_gravitational_range(self.universe_size_h * bg_vars.scale_up)
 
         i = 0
         for blob_pref in data["blobs"]:
@@ -165,7 +168,8 @@ class BlobPlotter:
                 blob_pref["name"],
                 self.blob_factory.new_blob_surface(
                     blob_pref["name"],
-                    blob_pref["radius"] * BlobGlobalVars.au_scale_factor,
+                    blob_pref["radius"] * bg_vars.au_scale_factor,
+                    blob_pref["mass"],
                     tuple(blob_pref["color"]),  # type: ignore
                     blob_pref.get("texture"),  # Might not exist
                     blob_pref.get("rotation_speed"),  # Might not exist
@@ -186,16 +190,22 @@ class BlobPlotter:
     def start_over(self: Self) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
 
-        universe = self.blob_factory.get_blob_universe()
+        self.blob_factory.reset()
+        self.display.update()
         for blob in self.blobs:
             blob.destroy()
             self.display.update()
+
+        universe = self.blob_factory.get_blob_universe()
+        universe.clear()
+        self.display.update()
+
         self.display.update()
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
-        universe.clear()
+
         self.universe_size_w = universe.get_width()
         self.universe_size_h = universe.get_height()
-        self.blob_factory.reset()
+
         self.display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
@@ -208,6 +218,18 @@ class BlobPlotter:
         """
         self.plot_center_blob()
 
+        max_radius_delta: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
+
+        min_radius_delta: float = (bg_vars.min_radius + max_radius_delta) / 2
+
+        max_radius_delta = (max_radius_delta + bg_vars.max_radius) / 2
+
+        max_mass_delta: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
+
+        min_mass_delta: float = (bg_vars.min_mass + max_mass_delta) / 2
+
+        max_mass_delta = (max_mass_delta + bg_vars.max_mass) / 2
+
         # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
             # Set up some random values for this blob
@@ -217,36 +239,37 @@ class BlobPlotter:
             # Divide mass and radius ranges in half, put smaller masses with
             # smaller radiuses, and vice versa. Randomize whether we're doing
             # a bigger or smaller blob.
-            max_radius_delta: float = BlobGlobalVars.min_radius + (
-                (BlobGlobalVars.max_radius - BlobGlobalVars.min_radius) / 2
-            )
-            max_mass_delta: float = MIN_MASS + ((MAX_MASS - MIN_MASS) / 2)
 
             if round(random.randint(1, 10)) % 2:
                 radius = round(
-                    (random.random() * (max_radius_delta - BlobGlobalVars.min_radius))
-                    + BlobGlobalVars.min_radius,
+                    (random.random() * (min_radius_delta - bg_vars.min_radius))
+                    + bg_vars.min_radius,
                     2,
                 )
-                mass = random.random() * (max_mass_delta - MIN_MASS) + MIN_MASS
+
+                mass = (
+                    random.random() * (min_mass_delta - bg_vars.min_mass)
+                    + bg_vars.min_mass
+                )
             else:
                 radius = round(
-                    (
-                        (
-                            random.random()
-                            * (BlobGlobalVars.max_radius - max_radius_delta)
-                        )
-                        + max_radius_delta
-                    ),
+                    (random.random() * (bg_vars.max_radius - max_radius_delta))
+                    + max_radius_delta,
                     2,
                 )
-                mass = (random.random() * (MAX_MASS - max_mass_delta)) + max_mass_delta
+
+                mass = (
+                    random.random() * (bg_vars.max_mass - max_mass_delta)
+                ) + max_mass_delta
+
+            # if bg_vars.scale_blob_mass_with_size:
+            #     mass *= bg_vars.blob_scale
 
             # Phew, let's instantiate this puppy . . .
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
                 str(i),
-                self.blob_factory.new_blob_surface(str(i), radius, COLORS[color]),
+                self.blob_factory.new_blob_surface(str(i), radius, mass, COLORS[color]),
                 mass,
                 0,
                 0,
@@ -268,9 +291,9 @@ class BlobPlotter:
         """
         self.proximity_grid = np.empty(
             [
-                int(BlobGlobalVars.grid_key_upper_bound),
-                int(BlobGlobalVars.grid_key_upper_bound),
-                int(BlobGlobalVars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
             ],
             dtype=MassiveBlob,
         )
@@ -339,7 +362,7 @@ class BlobPlotter:
                     blob2.y -= pos_offsets[1]
                     blob2.z -= pos_offsets[2]
 
-            if not BlobGlobalVars.center_blob_escape:
+            if not bg_vars.center_blob_escape:
                 bp.edge_detection(blob1)
 
         def check_grid(blob: MassiveBlob) -> None:
@@ -352,12 +375,10 @@ class BlobPlotter:
             z_pos_offset: float = 0
             x_pos_offset: float = 0
             y_pos_offset: float = 0
-            scaled_universe: float = (
-                BlobGlobalVars.universe_size * BlobGlobalVars.scale_up
-            )
+            scaled_universe: float = bg_vars.universe_size * bg_vars.scale_up
             for z_i_offset in range(-1, 2):
                 z = gk[2] + z_i_offset
-                if z > BlobGlobalVars.grid_key_check_bound:
+                if z > bg_vars.grid_key_check_bound:
                     z = 0
                     z_pos_offset = scaled_universe
                 elif z < 0:
@@ -366,7 +387,7 @@ class BlobPlotter:
                     z_pos_offset = 0
                 for x_i_offset in range(-1, 2):
                     x = gk[0] + x_i_offset
-                    if x > BlobGlobalVars.grid_key_check_bound:
+                    if x > bg_vars.grid_key_check_bound:
                         x = 0
                         x_pos_offset = scaled_universe
                     elif x < 0:
@@ -375,7 +396,7 @@ class BlobPlotter:
                         x_pos_offset = 0
                     for y_i_offset in range(-1, 2):
                         y = gk[1] + y_i_offset
-                        if y > BlobGlobalVars.grid_key_check_bound:
+                        if y > bg_vars.grid_key_check_bound:
                             y = 0
                             y_pos_offset = scaled_universe
                         elif y < 0:
@@ -395,7 +416,7 @@ class BlobPlotter:
             bp.gravitational_pull(self.blobs[0], self.blobs[i])
             bp.collision_detection(self.blobs[0], self.blobs[i])
 
-        if not BlobGlobalVars.center_blob_escape:
+        if not bg_vars.center_blob_escape:
             bp.edge_detection(self.blobs[0])
 
         self.blobs[0].advance()
@@ -422,9 +443,12 @@ class BlobPlotter:
             self.universe_size_h,
             CENTER_BLOB_NAME,
             self.blob_factory.new_blob_surface(
-                CENTER_BLOB_NAME, BlobGlobalVars.center_blob_radius, CENTER_BLOB_COLOR
+                CENTER_BLOB_NAME,
+                bg_vars.center_blob_radius,
+                bg_vars.center_blob_mass,
+                CENTER_BLOB_COLOR,
             ),
-            CENTER_BLOB_MASS,
+            bg_vars.center_blob_mass,
             x,
             y,
             z,
@@ -434,6 +458,10 @@ class BlobPlotter:
         )
 
         self.add_z_axis(self.blobs[0])
+
+        self.blobs[0].draw()
+
+        self.display.update()
 
     def plot_square_grid(self: Self) -> None:
         """Iterates through blobs and plots them in a square grid configuration around the center blob"""
@@ -445,29 +473,25 @@ class BlobPlotter:
         blob_partition: float = 0.0
 
         # split the screen up into enough partitions for every blob
-        if NUM_BLOBS > 5:
-            blob_partition = round(((AU * 6) / math.sqrt(NUM_BLOBS)))
-        else:
-            blob_partition = (AU * 6) / 4
+        blob_partition = AU
 
-        if blob_partition < ((BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 3):
-            blob_partition = round(
-                (BlobGlobalVars.max_radius * BlobGlobalVars.scale_up) * 3
-            )
+        if blob_partition < ((bg_vars.max_radius * bg_vars.scale_up) * 3):
+            blob_partition = round((bg_vars.max_radius * bg_vars.scale_up) * 3)
 
-        clearance = float(round(AU * 0.5 / blob_partition))
+        clearance = 2.0  # float((blob_partition * 2) / blob_partition)
 
         if clearance % 2:
             clearance += 1
 
         # Iterators grid placement
-        y_count = int(clearance)
+        y_count = round(clearance)
         y_turns = 0
         x_turns = 1
         x += (clearance / 2) * blob_partition
         y -= (clearance / 2) * blob_partition
 
         for i in range(1, NUM_BLOBS):
+
             # Get x and y coordinates for this blob
             # x and y take turns moving, each turn gives the other one more turn than
             # last time, which we need to do to spiral around in a square grid
@@ -511,19 +535,19 @@ class BlobPlotter:
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition = AU * 1  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition = AU  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
-        plot_radius = AU * 1
+        plot_radius = AU * 2
 
         # How far apart each blob will be on each circumference
-        chord_scaled = (math.pi * (plot_radius * 2)) / (orbiting_blobs / 4)
+        chord_scaled = (math.pi * (plot_radius * 2)) / round(orbiting_blobs / 4)
 
-        if chord_scaled < ((BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up):
-            chord_scaled = (BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up
+        if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
+            chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
 
         if chord_scaled > (plot_radius * 2):
-            chord_scaled = (BlobGlobalVars.max_radius * 3) * BlobGlobalVars.scale_up
+            chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
 
         # How many radians to increase for each blob around the circumference (such that
         # we get chord_scaled length between each blob center)
@@ -591,7 +615,7 @@ class BlobPlotter:
         d = math.sqrt(dx**2 + dy**2 + dz**2)
 
         # get velocity for a perfect orbit around center blob
-        velocity = math.sqrt(G * CENTER_BLOB_MASS / d)
+        velocity = math.sqrt(G * bg_vars.center_blob_mass / d)
 
         if not self.start_perfect_orbit:
             for _ in range(1, random.randint(1, 2)):
@@ -621,15 +645,17 @@ class BlobPlotter:
             velocityz,
         )
 
-        if BlobGlobalVars.start_pos_rotate_x:
+        if bg_vars.start_pos_rotate_x:
             blob.rotate_x()
 
-        if BlobGlobalVars.start_pos_rotate_y:
+        if bg_vars.start_pos_rotate_y:
             blob.rotate_y()
 
-        if BlobGlobalVars.start_pos_rotate_z:
+        if bg_vars.start_pos_rotate_z:
             blob.rotate_z()
 
         self.add_z_axis(blob)
+
+        blob.draw()
 
         self.display.update()

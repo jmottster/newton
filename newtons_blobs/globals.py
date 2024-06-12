@@ -20,11 +20,20 @@ __status__ = "In Progress"
 VERSION = __version__
 
 # No need to ever change these
-G = 6.67428e-11  # Gravitational constant
-AU = 1.495978707 * 10**11  # 149.6e6 * 1000   1 Astronomical Unit
-S = 6.96 * 10**8
-J = 7.1492 * 10**7
-E = 6.3781 * 10**6
+G = 6.67428 * 10**-11  # Gravitational constant
+AU = 1.495978707 * 10**11  # 1 Astronomical Unit
+S = 6.96 * 10**8  # Radius of the Sun
+J = 7.1492 * 10**7  # Radius of Jupiter
+E = 6.3781 * 10**6  # Radius of the Earth
+M = 1.7381 * 10**6  # Radius of the Moon
+
+# black hole, don't do it, your machine will collapse into itself!
+B_MASS = 8.54 * 10**36  # Mass of Sagittarius A*
+
+S_MASS = 1.98892 * 10**30  # Mass of the Sun
+J_MASS = 1.899 * 10**27  # Mass of Jupiter
+E_MASS = 5.972 * 10**24  # Mass of Earth
+M_MASS = 7.342 * 10**22  # Mass of the Moon
 
 TRUE_3D = True
 TEXTURES_3D = True
@@ -47,7 +56,7 @@ SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
-CLOCK_FPS = False
+CLOCK_FPS = True
 
 SECONDS = 1
 MINUTES = SECONDS * 60
@@ -62,7 +71,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 102
+NUM_BLOBS = 90
 
 # If true all blobs will start
 # with a perfect orbital velocity
@@ -92,19 +101,18 @@ UNIVERSE_SIZE_H = UNIVERSE_SIZE
 UNIVERSE_SIZE_W = UNIVERSE_SIZE
 UNIVERSE_SIZE_D = UNIVERSE_SIZE
 
-CENTER_BLOB_MASS = 1.98892 * 10**30  # currently set with mass of the sun
-# 8.54 * 10**36 <-- black hole, don't do it, your machine will collapse into itself!
+CENTER_BLOB_MASS = S_MASS
 CENTER_BLOB_RADIUS = (AU_SCALE_FACTOR * CENTER_BLOB_SCALE) * (S / AU)
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
 
-MIN_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (E / AU)
+MIN_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (M / AU)
 MAX_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (J / AU)
 
 BLOB_TRAIL_GIRTH = (AU_SCALE_FACTOR * BLOB_TRAIL_SCALE) * (J / AU)
 
-MIN_MASS = 5.972 * 10**24  # Mass of Earth
-MAX_MASS = 1.899 * 10**27  # mass of Jupiter
+MIN_MASS = M_MASS
+MAX_MASS = J_MASS
 
 FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1
 BACKGROUND_SCALE = CENTER_BLOB_RADIUS * 1000
@@ -114,7 +122,7 @@ GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
 
 print(
-    f"MIN_RADIUS={MIN_RADIUS}  MAX_RADIUS={MAX_RADIUS} BLOB_TRAIL_GIRTH={BLOB_TRAIL_GIRTH} GRID_CELL_SIZE={GRID_CELL_SIZE} GRID_KEY_UPPER_BOUND={GRID_KEY_UPPER_BOUND}"
+    f"MIN_RADIUS={round(MIN_RADIUS,2)}  MAX_RADIUS={round(MAX_RADIUS,2)} BLOB_TRAIL_GIRTH={BLOB_TRAIL_GIRTH} GRID_CELL_SIZE={GRID_CELL_SIZE} GRID_KEY_UPPER_BOUND={GRID_KEY_UPPER_BOUND}"
 )
 
 COLORS = [
