@@ -78,7 +78,7 @@ class BlobUrsinaFactory:
         bg_vars.set_center_blob_scale(50)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(50)
+        bg_vars.set_blob_scale(70)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)

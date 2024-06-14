@@ -185,6 +185,7 @@ class Rotator(urs.Entity):
             self.world_rotation_y = random.random() * 360
             self.world_rotation_z = random.random() * 360
 
+        # If rotation_pos coming from saved file, set world rotation values to that
         if self.rotation_pos is not None:
             self.world_rotation_x, self.world_rotation_y, self.world_rotation_z = (
                 self.rotation_pos
@@ -450,7 +451,7 @@ class BlobSurfaceUrsina:
             if texture is not None:
                 self.texture = texture
             else:
-                if self.radius >= (bg_vars.max_radius * 0.85):
+                if self.radius >= (bg_vars.max_radius * 0.75):
                     self.texture = BLOB_TEXTURES_LARGE[
                         random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
                     ]

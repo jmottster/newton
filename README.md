@@ -17,7 +17,7 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 ###### The easy way (Windows only)
 
 1. Download Windows executable here:
-   1. [Release 0.0.5](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.5/newton3D.exe)
+   1. [Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.exe)
 2. Save where you want to store it
 3. Double click and enjoy (runs as is, no system installation)
 
@@ -61,10 +61,14 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * MOUSE MOVE BACKWARD - Pitch down
 * Miscellaneous Controls:
   * SPACEBAR - Pause/Unpause
+    * MOUSE LEFT CLICK on Blob - Only when paused will toggle info sign above the blob (name, mass, radius, position)
   * ESC - Quit
   * Q - Disengage/reengage mouse
-  * V - Toggle ambient light (helps to see dark side of blobs)
   * F - Toggle fullscreen/windowed mode
+  * V - Toggle ambient light (helps to see dark side of blobs)
+  * B - Toggle show name of blobs above blobs (for all blobs, this will impact performance)
+  * UP ARROW - Increase timescale (make time go faster)
+  * DOWN ARROW - Decrease timescale (make time go slower)
   * 1 - Start over based on options selected with keys 1 and 2
   * 2 - Toggle stat displays
   * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
