@@ -330,7 +330,7 @@ class BlobPlotter:
                         )
                     )
 
-    def update_blobs(self: Self) -> None:
+    def update_blobs(self: Self, dt: float = 1) -> None:
         """
         Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
@@ -355,7 +355,7 @@ class BlobPlotter:
                     blob2.y += pos_offsets[1]
                     blob2.z += pos_offsets[2]
 
-                    bp.gravitational_pull(blob1, blob2)
+                    bp.gravitational_pull(blob1, blob2, dt)
                     bp.collision_detection(blob1, blob2)
 
                     blob2.x -= pos_offsets[0]
@@ -413,13 +413,13 @@ class BlobPlotter:
                         )
 
         for i in range(1, len(self.blobs)):
-            bp.gravitational_pull(self.blobs[0], self.blobs[i])
+            bp.gravitational_pull(self.blobs[0], self.blobs[i], dt)
             bp.collision_detection(self.blobs[0], self.blobs[i])
 
         if not bg_vars.center_blob_escape:
             bp.edge_detection(self.blobs[0])
 
-        self.blobs[0].advance()
+        self.blobs[0].advance(dt)
         self.add_z_axis(self.blobs[0])
         checked[id(self.blobs[0])] = 1
 
@@ -427,7 +427,7 @@ class BlobPlotter:
 
             check_grid(self.blobs[i])
 
-            self.blobs[i].advance()
+            self.blobs[i].advance(dt)
 
             self.add_z_axis(self.blobs[i])
 

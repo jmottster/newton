@@ -98,7 +98,7 @@ class BlobRunner:
         self.auto_save_load: bool = AUTO_SAVE_LOAD
         self.running: bool = True
         self.paused: bool = False
-        self.elapsed_time: int = 0
+        self.elapsed_time: float = 0
         self.show_stats: bool = True
         self.message: str = None
         self.message_counter: int = 0
@@ -232,20 +232,31 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
+        def get_timescale_str() -> str:
+            return_str = f"Timescale is now {int(bg_vars.timescale/DAYS)} days and "
+
+            return_str += f"{int( ( (bg_vars.timescale) - (DAYS * int(bg_vars.timescale/DAYS))       ) /HOURS)}h:"
+
+            return_str += f"{int( ( (bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS))     ) /MINUTES)}m:"
+
+            return_str += f"{int( ( (bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES)) ) )}s per second"
+
+            return return_str
+
         def time_faster() -> None:
-            if bg_vars.timescale < (bg_vars.timescale_inc * 15):
-                bg_vars.set_timescale(bg_vars.timescale_inc * 15)
+            if bg_vars.timescale < (bg_vars.timescale_inc):
+                bg_vars.set_timescale(bg_vars.timescale_inc)
             else:
-                bg_vars.set_timescale(bg_vars.timescale + (bg_vars.timescale_inc * 15))
-            self.message = f"Timescale is now {int(bg_vars.timescale/HOURS)}:{int(((bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS)))/MINUTES)}:{int(bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES))} per frame"
+                bg_vars.set_timescale(bg_vars.timescale + (bg_vars.timescale_inc))
+            self.message = get_timescale_str()
             self.message_counter = 60 * 2
 
         def time_slower() -> None:
-            if bg_vars.timescale <= (bg_vars.timescale_inc * 15):
+            if bg_vars.timescale <= (bg_vars.timescale_inc):
                 bg_vars.set_timescale(bg_vars.timescale_inc)
             else:
-                bg_vars.set_timescale(bg_vars.timescale - (bg_vars.timescale_inc * 15))
-            self.message = f"Timescale is now {int(bg_vars.timescale/HOURS)}:{int(((bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS)))/MINUTES)}:{int(bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES))} per frame"
+                bg_vars.set_timescale(bg_vars.timescale - (bg_vars.timescale_inc))
+            self.message = get_timescale_str()
             self.message_counter = 60 * 2
 
         keyboard_events[self.display.get_key_code("escape")] = quit_game
@@ -319,8 +330,8 @@ class BlobRunner:
         self.display.update()
 
         if not self.paused:
-            self.blob_plotter.update_blobs()
-            self.elapsed_time += 1
+            self.blob_plotter.update_blobs(self.display.fps_get_dt())
+            self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
 
         self.display.fps_clock_tick(FRAME_RATE)
 
@@ -387,7 +398,7 @@ class BlobRunner:
         Returns float number of units determined by divisor. E.g., if YEARS is divisor,
         returns number of years elapsed since last start.
         """
-        return round((self.elapsed_time * bg_vars.timescale) / divisor, 2)
+        return round(self.elapsed_time / divisor, 2)
 
     def display_elapsed_time(self: Self) -> None:
         """Draws the elapsed time to the display instance"""

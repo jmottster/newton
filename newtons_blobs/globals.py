@@ -23,7 +23,7 @@ VERSION = __version__
 G = 6.67428 * 10**-11  # Gravitational constant
 AU = 1.495978707 * 10**11  # 1 Astronomical Unit
 S = 6.96 * 10**8  # Radius of the Sun
-J = 7.1492 * 10**7  # Radius of Jupiter
+J = 7.1492 * 10**7 * 1.5  # Radius of Jupiter
 E = 6.3781 * 10**6  # Radius of the Earth
 M = 1.7381 * 10**6  # Radius of the Moon
 
@@ -31,7 +31,7 @@ M = 1.7381 * 10**6  # Radius of the Moon
 B_MASS = 8.54 * 10**36  # Mass of Sagittarius A*
 
 S_MASS = 1.98892 * 10**30  # Mass of the Sun
-J_MASS = 1.899 * 10**27  # Mass of Jupiter
+J_MASS = 1.899 * 10**27 * 1.5  # Mass of Jupiter
 E_MASS = 5.972 * 10**24  # Mass of Earth
 M_MASS = 7.342 * 10**22  # Mass of the Moon
 
@@ -64,14 +64,14 @@ HOURS = MINUTES * 60
 DAYS = HOURS * 24
 YEARS = DAYS * 365.25
 
-TIMESCALE = HOURS * 5  # elapsed time per frame, in seconds
+TIMESCALE = HOURS * 5  # elapsed time per second, in seconds
 
 AUTO_SAVE_LOAD = True
 LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 90
+NUM_BLOBS = 101
 
 # If true all blobs will start
 # with a perfect orbital velocity
@@ -106,12 +106,12 @@ CENTER_BLOB_RADIUS = (AU_SCALE_FACTOR * CENTER_BLOB_SCALE) * (S / AU)
 CENTER_BLOB_COLOR = (255, 210, 63)
 CENTER_BLOB_NAME = "sun"
 
-MIN_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (M / AU)
+MIN_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (E / AU)
 MAX_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (J / AU)
 
 BLOB_TRAIL_GIRTH = (AU_SCALE_FACTOR * BLOB_TRAIL_SCALE) * (J / AU)
 
-MIN_MASS = M_MASS
+MIN_MASS = E_MASS
 MAX_MASS = J_MASS
 
 FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1

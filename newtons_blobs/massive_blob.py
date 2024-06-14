@@ -66,8 +66,8 @@ class MassiveBlob:
         Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
         (closer=bigger/further=smaller), a 3d effect according the the z position
 
-    advance() -> None
-        Applies velocity to blob, changing its x,y coordinates for next frame draw
+    advance(dt: float) -> None
+        Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)
 
     destroy() -> None
         Call when no longer needed, so it can clean up and disappear
@@ -231,21 +231,21 @@ class MassiveBlob:
         self.radius = round(self.scaled_radius * BlobGlobalVars.scale_down)
         self.blob_surface.resize(self.radius)
 
-    def advance(self: Self) -> None:
-        """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
+    def advance(self: Self, dt: float) -> None:
+        """Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)"""
 
         if not BlobGlobalVars.true_3d and self.name == CENTER_BLOB_NAME:
             self.fake_blob_z()
             return
 
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
-        self.x += self.vx * BlobGlobalVars.timescale
+        self.x += self.vx * (BlobGlobalVars.timescale * dt)
 
         # Advance y by velocity (one frame, with TIMESCALE elapsed time)
-        self.y += self.vy * BlobGlobalVars.timescale
+        self.y += self.vy * (BlobGlobalVars.timescale * dt)
 
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
-        self.z += self.vz * BlobGlobalVars.timescale
+        self.z += self.vz * (BlobGlobalVars.timescale * dt)
 
         if not BlobGlobalVars.true_3d:
             self.fake_blob_z()

@@ -131,6 +131,9 @@ class BlobDisplayUrsina:
     fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
 
+    fps_get_dt() -> float
+        Returns the elapsed time for the previous frame in seconds
+
     fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
 
@@ -328,6 +331,10 @@ class BlobDisplayUrsina:
     def fps_clock_tick(self: Self, fps: int) -> None:
         """Control the FPS rate by sending the desired rate here every frame of while loop"""
         self.fps.clock.tick(fps)
+
+    def fps_get_dt(self: Self) -> float:
+        """Returns the elapsed time for the previous frame in seconds"""
+        return self.fps.clock.dt
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""

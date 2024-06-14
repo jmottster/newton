@@ -218,7 +218,7 @@ class BlobPhysics:
                     smaller_blob.swallowed = True
 
     @staticmethod
-    def gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob) -> None:
+    def gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None:
         """
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         """
@@ -238,13 +238,13 @@ class BlobPhysics:
             fdy = F * math.sin(theta) * math.sin(phi)
             fdz = F * math.cos(theta)
 
-            blob1.vx -= fdx / blob1.mass * BlobGlobalVars.timescale
-            blob1.vy -= fdy / blob1.mass * BlobGlobalVars.timescale
-            blob1.vz -= fdz / blob1.mass * BlobGlobalVars.timescale
+            blob1.vx -= fdx / blob1.mass * (BlobGlobalVars.timescale * dt)
+            blob1.vy -= fdy / blob1.mass * (BlobGlobalVars.timescale * dt)
+            blob1.vz -= fdz / blob1.mass * (BlobGlobalVars.timescale * dt)
 
-            blob2.vx += fdx / blob2.mass * BlobGlobalVars.timescale
-            blob2.vy += fdy / blob2.mass * BlobGlobalVars.timescale
-            blob2.vz += fdz / blob2.mass * BlobGlobalVars.timescale
+            blob2.vx += fdx / blob2.mass * (BlobGlobalVars.timescale * dt)
+            blob2.vy += fdy / blob2.mass * (BlobGlobalVars.timescale * dt)
+            blob2.vz += fdz / blob2.mass * (BlobGlobalVars.timescale * dt)
 
         elif BlobGlobalVars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

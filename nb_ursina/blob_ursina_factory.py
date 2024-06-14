@@ -73,30 +73,30 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(2000)
-        bg_vars.set_universe_scale(40)
-        bg_vars.set_center_blob_scale(30)
+        bg_vars.set_au_scale_factor(4000)
+        bg_vars.set_universe_scale(100)
+        bg_vars.set_center_blob_scale(50)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(100)
+        bg_vars.set_blob_scale(50)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
-        bg_vars.set_timescale(HOURS)
-        bg_vars.set_timescale_inc(MINUTES)
+        bg_vars.set_timescale(DAYS * 2)
+        bg_vars.set_timescale_inc(HOURS * 6)
         bg_vars.set_true_3d(True)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
-        bg_vars.set_start_angular_chaos(False)
+        bg_vars.set_start_angular_chaos(True)
         bg_vars.set_square_blob_plotter(False)
         bg_vars.set_center_blob_escape(False)
         bg_vars.set_wrap_if_no_escape(True)
 
         bg_vars.print_info()
 
-        self.start_distance = bg_vars.au_scale_factor * 5
+        self.start_distance = bg_vars.au_scale_factor * 7
 
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H

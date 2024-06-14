@@ -284,7 +284,7 @@ class BlobGlobalVars:
         if cls.scale_center_blob_mass_with_size and not cls.black_hole_mode:
             cls.center_blob_mass = cls.org_center_blob_mass * cls.center_blob_scale
 
-        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (M / AU)
+        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
         cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
         cls.blob_trail_girth = (cls.au_scale_factor * cls.blob_trail_scale) * (J / AU)
 
