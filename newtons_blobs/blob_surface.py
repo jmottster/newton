@@ -42,9 +42,13 @@ class BlobSurface(Protocol):
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
     rotation_pos : Tuple[int, int, int] = None
         For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
+    position : Tuple[float,float,float] = (0,0,0)
+        The x,y,z position for this blob
 
     Methods
     -------
+    set_orbital_pos_vel(orbital: BlobSurface) -> Tuple[float,float,float]
+        Sets orbital to a position appropriate for an orbital of this blob, and returns velocity as a tuple
 
     resize(radius: float) -> None
         Sets a new radius for this blob
@@ -73,6 +77,16 @@ class BlobSurface(Protocol):
     texture: str = None
     rotation_speed: float = None
     rotation_pos: Tuple[float, float, float] = None
+    position: Tuple[float, float, float]
+
+    def set_orbital_pos_vel(
+        self: Self, orbital: "BlobSurface"
+    ) -> Tuple[float, float, float]:
+        """
+        Sets orbital to a position appropriate for an orbital of this blob,
+        and returns velocity as a tuple
+        """
+        pass
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""

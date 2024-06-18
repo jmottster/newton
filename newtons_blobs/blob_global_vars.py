@@ -55,10 +55,18 @@ class BlobGlobalVars:
     BlobGlobalVars.min_radius: ClassVar[float] - minimum radius (in pixels) that a blob can be
     BlobGlobalVars.max_radius: ClassVar[float] - maximum radius (in pixels) that a blob can be
 
-    BlobGlobalVars.min_mass: ClassVar[float] - Minimum mass (in kg) of blobs, subject ot change
-    BlobGlobalVars.max_mass: ClassVar[float] - Maximum mass (in kg) of blobs, subject ot change
+    BlobGlobalVars.min_moon_radius: ClassVar[float] - minimum radius (in pixels) that a moon blob can be
+    BlobGlobalVars.max_moon_radius: ClassVar[float] - maximum radius (in pixels) that a moon blob can be
+
+    BlobGlobalVars.min_mass: ClassVar[float] - Minimum mass (in kg) of blobs, subject to change
+    BlobGlobalVars.max_mass: ClassVar[float] - Maximum mass (in kg) of blobs, subject to change
+    BlobGlobalVars.min_moon_mass: ClassVar[float] - Minimum mass (in kg) of moon blobs, subject to change
+    BlobGlobalVars.max_moon_mass: ClassVar[float] - Maximum mass (in kg) of moon blobs, subject to change
+
     BlobGlobalVars.org_min_mass: ClassVar[float] - Original minimum mass (in kg) of blobs, doesn't change
     BlobGlobalVars.org_max_mass: ClassVar[float] - Original maximum mass (in kg) of blobs, doesn't change
+    BlobGlobalVars.org_min_moon_mass: ClassVar[float] - Original minimum mass (in kg) of moon blobs, doesn't change
+    BlobGlobalVars.org_max_moon_mass: ClassVar[float] - Original maximum mass (in kg) of moon blobs, doesn't change
 
     BlobGlobalVars.first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
     BlobGlobalVars.background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
@@ -184,12 +192,18 @@ class BlobGlobalVars:
 
     min_radius: ClassVar[float] = MIN_RADIUS
     max_radius: ClassVar[float] = MAX_RADIUS
+    min_moon_radius: ClassVar[float] = MIN_MOON_RADIUS
+    max_moon_radius: ClassVar[float] = MAX_MOON_RADIUS
     blob_trail_girth: ClassVar[float] = BLOB_TRAIL_GIRTH
 
     min_mass: ClassVar[float] = MIN_MASS
     max_mass: ClassVar[float] = MAX_MASS
+    min_moon_mass: ClassVar[float] = MIN_MOON_MASS
+    max_moon_mass: ClassVar[float] = MAX_MOON_MASS
     org_min_mass: ClassVar[float] = min_mass
     org_max_mass: ClassVar[float] = max_mass
+    org_min_moon_mass: ClassVar[float] = min_moon_mass
+    org_max_moon_mass: ClassVar[float] = max_moon_mass
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE
@@ -286,13 +300,18 @@ class BlobGlobalVars:
 
         cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
         cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
+
+        cls.min_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (MIM / AU)
+        cls.max_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (GAN / AU)
         cls.blob_trail_girth = (cls.au_scale_factor * cls.blob_trail_scale) * (J / AU)
 
         if cls.scale_blob_mass_with_size:
             cls.min_mass = cls.org_min_mass * cls.blob_scale
             cls.max_mass = cls.org_max_mass * cls.blob_scale
+            cls.min_moon_mass = cls.org_min_moon_mass * cls.blob_scale
+            cls.max_moon_mass = cls.org_max_moon_mass * cls.blob_scale
 
-        cls.first_person_scale = cls.max_radius
+        cls.first_person_scale = cls.au_scale_factor * 0.2
         cls.background_scale = cls.universe_size
 
         cls.grid_cell_size = int(
@@ -307,7 +326,15 @@ class BlobGlobalVars:
     def print_info(cls) -> None:
         """Prints info about settings"""
         print(
-            f"cls.universe_size={cls.universe_size} cls.min_mass={cls.min_mass}  cls.max_mass={cls.max_mass} cls.min_radius={round(cls.min_radius,2)}  cls.max_radius={round(cls.max_radius,2)} cls.blob_trail_girth={round(cls.blob_trail_girth,2)} cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
+            f"cls.min_mass={cls.min_mass}  cls.max_mass={cls.max_mass} cls.min_radius={round(cls.min_radius,2)}  cls.max_radius={round(cls.max_radius,2)}"
+        )
+
+        print(
+            f"cls.min_moon_mass={cls.min_moon_mass}  cls.max_moon_mass={cls.max_moon_mass} cls.min_moon_radius={round(cls.min_moon_radius,2)}  cls.max_moon_radius={round(cls.max_moon_radius,2)}"
+        )
+
+        print(
+            f"cls.universe_size={cls.universe_size}  cls.grid_cell_size={cls.grid_cell_size} cls.grid_key_upper_bound={cls.grid_key_upper_bound}"
         )
 
     @classmethod

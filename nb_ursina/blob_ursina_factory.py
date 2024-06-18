@@ -73,12 +73,12 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(4000)
-        bg_vars.set_universe_scale(100)
-        bg_vars.set_center_blob_scale(50)
+        bg_vars.set_au_scale_factor(200000)
+        bg_vars.set_universe_scale(25)
+        bg_vars.set_center_blob_scale(20)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(70)
+        bg_vars.set_blob_scale(20)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)
@@ -89,7 +89,7 @@ class BlobUrsinaFactory:
         bg_vars.set_true_3d(True)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
-        bg_vars.set_start_angular_chaos(True)
+        bg_vars.set_start_angular_chaos(False)
         bg_vars.set_square_blob_plotter(False)
         bg_vars.set_center_blob_escape(False)
         bg_vars.set_wrap_if_no_escape(True)

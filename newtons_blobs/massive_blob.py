@@ -155,6 +155,18 @@ class MassiveBlob:
         if not BlobGlobalVars.true_3d:
             self.fake_blob_z()
 
+    def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
+
+        vel: Tuple[float, float, float] = None
+
+        vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
+
+        x = orbital.blob_surface.position[0] * BlobGlobalVars.scale_up
+        y = orbital.blob_surface.position[1] * BlobGlobalVars.scale_up
+        z = orbital.blob_surface.position[2] * BlobGlobalVars.scale_up
+
+        orbital.update_pos_vel(x, y, z, vel[0], vel[1], vel[2])
+
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
@@ -238,14 +250,16 @@ class MassiveBlob:
             self.fake_blob_z()
             return
 
+        timescale: float = BlobGlobalVars.timescale * dt
+
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
-        self.x += self.vx * (BlobGlobalVars.timescale * dt)
+        self.x += self.vx * timescale
 
         # Advance y by velocity (one frame, with TIMESCALE elapsed time)
-        self.y += self.vy * (BlobGlobalVars.timescale * dt)
+        self.y += self.vy * timescale
 
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
-        self.z += self.vz * (BlobGlobalVars.timescale * dt)
+        self.z += self.vz * timescale
 
         if not BlobGlobalVars.true_3d:
             self.fake_blob_z()

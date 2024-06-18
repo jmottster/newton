@@ -23,17 +23,25 @@ VERSION = __version__
 G = 6.67428 * 10**-11  # Gravitational constant
 AU = 1.495978707 * 10**11  # 1 Astronomical Unit
 S = 6.96 * 10**8  # Radius of the Sun
-J = 7.1492 * 10**7 * 1.5  # Radius of Jupiter
+J = 7.1492 * 10**7 * 2  # Radius of Jupiter
 E = 6.3781 * 10**6  # Radius of the Earth
+
+# Moons
+GAN = 2.6341 * 10**6 * 5  # Radius of Ganymede (largest moon in solar system)
 M = 1.7381 * 10**6  # Radius of the Moon
+MIM = 0.1982 * 10**6 * 5  # Radius of Mimas (smallest round moon in solar system)
 
 # black hole, don't do it, your machine will collapse into itself!
 B_MASS = 8.54 * 10**36  # Mass of Sagittarius A*
 
 S_MASS = 1.98892 * 10**30  # Mass of the Sun
-J_MASS = 1.899 * 10**27 * 1.5  # Mass of Jupiter
+J_MASS = 1.899 * 10**27 * 2  # Mass of Jupiter
 E_MASS = 5.972 * 10**24  # Mass of Earth
+
+# Moons
+GAN_MASS = 1.4819 * 10**23 * 0.75  # Mass of Ganymede (largest moon in solar system)
 M_MASS = 7.342 * 10**22  # Mass of the Moon
+MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar system)
 
 TRUE_3D = True
 TEXTURES_3D = True
@@ -71,7 +79,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 101
+NUM_BLOBS = 41
 
 # If true all blobs will start
 # with a perfect orbital velocity
@@ -109,10 +117,16 @@ CENTER_BLOB_NAME = "sun"
 MIN_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (E / AU)
 MAX_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (J / AU)
 
+MIN_MOON_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (MIM / AU)
+MAX_MOON_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (GAN / AU)
+
 BLOB_TRAIL_GIRTH = (AU_SCALE_FACTOR * BLOB_TRAIL_SCALE) * (J / AU)
 
-MIN_MASS = E_MASS
+MIN_MASS = M_MASS
 MAX_MASS = J_MASS
+
+MIN_MOON_MASS = MIM_MASS
+MAX_MOON_MASS = GAN_MASS
 
 FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1
 BACKGROUND_SCALE = CENTER_BLOB_RADIUS * 1000

@@ -218,6 +218,9 @@ class BlobPlotter:
         """
         self.plot_center_blob()
 
+        planets: list[MassiveBlob] = []
+        moons: list[MassiveBlob] = []
+
         max_radius_delta: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
 
         min_radius_delta: float = (bg_vars.min_radius + max_radius_delta) / 2
@@ -230,6 +233,8 @@ class BlobPlotter:
 
         max_mass_delta = (max_mass_delta + bg_vars.max_mass) / 2
 
+        moon: bool = False
+
         # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
             # Set up some random values for this blob
@@ -240,30 +245,44 @@ class BlobPlotter:
             # smaller radiuses, and vice versa. Randomize whether we're doing
             # a bigger or smaller blob.
 
-            if round(random.randint(1, 10)) % 2:
-                radius = round(
-                    (random.random() * (min_radius_delta - bg_vars.min_radius))
-                    + bg_vars.min_radius,
-                    2,
-                )
+            # if round(random.randint(1, 10)) % 2:
+            if i > ((NUM_BLOBS - 1) * 0.75):
+                # if i > 0:
+                moon = False
+                if random.randint(1, 10) > 6:
+                    radius = round(
+                        (random.random() * (min_radius_delta - bg_vars.min_radius))
+                        + bg_vars.min_radius,
+                        2,
+                    )
 
-                mass = (
-                    random.random() * (min_mass_delta - bg_vars.min_mass)
-                    + bg_vars.min_mass
-                )
+                    mass = (
+                        random.random() * (min_mass_delta - bg_vars.min_mass)
+                        + bg_vars.min_mass
+                    )
+                else:
+                    radius = round(
+                        (random.random() * (bg_vars.max_radius - max_radius_delta))
+                        + max_radius_delta,
+                        2,
+                    )
+
+                    mass = (
+                        random.random() * (bg_vars.max_mass - max_mass_delta)
+                    ) + max_mass_delta
             else:
+                moon = True
                 radius = round(
-                    (random.random() * (bg_vars.max_radius - max_radius_delta))
-                    + max_radius_delta,
+                    (
+                        random.random()
+                        * (bg_vars.max_moon_radius - bg_vars.min_moon_radius)
+                    )
+                    + bg_vars.min_moon_radius,
                     2,
                 )
-
                 mass = (
-                    random.random() * (bg_vars.max_mass - max_mass_delta)
-                ) + max_mass_delta
-
-            # if bg_vars.scale_blob_mass_with_size:
-            #     mass *= bg_vars.blob_scale
+                    random.random() * (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
+                ) + bg_vars.min_moon_mass
 
             # Phew, let's instantiate this puppy . . .
             self.blobs[i] = MassiveBlob(
@@ -279,10 +298,31 @@ class BlobPlotter:
                 0,
             )
 
+            # planets.append(self.blobs[i])
+
+            if moon:
+                moons.append(self.blobs[i])
+            else:
+                planets.append(self.blobs[i])
+
         if self.square_grid:
-            self.plot_square_grid()
+            self.plot_square_grid(planets)
         else:
-            self.plot_circular_grid()
+            self.plot_circular_grid(planets)
+
+        if len(moons) > 0:
+            self.plot_moons(moons, planets)
+
+        # print(f"moons num: {len(moons)}")
+        # print(f"planets num: {len(planets)}")
+
+    def plot_moons(
+        self: Self, moons: list[MassiveBlob], planets: list[MassiveBlob]
+    ) -> None:
+
+        for i in range(0, len(moons)):
+            planets[random.randint(1, len(planets)) - 1].add_orbital(moons[i])
+            self.add_pos_vel(moons[i], moons[i].x, moons[i].y, moons[i].z)
 
     def draw_blobs(self: Self) -> None:
         """
@@ -463,7 +503,7 @@ class BlobPlotter:
 
         self.display.update()
 
-    def plot_square_grid(self: Self) -> None:
+    def plot_square_grid(self: Self, planets: list[MassiveBlob]) -> None:
         """Iterates through blobs and plots them in a square grid configuration around the center blob"""
         x = self.blobs[0].x
         y = self.blobs[0].y
@@ -473,7 +513,7 @@ class BlobPlotter:
         blob_partition: float = 0.0
 
         # split the screen up into enough partitions for every blob
-        blob_partition = AU
+        blob_partition = AU * 2
 
         if blob_partition < ((bg_vars.max_radius * bg_vars.scale_up) * 3):
             blob_partition = round((bg_vars.max_radius * bg_vars.scale_up) * 3)
@@ -490,7 +530,7 @@ class BlobPlotter:
         x += (clearance / 2) * blob_partition
         y -= (clearance / 2) * blob_partition
 
-        for i in range(1, NUM_BLOBS):
+        for i in range(0, len(planets)):
 
             # Get x and y coordinates for this blob
             # x and y take turns moving, each turn gives the other one more turn than
@@ -517,31 +557,32 @@ class BlobPlotter:
                 elif x < scaled_half_universe_w:
                     y -= blob_partition
 
-            self.add_pos_vel(self.blobs[i], x, y, z)
+            self.add_pos_vel(planets[i], x, y, z)
 
-    def plot_circular_grid(self: Self) -> None:
+    def plot_circular_grid(self: Self, planets: list[MassiveBlob]) -> None:
         """Iterates through blobs and plots them in a circular grid configuration around the center blob"""
 
         scaled_half_universe_w = self.blobs[0].x
         scaled_half_universe_h = self.blobs[0].y
 
-        orbiting_blobs = NUM_BLOBS - 1
+        orbiting_blobs = len(planets)
 
         # Iterators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
         plot_phi = 0.0
+        plot_phi_offset = 0.0
         plot_theta = math.pi * 0.5
 
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition = AU  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition = AU * 2  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
-        plot_radius = AU * 2
+        plot_radius = AU * 4
 
         # How far apart each blob will be on each circumference
-        chord_scaled = (math.pi * (plot_radius * 2)) / round(orbiting_blobs / 4)
+        chord_scaled = (math.pi * (plot_radius * 2)) / (orbiting_blobs / 2)
 
         if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
             chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
@@ -556,30 +597,42 @@ class BlobPlotter:
         # Divy up the remainder for a more even distribution
         pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
+        blobs_left = orbiting_blobs
+
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
             pi_inc = (math.pi * 2) / (orbiting_blobs)
 
-        for i in range(1, NUM_BLOBS):
+        for i in range(0, len(planets)):
 
             self.display.update()
 
             # Circular grid x,y plot for this blob
             # Get x and y for this blob, vars set up from last iteration or initial setting
             x = scaled_half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
-                plot_phi
+                plot_phi_offset
             )
             y = scaled_half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
-                plot_phi
+                plot_phi_offset
             )
             z = scaled_half_universe_h + plot_radius * math.cos(plot_theta)
 
-            blobs_left = orbiting_blobs - i
+            blobs_left -= 1
             # Set up vars for next iteration, move the "clock dial" another notch,
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0
+
                 # Increase the radius for the next go around the center blob
                 plot_radius += plot_radius_partition
+
+                chord_scaled = (math.pi * (plot_radius * 2)) / ((blobs_left + 1) / 2)
+
+                if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
+                    chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
+
+                if chord_scaled > (plot_radius * 2):
+                    chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
+
                 # How many radians to increase for each blob around the circumference (such that
                 # we get chord_scaled length between each blob center)
                 pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
@@ -589,10 +642,13 @@ class BlobPlotter:
                 if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
                     pi_inc = (math.pi * 2) / blobs_left
 
+                plot_phi_offset = random.random() * (math.pi * 2)
+
             else:
                 plot_phi += pi_inc
+                plot_phi_offset += pi_inc
 
-            self.add_pos_vel(self.blobs[i], x, y, z)
+            self.add_pos_vel(planets[i], x, y, z)
 
     def add_z_axis(self: Self, blob: MassiveBlob) -> None:
         """Adds the given blob to the z_axis dict according to it z position"""
@@ -640,9 +696,9 @@ class BlobPlotter:
             x,
             y,
             z,
-            velocityx,
-            velocityy,
-            velocityz,
+            velocityx + blob.vx,
+            velocityy + blob.vy,
+            velocityz + blob.vz,
         )
 
         if bg_vars.start_pos_rotate_x:

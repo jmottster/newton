@@ -113,7 +113,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.temp_scale * 0.025,
             ),
             texture=texture,
-            texture_scale=(1, 1),
+            texture_scale=(1, 1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
         )

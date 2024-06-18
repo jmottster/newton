@@ -222,6 +222,7 @@ class BlobPhysics:
         """
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         """
+        timescale: float = BlobGlobalVars.timescale * dt
         dx = blob1.x - blob2.x
         dy = blob1.y - blob2.y
         dz = blob1.z - blob2.z
@@ -238,13 +239,13 @@ class BlobPhysics:
             fdy = F * math.sin(theta) * math.sin(phi)
             fdz = F * math.cos(theta)
 
-            blob1.vx -= fdx / blob1.mass * (BlobGlobalVars.timescale * dt)
-            blob1.vy -= fdy / blob1.mass * (BlobGlobalVars.timescale * dt)
-            blob1.vz -= fdz / blob1.mass * (BlobGlobalVars.timescale * dt)
+            blob1.vx -= fdx / blob1.mass * timescale
+            blob1.vy -= fdy / blob1.mass * timescale
+            blob1.vz -= fdz / blob1.mass * timescale
 
-            blob2.vx += fdx / blob2.mass * (BlobGlobalVars.timescale * dt)
-            blob2.vy += fdy / blob2.mass * (BlobGlobalVars.timescale * dt)
-            blob2.vz += fdz / blob2.mass * (BlobGlobalVars.timescale * dt)
+            blob2.vx += fdx / blob2.mass * timescale
+            blob2.vy += fdy / blob2.mass * timescale
+            blob2.vz += fdz / blob2.mass * timescale
 
         elif BlobGlobalVars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

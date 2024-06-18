@@ -14,6 +14,7 @@ import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
 
+from newtons_blobs import BlobSurface
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
@@ -111,6 +112,9 @@ class Rotator(urs.Entity):
 
     Methods
     -------
+    set_orbital_pos_vel(orbital: BlobSurface) -> None
+        Sets orbital to a position and velocity appropriate for an orbital of this blob
+
     create_text_overlay() -> None
         Instantiates all the objects necessary to display the text overlay.
         This is called by on_click()
@@ -181,9 +185,9 @@ class Rotator(urs.Entity):
         if self.blob_name == CENTER_BLOB_NAME:
             self.world_rotation_x = 90
         else:
-            self.world_rotation_x = random.random() * 360
-            self.world_rotation_y = random.random() * 360
-            self.world_rotation_z = random.random() * 360
+            self.world_rotation_x = 45
+            change = random.random() * 90
+            self.world_rotation_x += change
 
         # If rotation_pos coming from saved file, set world rotation values to that
         if self.rotation_pos is not None:
@@ -210,6 +214,30 @@ class Rotator(urs.Entity):
 
         self.all_on: bool = False
         self.full_details: bool = False
+
+    def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
+
+        self.rotate((0, (random.random() * 360.00), 0))
+        orbital.ursina_blob.world_rotation = self.world_rotation
+        orbital.ursina_blob.rotation_pos = self.rotation_pos
+
+        orbit_distance: float = (
+            random.random() * (self.scale_x * 3)
+        ) + self.scale_x * 5
+        move: urs.Vec3 = urs.Vec3(self.left.normalized() * orbit_distance)
+
+        orbital.ursina_blob.position = urs.Vec3(self.position + move)
+        orbital.position = orbital.ursina_blob.world_position
+
+        dx: float = (self.world_x - orbital.ursina_blob.world_x) * bg_vars.scale_up
+        dy: float = (self.world_y - orbital.ursina_blob.world_y) * bg_vars.scale_up
+        dz: float = (self.world_z - orbital.ursina_blob.world_z) * bg_vars.scale_up
+
+        distance: float = math.sqrt(dx**2 + dy**2 + dz**2)
+
+        vel: float = math.sqrt(G * self.mass / distance)
+
+        return urs.Vec3(orbital.ursina_blob.forward.normalized() * vel)
 
     def create_text_overlay(self: Self) -> None:
         """
@@ -379,9 +407,13 @@ class BlobSurfaceUrsina:
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
     rotation_pos : Tuple[float, float, float] = None
         For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
+    position : Tuple[float,float,float] = (0,0,0)
+        The x,y,z position for this blob
 
     Methods
     -------
+    set_orbital_pos_vel(orbital: BlobSurface) -> None
+        Sets orbital to a position and velocity appropriate for an orbital of this blob
 
     resize(radius: float) -> None
         Sets a new radius for this blob
@@ -409,6 +441,7 @@ class BlobSurfaceUrsina:
         "name",
         "radius",
         "mass",
+        "position",
         "color",
         "trail_color",
         "universe",
@@ -438,6 +471,7 @@ class BlobSurfaceUrsina:
         self.name: str = name
         self.radius: float = radius
         self.mass: float = mass
+        position: Tuple[float, float, float] = (0, 0, 0)
         self.color: Tuple[int, int, int] = color
         self.trail_color: urs.Color = urs.color.rgba(
             self.color[0], self.color[1], self.color[2], 255
@@ -493,7 +527,7 @@ class BlobSurfaceUrsina:
                 blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere",
-                scale=radius,
+                scale=(self.radius, self.radius, self.radius),
                 mass=self.mass,
                 texture=self.texture,
                 rotation_speed=self.rotation_speed,
@@ -507,7 +541,7 @@ class BlobSurfaceUrsina:
             )
             self.ursina_center_blob = BlobPointLight(
                 # parent=self.ursina_blob,
-                scale=400,
+                scale=(self.radius, self.radius, self.radius),
                 position=(0, 0, 0),
                 shadows=True,
                 shadow_map_resolution=(4096, 4096),
@@ -530,7 +564,7 @@ class BlobSurfaceUrsina:
                 blob_name=self.name,
                 position=(0, 0, 0),
                 model="local_uvsphere",
-                scale=radius,
+                scale=(self.radius, self.radius, self.radius),
                 mass=self.mass,
                 texture=self.texture,
                 color=urs_color,
@@ -545,6 +579,15 @@ class BlobSurfaceUrsina:
 
         self.rotation_speed = self.ursina_blob.rotation_speed
         self.rotation_pos = self.ursina_blob.rotation_pos
+
+    def set_orbital_pos_vel(
+        self: Self, orbital: BlobSurface
+    ) -> Tuple[float, float, float]:
+        """
+        Sets orbital to a position appropriate for an orbital of this blob,
+        and returns velocity as a tuple
+        """
+        return self.ursina_blob.set_orbital_pos_vel(cast(BlobSurfaceUrsina, orbital))
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""
@@ -566,6 +609,8 @@ class BlobSurfaceUrsina:
         Draws this blob to the universe surface, with the given position (or uses position already set),
         send (pos,False) to turn off lighting effects
         """
+
+        self.position = pos
         self.ursina_blob.position = urs.Vec3(pos)
 
         # if self.ursina_blob.trail is None:
@@ -589,6 +634,7 @@ class BlobSurfaceUrsina:
                 self.ursina_center_blob.enabled = False
         # print(f"center blob light: {self.ursina_center_blob.world_position}")
 
+        self.position = pos
         self.ursina_center_blob.position = urs.Vec3(pos)
         self.ursina_blob.position = urs.Vec3(pos)
 
