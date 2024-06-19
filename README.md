@@ -61,7 +61,9 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * MOUSE MOVE BACKWARD - Pitch down
 * Miscellaneous Controls:
   * SPACEBAR - Pause/Unpause
-    * MOUSE LEFT CLICK on Blob - Only when paused will toggle info sign above the blob (name, mass, radius, position)
+    * Only when paused . . .
+    * MOUSE LEFT CLICK on Blob - Toggle info sign above the blob (name, mass, radius, position)
+    * MOUSE RIGHT CLICK on Blob - Follow this blob (blob becomes you reference frame, you move with it, but can still also move freely)
   * ESC - Quit
   * Q - Disengage/reengage mouse
   * F - Toggle fullscreen/windowed mode
