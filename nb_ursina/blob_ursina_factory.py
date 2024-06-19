@@ -74,11 +74,11 @@ class BlobUrsinaFactory:
     def __init__(self: Self):
 
         bg_vars.set_au_scale_factor(200000)
-        bg_vars.set_universe_scale(25)
-        bg_vars.set_center_blob_scale(20)
+        bg_vars.set_universe_scale(40)
+        bg_vars.set_center_blob_scale(25)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(20)
+        bg_vars.set_blob_scale(30)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)
@@ -87,6 +87,7 @@ class BlobUrsinaFactory:
         bg_vars.set_timescale(DAYS * 2)
         bg_vars.set_timescale_inc(HOURS * 6)
         bg_vars.set_true_3d(True)
+        bg_vars.set_blob_moon_percent(0.75)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)

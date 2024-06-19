@@ -83,6 +83,7 @@ class BlobGlobalVars:
     BlobGlobalVars.timescale: ClassVar[int] - number of seconds to pass with each frame
     BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
     BlobGlobalVars.true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
+    BlobGlobalVars.blob_moon_percent: ClassVar[float] - Percentage of blobs that are moons (if true_3d)
     BlobGlobalVars.textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
     BlobGlobalVars.start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
     BlobGlobalVars.start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
@@ -113,6 +114,9 @@ class BlobGlobalVars:
 
     BlobGlobalVars.set_wrap_if_no_escape(wrap_if_no_escape: bool) -> None
         Class method to set whether to wrap around at edges (or bounce) when edge detection is used
+
+    BlobGlobalVars.set_blob_moon_percent(blob_moon_percent: float) -> None
+        Class method to set BlobGlobalVars.blob_moon_percent
 
     BlobGlobalVars.apply_configure() -> None
         Resets all variables that are calculated based on other variables
@@ -220,6 +224,7 @@ class BlobGlobalVars:
     timescale: ClassVar[int] = TIMESCALE
     timescale_inc: ClassVar[int] = MINUTES
     true_3d: ClassVar[bool] = TRUE_3D
+    blob_moon_percent: ClassVar[float] = BLOB_MOON_PERCENT
     textures_3d: ClassVar[bool] = TEXTURES_3D
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
     start_angular_chaos: ClassVar[bool] = START_ANGULAR_CHAOS
@@ -280,6 +285,12 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
+    def set_blob_moon_percent(cls, blob_moon_percent: float) -> None:
+        """Class method to set BlobGlobalVars.blob_moon_percent"""
+        cls.blob_moon_percent = blob_moon_percent
+        cls.apply_configure()
+
+    @classmethod
     def apply_configure(cls) -> None:
         """This resets all variables that are calculated based on other variables (use after making changes to vars)"""
 
@@ -321,6 +332,9 @@ class BlobGlobalVars:
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 
         cls.wrap_if_no_escape = cls.wrap_if_no_escape and not cls.center_blob_escape
+
+        if not cls.true_3d:
+            cls.blob_moon_percent = 0
 
     @classmethod
     def print_info(cls) -> None:

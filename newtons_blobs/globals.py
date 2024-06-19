@@ -27,7 +27,7 @@ J = 7.1492 * 10**7 * 2  # Radius of Jupiter
 E = 6.3781 * 10**6  # Radius of the Earth
 
 # Moons
-GAN = 2.6341 * 10**6 * 5  # Radius of Ganymede (largest moon in solar system)
+GAN = 2.6341 * 10**6 * 2  # Radius of Ganymede (largest moon in solar system)
 M = 1.7381 * 10**6  # Radius of the Moon
 MIM = 0.1982 * 10**6 * 5  # Radius of Mimas (smallest round moon in solar system)
 
@@ -44,6 +44,9 @@ M_MASS = 7.342 * 10**22  # Mass of the Moon
 MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar system)
 
 TRUE_3D = True
+BLOB_MOON_PERCENT = 0.75  # Percentage of blobs that are moons (if true_3d)
+if not TRUE_3D:
+    BLOB_MOON_PERCENT = 0
 TEXTURES_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 

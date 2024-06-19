@@ -10,6 +10,9 @@ import math
 import random
 from typing import ClassVar, Tuple, Self, cast
 
+
+from panda3d.core import ClockObject  # type: ignore
+
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
@@ -202,7 +205,7 @@ class Rotator(urs.Entity):
         )
 
         if self.rotation_speed is None:
-            self.rotation_speed = (random.random() * 5.00) + 1
+            self.rotation_speed = (random.random() * 29.00) + 1
 
         self.text_entity: urs.Entity = None
 
@@ -339,7 +342,11 @@ class Rotator(urs.Entity):
             )
             self.info_text.text = self.text
 
-        self.rotate((0, self.rotation_speed, 0))
+        degrees = self.rotation_speed * (
+            (ClockObject.getGlobalClock().getDt() * bg_vars.timescale) / HOURS
+        )
+
+        self.rotate((0, degrees, 0))
 
     def on_click(self: Self) -> None:
         """

@@ -241,13 +241,9 @@ class BlobPlotter:
             color: int = round(random.random() * (len(COLORS) - 1))
             radius: float = 0.0
             mass: float = 0.0
-            # Divide mass and radius ranges in half, put smaller masses with
-            # smaller radiuses, and vice versa. Randomize whether we're doing
-            # a bigger or smaller blob.
 
-            # if round(random.randint(1, 10)) % 2:
-            if i > ((NUM_BLOBS - 1) * 0.75):
-                # if i > 0:
+            if i > ((NUM_BLOBS - 1) * bg_vars.blob_moon_percent):
+
                 moon = False
                 if random.randint(1, 10) > 6:
                     radius = round(

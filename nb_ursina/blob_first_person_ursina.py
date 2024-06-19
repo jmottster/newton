@@ -97,12 +97,12 @@ class BlobFirstPersonUrsina(urs.Entity):
         )
 
         color: urs.Color = urs.color.rgba(200, 200, 200, 150)
-        texture: str = "nb_ursina/textures/sun03.png"
+        self.gimbal_texture: str = "nb_ursina/textures/sun03.png"
         if not bg_vars.textures_3d:
             color = urs.rgba(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
             )
-            texture = None
+            self.gimbal_texture = None
         self.gimbal: urs.Entity = urs.Entity(
             model="sphere",
             color=color,
@@ -112,7 +112,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.temp_scale * 0.025,
                 self.temp_scale * 0.025,
             ),
-            texture=texture,
+            texture=self.gimbal_texture,
             texture_scale=(1, 1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
@@ -177,6 +177,9 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.on_destroy: Callable[[], None] = self.on_disable
 
+        self.follow_entity: urs.Entity = None
+        self.follow_entity_last_pos: urs.Vec3 = None
+
         for key in (
             "model",
             "origin",
@@ -206,6 +209,16 @@ class BlobFirstPersonUrsina(urs.Entity):
         """
         self.setup_stage = True
         self.pos_lock()
+
+    def start_following(self: Self, follow_entity: urs.Entity) -> None:
+        self.follow_entity = follow_entity
+        self.follow_entity_last_pos = self.follow_entity.position
+        self.gimbal.texture = self.follow_entity.texture
+
+    def stop_following(self: Self) -> None:
+        self.follow_entity = None
+        self.follow_entity_last_pos = None
+        self.gimbal.texture = self.gimbal_texture
 
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
@@ -249,6 +262,13 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
 
+            if self.follow_entity is not None:
+                diff: urs.Vec3 = (
+                    self.follow_entity.position - self.follow_entity_last_pos
+                )
+                self.position += diff
+                self.follow_entity_last_pos = self.follow_entity.position
+
             self.direction = urs.Vec3(
                 self.forward * (urs.held_keys["w"] - urs.held_keys["s"])
                 + self.right * (urs.held_keys["d"] - urs.held_keys["a"])
@@ -268,7 +288,11 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.gimbal.rotation = self.rotation
             self.gimbal.position = self.position + (self.forward / 2)
             self.gimbal.position += self.gimbal.down * 4
-            self.gimbal.look_at(self.center_blob)
+
+            if self.follow_entity is not None:
+                self.gimbal.look_at(self.follow_entity)
+            else:
+                self.gimbal.look_at(self.center_blob)
 
             self.universe.universe.position = self.world_position
 
