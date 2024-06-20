@@ -215,6 +215,14 @@ class Rotator(urs.Entity):
 
         self.text: str = None
 
+        self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
+        self.text_position: float = 11
+
+        if self.scale_x < bg_vars.min_radius:
+            self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
+        # else:
+        #     self.text_position = 100
+
         self.all_on: bool = False
         self.full_details: bool = False
 
@@ -336,9 +344,9 @@ class Rotator(urs.Entity):
             dy = urs.camera.parent.world_y - self.text_entity.world_y
             dz = urs.camera.parent.world_z - self.text_entity.world_z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
-            self.text_entity.scale = 0.1 * d
+            self.text_entity.scale = self.text_scale * d
             self.text_entity.position += self.text_entity.up * (
-                (self.world_scale_x * 11) / d
+                (self.world_scale_x * self.text_position) / d
             )
             self.info_text.text = self.text
 

@@ -23,19 +23,19 @@ VERSION = __version__
 G = 6.67428 * 10**-11  # Gravitational constant
 AU = 1.495978707 * 10**11  # 1 Astronomical Unit
 S = 6.96 * 10**8  # Radius of the Sun
-J = 7.1492 * 10**7 * 2  # Radius of Jupiter
+J = 7.1492 * 10**7  # Radius of Jupiter
 E = 6.3781 * 10**6  # Radius of the Earth
 
 # Moons
-GAN = 2.6341 * 10**6 * 2  # Radius of Ganymede (largest moon in solar system)
+GAN = 2.6341 * 10**6 * 1.5  # Radius of Ganymede (largest moon in solar system)
 M = 1.7381 * 10**6  # Radius of the Moon
-MIM = 0.1982 * 10**6 * 5  # Radius of Mimas (smallest round moon in solar system)
+MIM = 0.1982 * 10**6 * 10  # Radius of Mimas (smallest round moon in solar system)
 
 # black hole, don't do it, your machine will collapse into itself!
 B_MASS = 8.54 * 10**36  # Mass of Sagittarius A*
 
 S_MASS = 1.98892 * 10**30  # Mass of the Sun
-J_MASS = 1.899 * 10**27 * 2  # Mass of Jupiter
+J_MASS = 1.899 * 10**27  # Mass of Jupiter
 E_MASS = 5.972 * 10**24  # Mass of Earth
 
 # Moons
@@ -82,7 +82,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 41
+NUM_BLOBS = 81
 
 # If true all blobs will start
 # with a perfect orbital velocity

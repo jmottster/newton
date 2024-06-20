@@ -578,7 +578,7 @@ class BlobPlotter:
         plot_radius = AU * 4
 
         # How far apart each blob will be on each circumference
-        chord_scaled = (math.pi * (plot_radius * 2)) / (orbiting_blobs / 2)
+        chord_scaled = (math.pi * (plot_radius * 2)) / 6
 
         if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
             chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
@@ -620,14 +620,6 @@ class BlobPlotter:
 
                 # Increase the radius for the next go around the center blob
                 plot_radius += plot_radius_partition
-
-                chord_scaled = (math.pi * (plot_radius * 2)) / ((blobs_left + 1) / 2)
-
-                if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
-                    chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
-
-                if chord_scaled > (plot_radius * 2):
-                    chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
 
                 # How many radians to increase for each blob around the circumference (such that
                 # we get chord_scaled length between each blob center)

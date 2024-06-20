@@ -75,10 +75,10 @@ class BlobUrsinaFactory:
 
         bg_vars.set_au_scale_factor(200000)
         bg_vars.set_universe_scale(40)
-        bg_vars.set_center_blob_scale(25)
+        bg_vars.set_center_blob_scale(40)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(30)
+        bg_vars.set_blob_scale(40)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)
@@ -210,6 +210,8 @@ class BlobUrsinaFactory:
             self.loading_screen.enabled = False
             urs.destroy(self.loading_screen)
             self.loading_screen = None
+
+        self.urs_display.first_person_surface.first_person_viewer.stop_following()
 
         self.loading_screen = BlobLoadingScreenUrsina(max_value=num_blobs)
 
