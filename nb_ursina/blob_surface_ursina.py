@@ -8,10 +8,12 @@ by Jason Mott, copyright 2024
 
 import math
 import random
-from typing import ClassVar, Tuple, Self, cast
+from typing import ClassVar, List, Tuple, Self, cast
+from collections import deque
 
 
 from panda3d.core import ClockObject  # type: ignore
+from panda3d.core import LineSegs  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -21,7 +23,6 @@ from newtons_blobs import BlobSurface
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
-from newtons_blobs import resource_path
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL, BLOB_TEXTURES_LARGE
@@ -37,70 +38,110 @@ __status__ = "In Progress"
 
 
 class TrailRenderer(urs.Entity):
+    """
+    A class to create a trail behind an orbiting blob
+
+    Attributes
+    ----------
+    **kwargs
+        Specific to this class:
+        segments: int = 2 - How many "min_spacing" links there are
+        min_spacing: float = 0.05 -  How often (in pixels) to place a draw point in the trail
+
+    Methods
+    -------
+    update() -> None
+        Called by Ursina once per frame. This will keep the trial
+        current and only min_spacing * segments long
+
+    on_destroy() -> None
+        Called by Ursina when this Entity is destroyed
+
+    """
+
     def __init__(
-        self,
-        size=[1, 1, 1],
-        segments=2,
-        min_spacing=0.05,
-        fade_speed=0,
-        color_gradient=[urs.color.white, urs.color.white.tint(-0.5), urs.color.clear],
+        self: Self,
+        segments: int = 2,
+        min_spacing: float = 0.05,
         **kwargs,
     ):
 
-        super().__init__(**kwargs)
-        if color_gradient:
-            color_gradient = color_gradient[::-1]
+        super().__init__()
 
-        self.renderer = urs.Entity(
-            model=urs.Pipe(
-                base_shape=urs.Quad(segments=0, scale=size),
-                path=[self.world_position, self.world_position],
-                color_gradient=color_gradient,
-                static=False,
-                cap_ends=False,
-            ),
+        for key in (
+            "model",
+            "origin",
+            "origin_x",
+            "origin_y",
+            "origin_z",
+            "collider",
+            "shader",
+            "texture",
+            "texture_scale",
+            "texture_offset",
+        ):
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
+                del kwargs[key]
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+        self.points: deque[urs.Vec3] = deque(
+            [self.world_position, self.world_position, self.world_position]
         )
 
-        self._t = 0
-        self.segments = segments
-        self.update_step = 0.05
-        self.min_spacing = min_spacing
-        self.fade_speed = fade_speed
-        self.render = False
+        self.line_renderer: urs.Entity = urs.Entity(
+            model=urs.Mesh(vertices=self.points, mode="line", thickness=4),
+            color=self.color,
+        )
 
-        self.on_enable = self.renderer.enable
-        self.on_disable = self.renderer.disable
+        self._t: float = 0
+        self.segments: int = segments
+        self.min_spacing: float = min_spacing
+        self.update_step: float = 0.05
 
-        # self.enabled = False
+        self.on_enable = self.line_renderer.enable
+        self.on_disable = self.line_renderer.disable
 
-    def update(self):
+    def update(self: Self) -> None:
+        """
+        Called by Ursina once per frame. This will keep the trial
+        current and only min_spacing * segments long
+        """
         self._t += urs.time.dt
         if self._t >= self.update_step:
 
             self._t = 0
+            numVert: int = len(self.points)
 
-            if (
-                urs.distance(self.world_position, self.renderer.model.path[-1])
-                > self.min_spacing
-            ):
-                self.renderer.model.path.append(self.world_position)
-                if len(self.renderer.model.path) > self.segments:
-                    self.renderer.model.path.pop(0)
+            if numVert < self.segments:
 
-            if self.fade_speed:
-                for i, v in enumerate(self.renderer.model.path):
-                    if i >= len(self.renderer.model.path) - 1:
-                        continue
-                    self.renderer.model.path[i] = urs.lerp(
-                        v,
-                        self.renderer.model.path[i + 1],
-                        urs.time.dt * self.fade_speed,
-                    )
+                if (
+                    urs.distance(self.world_position, self.points[-1])
+                    > self.min_spacing
+                ):
+                    self.points.append(self.world_position)
 
-            self.renderer.model.generate()
+                    self.line_renderer.model.vertices = self.points
 
-    def on_destroy(self):
-        urs.destroy(self.renderer)
+                    self.line_renderer.model.generate()
+
+                return
+
+            if urs.distance(self.world_position, self.points[-1]) > self.min_spacing:
+
+                self.points[-1] = self.world_position
+
+                for i in range(0, numVert - 1):
+                    self.points[i] = self.points[i + 1]
+
+                self.line_renderer.model.generate()
+
+    def on_destroy(self: Self) -> None:
+        """Called by Ursina when this Entity is destroyed"""
+        self.line_renderer.enabled = False
+        urs.destroy(self.line_renderer)
 
 
 class Rotator(urs.Entity):
@@ -118,9 +159,16 @@ class Rotator(urs.Entity):
     set_orbital_pos_vel(orbital: BlobSurface) -> None
         Sets orbital to a position and velocity appropriate for an orbital of this blob
 
+    create_trail() -> None
+        Creates the orbital trail. Called by input() when the "t" key is pressed if it
+        is not running
+
     create_text_overlay() -> None
         Instantiates all the objects necessary to display the text overlay.
         This is called by on_click()
+
+    update_text_background() -> None
+        This is for when text changes, it will ensure the background size updates accordingly
 
     destroy_text_overlay() -> None
         Cleans up all the objects related to the text overlay. Called by
@@ -132,6 +180,9 @@ class Rotator(urs.Entity):
     on_click() -> None
         Calls the text overlay methods to toggle it on and off. Called when the mouse
         clicks on this blob while the simulation is paused
+
+    input(key: str) -> None
+        Called by Ursina when a keyboard event happens
 
     on_disable() -> None
         Called when this Entity is set to enabled=False. This calls clean up method for
@@ -220,8 +271,6 @@ class Rotator(urs.Entity):
 
         if self.scale_x < bg_vars.min_radius:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
-        # else:
-        #     self.text_position = 100
 
         self.all_on: bool = False
         self.full_details: bool = False
@@ -249,6 +298,19 @@ class Rotator(urs.Entity):
         vel: float = math.sqrt(G * self.mass / distance)
 
         return urs.Vec3(orbital.ursina_blob.forward.normalized() * vel)
+
+    def create_trail(self: Self) -> None:
+        """
+        Creates the orbital trail. Called by input() when the "t" key is pressed if it
+        is not running
+        """
+
+        self.trail = TrailRenderer(
+            segments=250,
+            min_spacing=bg_vars.max_radius,
+            parent=self,
+            color=self.trail_color,
+        )
 
     def create_text_overlay(self: Self) -> None:
         """
@@ -293,7 +355,8 @@ class Rotator(urs.Entity):
         self.text_light.enabled = True
         self.update_text_background()
 
-    def update_text_background(self: Self):
+    def update_text_background(self: Self) -> None:
+        """This is for when text changes, it will ensure the background size updates accordingly"""
         if self.info_text is not None:
 
             self.text = f"{self.blob_name}"
@@ -383,6 +446,14 @@ class Rotator(urs.Entity):
                     self.destroy_text_overlay()
                 else:
                     self.update_text_background()
+        if key == "t":
+            if self.trail is not None:
+                self.trail.enabled = False
+                urs.destroy(self.trail)
+                self.trail = None
+
+            elif self.trail is None and self.scale_x >= bg_vars.min_radius:
+                self.create_trail()
 
     def on_disable(self: Self) -> None:
         """
@@ -395,9 +466,9 @@ class Rotator(urs.Entity):
         """Called when this Entity is destroyed"""
         if self.trail is not None:
             self.trail.enabled = False
-        urs.destroy(self.trail)
+            urs.destroy(self.trail)
         self.destroy_text_overlay()
-        self.hide()
+        self.enabled = False
 
 
 class BlobSurfaceUrsina:
@@ -486,13 +557,14 @@ class BlobSurfaceUrsina:
         self.name: str = name
         self.radius: float = radius
         self.mass: float = mass
-        position: Tuple[float, float, float] = (0, 0, 0)
         self.color: Tuple[int, int, int] = color
-        self.trail_color: urs.Color = urs.color.rgba(
-            self.color[0], self.color[1], self.color[2], 255
-        )
-        self.texture: str = None
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
+        self.texture: str = None
+        self.rotation_speed: float = None
+        self.rotation_pos: Tuple[float, float, float] = None
+        self.position: Tuple[float, float, float] = (0, 0, 0)
+
+        self.trail_color: urs.Color = urs.color.rgba(75, 200, 255, 255)
 
         urs_color = urs.color.rgba(self.color[0], self.color[1], self.color[2])
 
@@ -508,8 +580,6 @@ class BlobSurfaceUrsina:
                     self.texture = BLOB_TEXTURES_SMALL[
                         random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
                     ]
-        self.rotation_speed: float = None
-        self.rotation_pos: Tuple[float, float, float] = None
 
         if rotation_speed is not None:
             self.rotation_speed = rotation_speed
@@ -525,10 +595,6 @@ class BlobSurfaceUrsina:
 
             enabled: bool = not bg_vars.black_hole_mode
             self.texture = "nb_ursina/textures/sun03.png"
-
-            self.trail_color = urs.color.rgba(
-                self.color[0], self.color[1], self.color[2], 255
-            )
 
             if not enabled:
                 urs_color = urs.color.rgba(100, 100, 100, 0)
@@ -565,10 +631,6 @@ class BlobSurfaceUrsina:
                 color=(5, 5, 5, 5),
             )
         else:
-
-            self.trail_color = urs.color.rgba(
-                self.color[0], self.color[1], self.color[2], 255
-            )
 
             if not bg_vars.textures_3d:
                 self.texture = None
@@ -628,9 +690,6 @@ class BlobSurfaceUrsina:
         self.position = pos
         self.ursina_blob.position = urs.Vec3(pos)
 
-        # if self.ursina_blob.trail is None:
-        #     self.create_trail()
-
     def draw_as_center_blob(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
     ) -> None:
@@ -653,28 +712,6 @@ class BlobSurfaceUrsina:
         self.ursina_center_blob.position = urs.Vec3(pos)
         self.ursina_blob.position = urs.Vec3(pos)
 
-        # if self.ursina_blob.trail is None:
-        #     self.create_trail()
-
-    def create_trail(self) -> None:
-
-        self.ursina_blob.trail = TrailRenderer(
-            size=[
-                bg_vars.blob_trail_girth,
-                bg_vars.blob_trail_girth,
-                bg_vars.blob_trail_girth,
-            ],
-            segments=4,
-            min_spacing=bg_vars.blob_trail_girth,
-            fade_speed=0,
-            parent=self.ursina_blob,
-            # color_gradient=[
-            #     self.trail_color,
-            #     self.trail_color.tint(-0.75),
-            #     urs.color.rgba(0, 0, 0, 100),
-            # ],
-        )
-
     def on_destroy(self: Self) -> None:
         """Call when getting rid of this instance, so it can clean up"""
         self.destroy()
@@ -688,5 +725,5 @@ class BlobSurfaceUrsina:
             urs.destroy(self.ursina_center_blob)
             self.ursina_center_blob = None
 
-        self.ursina_blob.enabled = False
+        urs.destroy(self.ursina_blob)
         # self.ursina_blob = None
