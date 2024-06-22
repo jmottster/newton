@@ -39,7 +39,7 @@ J_MASS = 1.899 * 10**27  # Mass of Jupiter
 E_MASS = 5.972 * 10**24  # Mass of Earth
 
 # Moons
-GAN_MASS = 1.4819 * 10**23 * 0.75  # Mass of Ganymede (largest moon in solar system)
+GAN_MASS = 1.4819 * 10**23  # Mass of Ganymede (largest moon in solar system)
 M_MASS = 7.342 * 10**22  # Mass of the Moon
 MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar system)
 

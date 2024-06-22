@@ -108,9 +108,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             color=color,
             position=(0, 0, self.start_z),
             scale=(
-                self.temp_scale * 0.025,
-                self.temp_scale * 0.025,
-                self.temp_scale * 0.025,
+                self.temp_scale * 0.005,
+                self.temp_scale * 0.005,
+                self.temp_scale * 0.005,
             ),
             texture=self.gimbal_texture,
             texture_scale=(1, 1, 1),
@@ -197,6 +197,9 @@ class BlobFirstPersonUrsina(urs.Entity):
                 del kwargs[key]
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+        self.gimbal_relative_forward_pos = self.scale_x * 0.103
+        self.gimbal_relative_down_pos = self.scale_x * 0.02
 
         self.speed_inc = self.orig_speed * 0.04
 
@@ -286,8 +289,13 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
 
             self.gimbal.rotation = self.rotation
-            self.gimbal.position = self.position + (self.forward / 2)
-            self.gimbal.position += self.gimbal.down * 4
+            self.gimbal.position = (
+                self.position
+                + self.forward.normalized() * self.gimbal_relative_forward_pos
+            )
+            self.gimbal.position += (
+                self.gimbal.down.normalized() * self.gimbal_relative_down_pos
+            )
 
             if self.follow_entity is not None:
                 self.gimbal.look_at(self.follow_entity)
