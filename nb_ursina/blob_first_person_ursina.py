@@ -180,6 +180,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.follow_entity: urs.Entity = None
         self.follow_entity_last_pos: urs.Vec3 = None
 
+        self.hud = True
+
         for key in (
             "model",
             "origin",
@@ -266,10 +268,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.mouse_scroll_down = 0
 
             if self.follow_entity is not None:
-                diff: urs.Vec3 = (
+                self.position += (
                     self.follow_entity.position - self.follow_entity_last_pos
                 )
-                self.position += diff
                 self.follow_entity_last_pos = self.follow_entity.position
 
             self.direction = urs.Vec3(
@@ -326,6 +327,18 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.speed = self.orig_speed
             self.roll_speed = self.orig_roll_speed
             self.report_throttle_speed()
+
+        if key == "g":
+            self.hud = not self.hud
+
+            if self.hud:
+                self.gimbal_arrow.enabled = True
+                self.gimbal.enabled = True
+                self.center_cursor.enabled = True
+            else:
+                self.gimbal_arrow.enabled = False
+                self.gimbal.enabled = False
+                self.center_cursor.enabled = False
 
         if key == "scroll up":
             self.mouse_scroll_up = 1
@@ -385,9 +398,6 @@ class BlobFirstPersonUrsina(urs.Entity):
     def on_enable(self: Self) -> None:
         """Called by Ursina when this Entity is enabled"""
         urs.mouse.locked = True
-        self.gimbal_arrow.enabled = True
-        self.gimbal.enabled = True
-        self.center_cursor.enabled = True
         if hasattr(self, "_mouse_position"):
             urs.mouse.position = self._mouse_position
         urs.mouse.enabled = True
@@ -400,9 +410,6 @@ class BlobFirstPersonUrsina(urs.Entity):
         """Called by Ursina when this Entity is disabled"""
 
         urs.mouse.locked = False
-        self.gimbal_arrow.enabled = False
-        self.gimbal.enabled = False
-        self.center_cursor.enabled = False
         self._mouse_position = urs.mouse.position
         urs.mouse.enabled = False
         # store original position and rotation

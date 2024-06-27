@@ -8,12 +8,11 @@ by Jason Mott, copyright 2024
 
 import math
 import random
-from typing import ClassVar, List, Tuple, Self, cast
+from typing import ClassVar, Tuple, Self, cast
 from collections import deque
 
 
 from panda3d.core import ClockObject  # type: ignore
-from panda3d.core import LineSegs  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -63,6 +62,7 @@ class TrailRenderer(urs.Entity):
         self: Self,
         segments: int = 2,
         min_spacing: float = 0.05,
+        barycenter_blob: "Rotator" = None,
         **kwargs,
     ):
 
@@ -87,61 +87,103 @@ class TrailRenderer(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        self.segments: int = segments
         self.points: deque[urs.Vec3] = deque(
-            [self.world_position, self.world_position, self.world_position]
-        )
-
-        self.line_renderer: urs.Entity = urs.Entity(
-            model=urs.Mesh(vertices=self.points, mode="line", thickness=4),
-            color=self.color,
+            [self.world_position for _ in range(0, self.segments)]
         )
 
         self._t: float = 0
-        self.segments: int = segments
-        self.min_spacing: float = min_spacing
-        self.update_step: float = 0.05
+        self._t2: float = 0
 
-        self.on_enable = self.line_renderer.enable
-        self.on_disable = self.line_renderer.disable
+        self.min_spacing: float = min_spacing
+        self.update_step: float = 0.0
+        self.thickness: int = 2
+        self.barycenter_blob: Rotator = barycenter_blob
+        self.barycenter_last_pos: urs.Vec3 = None
+        self.check_barycenter_dist: float = 2
+        if self.barycenter_blob is not None:
+            self.barycenter_last_pos = self.barycenter_blob.world_position
+            self.thickness = 1
+            self.min_spacing = bg_vars.min_moon_radius
+            self.segments = 15
+
+        self.line_renderer: urs.Entity = urs.Entity(
+            model=urs.Mesh(
+                vertices=self.points,
+                mode="line",
+                thickness=self.thickness,
+            ),
+            color=self.color,
+            shader=shd.unlit_shader,
+        )
+
+        self.on_enable = self.on_enable_trail
+        self.on_disable = self.on_disable_trail
+
+        if self.barycenter_blob is not None:
+            self.enabled = False
+            self.line_renderer.enabled = False
 
     def update(self: Self) -> None:
         """
         Called by Ursina once per frame. This will keep the trial
         current and only min_spacing * segments long
         """
+
+        if self.barycenter_blob is not None:
+
+            diff: urs.Vec3 = (
+                self.barycenter_blob.world_position - self.barycenter_last_pos
+            )
+            self.barycenter_last_pos = self.barycenter_blob.world_position
+
+            for i in range(0, len(self.points)):
+                self.points[i] = self.points[i] + diff
+
+            # self._t2 += urs.time.dt
+            # if self._t2 >= self.check_barycenter_dist:
+            #     if (
+            #         urs.distance(
+            #             self.world_position, self.barycenter_blob.world_position
+            #         )
+            #         > bg_vars.au_scale_factor
+            #     ):
+            #         self.barycenter_blob = None
+            #         for i in range(0, len(self.points)):
+            #             self.points[i] = self.world_position
+            #     self._t2 = 0
+
         self._t += urs.time.dt
         if self._t >= self.update_step:
 
             self._t = 0
-            numVert: int = len(self.points)
-
-            if numVert < self.segments:
-
-                if (
-                    urs.distance(self.world_position, self.points[-1])
-                    > self.min_spacing
-                ):
-                    self.points.append(self.world_position)
-
-                    self.line_renderer.model.vertices = self.points
-
-                    self.line_renderer.model.generate()
-
-                return
-
             if urs.distance(self.world_position, self.points[-1]) > self.min_spacing:
 
-                self.points[-1] = self.world_position
+                self.points.popleft()
+                self.points.append(self.world_position)
 
-                for i in range(0, numVert - 1):
-                    self.points[i] = self.points[i + 1]
+            self.line_renderer.model.generate()
 
-                self.line_renderer.model.generate()
+    def on_enable_trail(self: Self) -> None:
+
+        if not self.line_renderer.enabled:
+            self.line_renderer.enabled = True
+
+            for i in range(0, len(self.points)):
+                self.points[i] = self.world_position
+
+    def on_disable_trail(self: Self) -> None:
+        self.line_renderer.enabled = False
 
     def on_destroy(self: Self) -> None:
         """Called by Ursina when this Entity is destroyed"""
         self.line_renderer.enabled = False
+        self.line_renderer.model.clear()
+        self.points.clear()
+        self.points = None
         urs.destroy(self.line_renderer)
+
+        self.barycenter_blob = None
 
 
 class Rotator(urs.Entity):
@@ -193,7 +235,14 @@ class Rotator(urs.Entity):
 
     """
 
-    __slots__ = ("mass", "rotation_speed", "rotation_pos", "trail_color", "trail")
+    __slots__ = (
+        "mass",
+        "rotation_speed",
+        "rotation_pos",
+        "trail_color",
+        "trail",
+        "barycenter_blob",
+    )
 
     def __init__(self: Self, **kwargs):
 
@@ -275,6 +324,8 @@ class Rotator(urs.Entity):
         self.all_on: bool = False
         self.full_details: bool = False
 
+        self.barycenter_blob: Rotator = None
+
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
 
         self.rotate((0, (random.random() * 360.00), 0))
@@ -287,7 +338,7 @@ class Rotator(urs.Entity):
         move: urs.Vec3 = urs.Vec3(self.left.normalized() * orbit_distance)
 
         orbital.ursina_blob.position = urs.Vec3(self.position + move)
-        orbital.position = orbital.ursina_blob.world_position
+        orbital.position = orbital.ursina_blob.position
 
         dx: float = (self.world_x - orbital.ursina_blob.world_x) * bg_vars.scale_up
         dy: float = (self.world_y - orbital.ursina_blob.world_y) * bg_vars.scale_up
@@ -296,6 +347,8 @@ class Rotator(urs.Entity):
         distance: float = math.sqrt(dx**2 + dy**2 + dz**2)
 
         vel: float = math.sqrt(G * self.mass / distance)
+
+        orbital.ursina_blob.barycenter_blob = self
 
         return urs.Vec3(orbital.ursina_blob.forward.normalized() * vel)
 
@@ -306,10 +359,11 @@ class Rotator(urs.Entity):
         """
 
         self.trail = TrailRenderer(
-            segments=250,
+            segments=200,
             min_spacing=bg_vars.max_radius,
             parent=self,
             color=self.trail_color,
+            barycenter_blob=self.barycenter_blob,
         )
 
     def create_text_overlay(self: Self) -> None:
@@ -452,7 +506,7 @@ class Rotator(urs.Entity):
                 urs.destroy(self.trail)
                 self.trail = None
 
-            elif self.trail is None and self.scale_x >= bg_vars.min_radius:
+            elif self.trail is None:
                 self.create_trail()
 
     def on_disable(self: Self) -> None:
@@ -464,10 +518,23 @@ class Rotator(urs.Entity):
 
     def on_destroy(self: Self) -> None:
         """Called when this Entity is destroyed"""
+
+        from .blob_moon_trail_registry_ursina import (
+            BlobMoonTrailRegistryUrsina as moon_registry,
+        )
+
         if self.trail is not None:
             self.trail.enabled = False
             urs.destroy(self.trail)
+
+        if self.barycenter_blob is not None:
+            self.barycenter_blob = None
+            moon_registry.remove_moon(self)
+        else:
+            moon_registry.remove_planet(self)
+
         self.destroy_text_overlay()
+
         self.enabled = False
 
 
@@ -564,7 +631,7 @@ class BlobSurfaceUrsina:
         self.rotation_pos: Tuple[float, float, float] = None
         self.position: Tuple[float, float, float] = (0, 0, 0)
 
-        self.trail_color: urs.Color = urs.color.rgba(75, 200, 255, 255)
+        self.trail_color: urs.Color = urs.color.rgba(25, 100, 150, 255)
 
         urs_color = urs.color.rgba(self.color[0], self.color[1], self.color[2])
 
@@ -726,4 +793,4 @@ class BlobSurfaceUrsina:
             self.ursina_center_blob = None
 
         urs.destroy(self.ursina_blob)
-        # self.ursina_blob = None
+        self.ursina_blob = None

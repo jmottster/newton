@@ -6,7 +6,7 @@
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.5! This is the full 3D version. And now there is full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Pause and click on a blob to get its name, size, and position. Much more to come in the future!
+Alpha release 0.0.6! This is the full 3D version. And now there is full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Pause and click on a blob to get its name, size, and position. Much more to come in the future!
 
 To toggle auto save and load, just press the 3 key. To pause, press the spacebar. Full instructions below.
 
@@ -66,8 +66,11 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
     * MOUSE RIGHT CLICK on Blob - Follow this blob (blob becomes you reference frame, you move with it, but can still also move freely)
   * ESC - Quit
   * Q - Disengage/reengage mouse
+  * R - Return to default speed
   * F - Toggle fullscreen/windowed mode
   * V - Toggle ambient light (helps to see dark side of blobs)
+  * T - Toggle blob trails to show orbit path (doesn't apply to moons)
+  * G - Toggle cursor and gimbal on/off
   * B - Toggle show name of blobs above blobs (for all blobs, this will impact performance)
   * UP ARROW - Increase timescale (make time go faster)
   * DOWN ARROW - Decrease timescale (make time go slower)

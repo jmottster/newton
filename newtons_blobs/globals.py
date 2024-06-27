@@ -21,16 +21,19 @@ VERSION = __version__
 
 # No need to ever change these
 G = 6.67428 * 10**-11  # Gravitational constant
+
+# Sizes in Meters
 AU = 1.495978707 * 10**11  # 1 Astronomical Unit
-S = 6.96 * 10**8  # Radius of the Sun
+S = 6.957 * 10**8  # Radius of the Sun
 J = 7.1492 * 10**7  # Radius of Jupiter
 E = 6.3781 * 10**6  # Radius of the Earth
 
 # Moons
-GAN = 2.6341 * 10**6 * 1.5  # Radius of Ganymede (largest moon in solar system)
+GAN = 2.6341 * 10**6  # Radius of Ganymede (largest moon in solar system)
 M = 1.7381 * 10**6  # Radius of the Moon
-MIM = 0.1982 * 10**6 * 10  # Radius of Mimas (smallest round moon in solar system)
+MIM = 0.1982 * 10**6  # Radius of Mimas (smallest round moon in solar system)
 
+# Masses in Kilograms
 # black hole, don't do it, your machine will collapse into itself!
 B_MASS = 8.54 * 10**36  # Mass of Sagittarius A*
 
@@ -60,9 +63,6 @@ CENTER_BLOB_SCALE = 10
 # but that makes them quite small, to fix this divide S by something)
 BLOB_SCALE = 60
 
-# Size of the trail a blob leaves, (this many times bigger than it's actual size of E/AU, which would be barely visible)
-BLOB_TRAIL_SCALE = 20
-
 SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 
@@ -82,7 +82,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 81
+NUM_BLOBS = 41
 
 # If true all blobs will start
 # with a perfect orbital velocity
@@ -123,8 +123,6 @@ MAX_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (J / AU)
 MIN_MOON_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (MIM / AU)
 MAX_MOON_RADIUS = (AU_SCALE_FACTOR * BLOB_SCALE) * (GAN / AU)
 
-BLOB_TRAIL_GIRTH = (AU_SCALE_FACTOR * BLOB_TRAIL_SCALE) * (J / AU)
-
 MIN_MASS = M_MASS
 MAX_MASS = J_MASS
 
@@ -137,10 +135,6 @@ GRID_CELLS_PER_AU = 10
 GRID_CELL_SIZE = int(UNIVERSE_SIZE / (UNIVERSE_SCALE * GRID_CELLS_PER_AU))
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
-
-print(
-    f"MIN_RADIUS={round(MIN_RADIUS,2)}  MAX_RADIUS={round(MAX_RADIUS,2)} BLOB_TRAIL_GIRTH={BLOB_TRAIL_GIRTH} GRID_CELL_SIZE={GRID_CELL_SIZE} GRID_KEY_UPPER_BOUND={GRID_KEY_UPPER_BOUND}"
-)
 
 COLORS = [
     (221, 110, 66),  # rgb(221, 110, 66)

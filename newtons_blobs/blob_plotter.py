@@ -184,7 +184,9 @@ class BlobPlotter:
                 blob_pref["vz"],
             )
 
-            self.add_z_axis(self.blobs[i])
+            if not bg_vars.true_3d:
+                self.add_z_axis(self.blobs[i])
+
             i += 1
 
     def start_over(self: Self) -> None:
@@ -196,12 +198,12 @@ class BlobPlotter:
             blob.destroy()
             self.display.update()
 
+        self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
+        self.display.update()
+
         universe = self.blob_factory.get_blob_universe()
         universe.clear()
         self.display.update()
-
-        self.display.update()
-        self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
 
         self.universe_size_w = universe.get_width()
         self.universe_size_h = universe.get_height()
@@ -294,8 +296,6 @@ class BlobPlotter:
                 0,
             )
 
-            # planets.append(self.blobs[i])
-
             if moon:
                 moons.append(self.blobs[i])
             else:
@@ -309,15 +309,14 @@ class BlobPlotter:
         if len(moons) > 0:
             self.plot_moons(moons, planets)
 
-        # print(f"moons num: {len(moons)}")
-        # print(f"planets num: {len(planets)}")
-
     def plot_moons(
         self: Self, moons: list[MassiveBlob], planets: list[MassiveBlob]
     ) -> None:
 
         for i in range(0, len(moons)):
-            planets[random.randint(1, len(planets)) - 1].add_orbital(moons[i])
+
+            planets[random.randint(0, len(planets) - 1)].add_orbital(moons[i])
+            self.display.update()
             self.add_pos_vel(moons[i], moons[i].x, moons[i].y, moons[i].z)
 
     def draw_blobs(self: Self) -> None:
@@ -334,39 +333,44 @@ class BlobPlotter:
             dtype=MassiveBlob,
         )
 
-        keys = np.flip(
-            np.sort(np.array([k for k in self.z_axis], dtype=float), axis=None)
-        )
+        if bg_vars.true_3d:
+            self.iterate_draw_blobs(self.blobs)
 
-        for key in keys:
-            # Draw the blobs
-            for blob in self.z_axis[key]:
-                # get rid of dead blobs
-                if blob.dead:
-                    if blob.swallowed:
-                        self.blobs_swallowed += 1
-                    elif blob.escaped:
-                        self.blobs_escaped += 1
-                    self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
-                    blob.destroy()
-                    continue
-                blob.draw()
+        else:
+            keys: npt.NDArray = np.flip(
+                np.sort(np.array([k for k in self.z_axis], dtype=float), axis=None)
+            )
 
-                grid_key = blob.grid_key()
+            for key in keys:
+                # Draw the blobs
+                self.iterate_draw_blobs(self.z_axis[key])
 
-                if self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] is None:
-                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
-                        np.array([blob], dtype=MassiveBlob)
-                    )
-                else:
-                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = (
-                        np.append(
-                            self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]],
-                            blob,
-                        )
-                    )
+    def iterate_draw_blobs(self: Self, blobs: npt.NDArray):
+        for blob in blobs:
+            # get rid of dead blobs
+            if blob.dead:
+                if blob.swallowed:
+                    self.blobs_swallowed += 1
+                elif blob.escaped:
+                    self.blobs_escaped += 1
+                self.blobs = np.delete(self.blobs, np.where(self.blobs == blob)[0])
+                blob.destroy()
+                continue
+            blob.draw()
 
-    def update_blobs(self: Self, dt: float = 1) -> None:
+            grid_key = blob.grid_key()
+
+            if self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] is None:
+                self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = np.array(
+                    [blob], dtype=MassiveBlob
+                )
+            else:
+                self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]] = np.append(
+                    self.proximity_grid[grid_key[0]][grid_key[1]][grid_key[2]],
+                    blob,
+                )
+
+    def update_blobs(self: Self, dt: float = 1 / FRAME_RATE) -> None:
         """
         Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
@@ -456,7 +460,10 @@ class BlobPlotter:
             bp.edge_detection(self.blobs[0])
 
         self.blobs[0].advance(dt)
-        self.add_z_axis(self.blobs[0])
+
+        if not bg_vars.true_3d:
+            self.add_z_axis(self.blobs[0])
+
         checked[id(self.blobs[0])] = 1
 
         for i in range(1, len(self.blobs)):
@@ -465,7 +472,8 @@ class BlobPlotter:
 
             self.blobs[i].advance(dt)
 
-            self.add_z_axis(self.blobs[i])
+            if not bg_vars.true_3d:
+                self.add_z_axis(self.blobs[i])
 
             checked[id(self.blobs[i])] = 1
 
@@ -493,7 +501,8 @@ class BlobPlotter:
             0,
         )
 
-        self.add_z_axis(self.blobs[0])
+        if not bg_vars.true_3d:
+            self.add_z_axis(self.blobs[0])
 
         self.blobs[0].draw()
 
@@ -698,7 +707,8 @@ class BlobPlotter:
         if bg_vars.start_pos_rotate_z:
             blob.rotate_z()
 
-        self.add_z_axis(blob)
+        if not bg_vars.true_3d:
+            self.add_z_axis(blob)
 
         blob.draw()
 

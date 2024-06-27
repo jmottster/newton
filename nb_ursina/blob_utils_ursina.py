@@ -75,14 +75,14 @@ class FPS:
                 self.globalClock.setMode(ClockObject.MLimited)
                 self.globalClock.setFrameRate(self.frame_rate)
                 self.globalClock.setAverageFrameRateInterval(4)
-                self.dt: float = self.globalClock.getDt()
+                self.dt: float = 1 / self.frame_rate  # self.globalClock.getDt()
 
             def tick(self: Self, time: float):
                 if time != self.frame_rate:
                     self.frame_rate = time
                     self.globalClock.setFrameRate(time)
 
-                self.dt = self.globalClock.getDt()
+                self.dt = 1 / self.frame_rate  # self.globalClock.getDt()
 
             def getAverageFrameRate(self: Self):
                 return self.globalClock.getAverageFrameRate()

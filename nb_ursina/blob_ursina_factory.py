@@ -23,6 +23,9 @@ from newtons_blobs import BlobUniverse
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
 from .blob_first_person_surface import FirstPersonSurface
+from .blob_moon_trail_registry_ursina import (
+    BlobMoonTrailRegistryUrsina as moon_registry,
+)
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
 
@@ -73,14 +76,13 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(200000)
+        bg_vars.set_au_scale_factor(800000)
         bg_vars.set_universe_scale(40)
-        bg_vars.set_center_blob_scale(40)
+        bg_vars.set_center_blob_scale(25)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(40)
+        bg_vars.set_blob_scale(25)
         bg_vars.set_scale_blob_mass_with_size(True)
-        bg_vars.set_blob_trail_scale(20)
         bg_vars.set_grid_cells_per_au(1)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
@@ -114,6 +116,10 @@ class BlobUrsinaFactory:
             self.start_distance,
             (0, 0, 0),
             self.urs_universe,
+        )
+
+        moon_registry.set_first_person_viewer(
+            self.urs_display.first_person_surface.first_person_viewer
         )
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
@@ -219,7 +225,7 @@ class BlobUrsinaFactory:
 
         self.urs_display.update()
 
-        self.setup_start_pos(self.default_start_pos)
+        # self.setup_start_pos(self.default_start_pos)
 
     def new_blob_surface(
         self: Self,
@@ -235,7 +241,6 @@ class BlobUrsinaFactory:
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
         """
-
         new_blob: BlobSurfaceUrsina = BlobSurfaceUrsina(
             name,
             radius,
@@ -246,8 +251,13 @@ class BlobUrsinaFactory:
             rotation_speed,
             rotation_pos,
         )
-
         self.loading_screen.add_to_bar(1)
+
+        if name != CENTER_BLOB_NAME:
+            if radius < bg_vars.min_radius:
+                moon_registry.add_moon(new_blob.ursina_blob)
+            else:
+                moon_registry.add_planet(new_blob.ursina_blob)
 
         if self.loading_screen.bar_at_max() and self.loading_screen.enabled:
             self.setup_start_pos(self.default_start_pos)

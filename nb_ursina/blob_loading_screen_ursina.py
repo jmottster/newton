@@ -6,7 +6,7 @@ Class file for displaying a splash screen showing progress of loading blobs
 by Jason Mott, copyright 2024
 """
 
-from typing import Any, Self
+from typing import Self
 
 import ursina as urs  # type: ignore
 from ursina.prefabs.health_bar import HealthBar  # type: ignore
@@ -27,6 +27,8 @@ class BlobLoadingScreenUrsina(urs.Entity):
 
     Attributes
     ----------
+    **kwargs
+
     max_value : int
         The value that represents a full bar on the progress bar
 
@@ -77,6 +79,9 @@ class BlobLoadingScreenUrsina(urs.Entity):
 
     on_disable() -> None
         Called by Ursina when enabled=False is set
+
+    on_destroy() -> None
+        Called by Ursina when destroying this instance
 
     """
 
@@ -230,3 +235,14 @@ class BlobLoadingScreenUrsina(urs.Entity):
         """Called by Ursina when enabled=False is set"""
         self.health_bar.enabled = False
         self.enabled = False
+
+    def on_destroy(self: Self) -> None:
+        """Called by Ursina when destroying this instance"""
+        urs.destroy(self.bg)
+        urs.destroy(self.text_entity_loading)
+        urs.destroy(self.text_entity_title)
+        urs.destroy(self.text_entity_title_shadow)
+        urs.destroy(self.point_center)
+        urs.destroy(self.point2)
+        urs.destroy(self.point)
+        urs.destroy(self.health_bar)

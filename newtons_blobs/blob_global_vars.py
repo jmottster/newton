@@ -176,7 +176,6 @@ class BlobGlobalVars:
 
     blob_scale: ClassVar[float] = BLOB_SCALE
     scale_blob_mass_with_size: ClassVar[bool] = True
-    blob_trail_scale: ClassVar[float] = BLOB_TRAIL_SCALE
 
     # 1 AU = SCALE_FACTOR pixels
     scale_down: ClassVar[float] = SCALE_DOWN
@@ -198,7 +197,6 @@ class BlobGlobalVars:
     max_radius: ClassVar[float] = MAX_RADIUS
     min_moon_radius: ClassVar[float] = MIN_MOON_RADIUS
     max_moon_radius: ClassVar[float] = MAX_MOON_RADIUS
-    blob_trail_girth: ClassVar[float] = BLOB_TRAIL_GIRTH
 
     min_mass: ClassVar[float] = MIN_MASS
     max_mass: ClassVar[float] = MAX_MASS
@@ -259,12 +257,6 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
-    def set_blob_trail_scale(cls, blob_trail_scale: float) -> None:
-        """Class method to set BlobGlobalVars.blob_trail_scale"""
-        cls.blob_trail_scale = blob_trail_scale
-        cls.apply_configure()
-
-    @classmethod
     def set_grid_cells_per_au(cls, grid_cells_per_au: int) -> None:
         """
         Class method to set BlobGlobalVars.grid_cells_per_au.
@@ -313,8 +305,11 @@ class BlobGlobalVars:
         cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
 
         cls.min_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (MIM / AU)
+        # if cls.min_moon_radius < 10:
+        #     cls.min_moon_radius = 10
         cls.max_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (GAN / AU)
-        cls.blob_trail_girth = (cls.au_scale_factor * cls.blob_trail_scale) * (J / AU)
+        # if cls.max_moon_radius <= cls.min_moon_radius:
+        #     cls.max_moon_radius = cls.min_moon_radius * 2
 
         if cls.scale_blob_mass_with_size:
             cls.min_mass = cls.org_min_mass * cls.blob_scale
@@ -322,7 +317,7 @@ class BlobGlobalVars:
             cls.min_moon_mass = cls.org_min_moon_mass * cls.blob_scale
             cls.max_moon_mass = cls.org_max_moon_mass * cls.blob_scale
 
-        cls.first_person_scale = cls.au_scale_factor * 0.2
+        cls.first_person_scale = cls.au_scale_factor * 0.05
         cls.background_scale = cls.universe_size
 
         cls.grid_cell_size = int(

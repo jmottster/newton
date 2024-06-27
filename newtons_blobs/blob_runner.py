@@ -329,11 +329,11 @@ class BlobRunner:
 
         self.display.update()
 
+        self.display.fps_clock_tick(FRAME_RATE)
+
         if not self.paused:
             self.blob_plotter.update_blobs(self.display.fps_get_dt())
             self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
-
-        self.display.fps_clock_tick(FRAME_RATE)
 
     def draw_stats(self: Self, message: str = None) -> None:
         """
