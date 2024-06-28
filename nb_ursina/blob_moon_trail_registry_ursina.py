@@ -13,6 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 import ursina as urs  # type: ignore
+from ursina.ursinastuff import _destroy
 
 
 from newtons_blobs.globals import *
@@ -85,6 +86,9 @@ class MoonWatcher(urs.Entity):
     remove_planet(planet: Rotator) -> None
         Removes a blob from the internal planet blob array
 
+    is_ready() -> bool
+        Returns True if all blob arrays are full and the moon blobs all have a barycenter
+
     remove_moon(moon: Rotator) -> None
         Removes a blob from the internal moon blob array
 
@@ -94,6 +98,10 @@ class MoonWatcher(urs.Entity):
     update() -> None
         Called by Ursina once per frame. This is where all the checks happens and moon trails
         are turned on and off
+
+    on_destroy() -> None
+        Called by Ursina when this Entity is being destroyed. This cleans up references to first person viewer
+        and blobs so they can be properly destroyed too
 
 
     """
@@ -124,6 +132,8 @@ class MoonWatcher(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        self.eternal = True
+
         self.num_moons: int = int((NUM_BLOBS - 1) * bg_vars.blob_moon_percent)
         self.num_planets: int = int((NUM_BLOBS - 1) - self.num_moons)
         self.planet_index_offset: int = self.num_moons + 1
@@ -152,21 +162,26 @@ class MoonWatcher(urs.Entity):
 
     def remove_planet(self: Self, planet: Rotator) -> None:
         """Removes a blob from the internal planet blob array"""
-        self.planets = np.array(
-            [k for k in self.planets if k.blob_name != planet.blob_name],
-            dtype=Rotator,
-        )
+        self.planets = np.delete(self.planets, np.where(self.planets == planet)[0])
 
     def remove_moon(self: Self, moon: Rotator) -> None:
         """Removes a blob from the internal moon blob array"""
-        self.moons = np.array(
-            [k for k in self.moons if k.blob_name != moon.blob_name], dtype=Rotator
+        self.moons = np.delete(self.moons, np.where(self.moons == moon)[0])
+
+    def is_ready(self: Self) -> bool:
+        """Returns True if all blob arrays are full and the moon blobs all have a barycenter"""
+        return (
+            self.planets[-1] is not None
+            and self.moons[-1] is not None
+            and self.moons[-1].barycenter_blob is not None
         )
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a key event happens (looks for T, to turn functionality on/off)"""
         if key == "t":
-            self.trail_on = not self.trail_on
+            if self.is_ready():
+                self.trail_on = not self.trail_on
+                self._t = 0
 
     def update(self: Self) -> None:
         """
@@ -209,8 +224,8 @@ class MoonWatcher(urs.Entity):
                         ):
                             blob.trail.enabled = True
                             if (
-                                blob.barycenter_blob is None
-                                or blob.barycenter_blob.blob_name
+                                blob.trail.barycenter_blob is None
+                                or blob.trail.barycenter_blob.blob_name
                                 != self.planets[closest].blob_name
                             ):
                                 blob.barycenter_blob = self.planets[closest]
@@ -225,6 +240,19 @@ class MoonWatcher(urs.Entity):
 
                 self._t = 0
 
+    def on_destroy(self: Self) -> None:
+        """
+        Called by Ursina when this Entity is being destroyed. This cleans up references to first person viewer
+        and blobs so they can be properly destroyed too
+        """
+        self.first_person_viewer = None
+        for i in range(0, len(self.planets)):
+            self.planets[i] = None
+        self.planets = None
+        for i in range(0, len(self.moons)):
+            self.moons[i] = None
+        self.moons = None
+
 
 class BlobMoonTrailRegistryUrsina:
     """
@@ -237,6 +265,10 @@ class BlobMoonTrailRegistryUrsina:
 
     Methods
     -------
+
+    BlobMoonTrailRegistryUrsina.reset() -> None
+        Will delete the singleton instance of MoonWatcher, which will create a new one
+        when any other method is subsequently called
 
     BlobMoonTrailRegistryUrsina.get_moon_watch_instance() -> MoonWatcher
         Called by other methods, will create singleton instance if it doesn't already exist
@@ -256,9 +288,21 @@ class BlobMoonTrailRegistryUrsina:
     BlobMoonTrailRegistryUrsina.remove_moon(moon: Rotator) -> None
         Removes a blob from the internal moon blob array
 
+    BlobMoonTrailRegistryUrsina.is_ready() -> bool
+        Returns True if all blob arrays are full and the moon blobs all have a barycenter
+
     """
 
     moon_watcher: ClassVar[MoonWatcher] = None
+
+    @classmethod
+    def reset(cls) -> None:
+        """
+        Will delete the singleton instance of MoonWatcher, which will create a new one
+        when any other method is subsequently called
+        """
+        _destroy(cls.moon_watcher, True)
+        cls.moon_watcher = None
 
     @classmethod
     def get_moon_watch_instance(cls) -> MoonWatcher:
@@ -291,3 +335,8 @@ class BlobMoonTrailRegistryUrsina:
     def remove_moon(cls, moon: Rotator) -> None:
         """Removes a blob from the internal moon blob array"""
         cls.get_moon_watch_instance().remove_moon(moon)
+
+    @classmethod
+    def is_ready(cls) -> bool:
+        """Returns True if all blob arrays are full and the moon blobs all have a barycenter"""
+        return cls.get_moon_watch_instance().is_ready()

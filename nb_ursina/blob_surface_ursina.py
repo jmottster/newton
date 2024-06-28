@@ -53,10 +53,32 @@ class TrailRenderer(urs.Entity):
         Called by Ursina once per frame. This will keep the trial
         current and only min_spacing * segments long
 
+    on_enable() -> None
+        Called by Ursina when self.enabled is set to True. This passes the True flag on to
+        self.line_renderer
+
+    on_disable() -> None
+        Called by Ursina when self.enabled is set to False. This passes the False flag on to
+        self.line_renderer
+
     on_destroy() -> None
         Called by Ursina when this Entity is destroyed
 
     """
+
+    __slots__ = (
+        "segments",
+        "points",
+        "_t",
+        "_t2",
+        "min_spacing",
+        "update_step",
+        "thickness",
+        "barycenter_blob",
+        "barycenter_last_pos",
+        "check_barycenter_dist",
+        "line_renderer",
+    )
 
     def __init__(
         self: Self,
@@ -65,6 +87,10 @@ class TrailRenderer(urs.Entity):
         barycenter_blob: "Rotator" = None,
         **kwargs,
     ):
+
+        self.line_renderer: urs.Entity = None
+
+        self.is_moon: bool = kwargs.get("is_moon", False)
 
         super().__init__()
 
@@ -101,13 +127,14 @@ class TrailRenderer(urs.Entity):
         self.barycenter_blob: Rotator = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
         self.check_barycenter_dist: float = 2
-        if self.barycenter_blob is not None:
-            self.barycenter_last_pos = self.barycenter_blob.world_position
+        if self.is_moon:
+            if self.barycenter_blob is not None:
+                self.barycenter_last_pos = self.barycenter_blob.world_position
             self.thickness = 1
             self.min_spacing = bg_vars.min_moon_radius
             self.segments = 15
 
-        self.line_renderer: urs.Entity = urs.Entity(
+        self.line_renderer = urs.Entity(
             model=urs.Mesh(
                 vertices=self.points,
                 mode="line",
@@ -117,12 +144,8 @@ class TrailRenderer(urs.Entity):
             shader=shd.unlit_shader,
         )
 
-        self.on_enable = self.on_enable_trail
-        self.on_disable = self.on_disable_trail
-
-        if self.barycenter_blob is not None:
+        if self.is_moon:
             self.enabled = False
-            self.line_renderer.enabled = False
 
     def update(self: Self) -> None:
         """
@@ -164,23 +187,34 @@ class TrailRenderer(urs.Entity):
 
             self.line_renderer.model.generate()
 
-    def on_enable_trail(self: Self) -> None:
+    def on_enable(self: Self) -> None:
+        """
+        Called by Ursina when self.enabled is set to True. This passes the True flag on to
+        self.line_renderer
+        """
+        if self.line_renderer is not None:
+            if not self.line_renderer.enabled:
+                self.line_renderer.enabled = True
 
-        if not self.line_renderer.enabled:
-            self.line_renderer.enabled = True
+                for i in range(0, len(self.points)):
+                    self.points[i] = self.world_position
 
-            for i in range(0, len(self.points)):
-                self.points[i] = self.world_position
-
-    def on_disable_trail(self: Self) -> None:
-        self.line_renderer.enabled = False
+    def on_disable(self: Self) -> None:
+        """
+        Called by Ursina when self.enabled is set to False. This passes the False flag on to
+        self.line_renderer
+        """
+        if self.line_renderer is not None:
+            self.line_renderer.enabled = False
 
     def on_destroy(self: Self) -> None:
         """Called by Ursina when this Entity is destroyed"""
         self.line_renderer.enabled = False
         self.line_renderer.model.clear()
+
         self.points.clear()
         self.points = None
+
         urs.destroy(self.line_renderer)
 
         self.barycenter_blob = None
@@ -280,6 +314,7 @@ class Rotator(urs.Entity):
             setattr(self, key, value)
 
         self.trail: TrailRenderer = None
+        self.trail_ready: bool = False
 
         self.world_rotation_x: float = 0.0
         self.world_rotation_y: float = 0.0
@@ -327,6 +362,7 @@ class Rotator(urs.Entity):
         self.barycenter_blob: Rotator = None
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
+        """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
 
         self.rotate((0, (random.random() * 360.00), 0))
         orbital.ursina_blob.world_rotation = self.world_rotation
@@ -357,13 +393,13 @@ class Rotator(urs.Entity):
         Creates the orbital trail. Called by input() when the "t" key is pressed if it
         is not running
         """
-
         self.trail = TrailRenderer(
             segments=200,
             min_spacing=bg_vars.max_radius,
             parent=self,
             color=self.trail_color,
             barycenter_blob=self.barycenter_blob,
+            is_moon=self.scale_x < bg_vars.min_radius,
         )
 
     def create_text_overlay(self: Self) -> None:
@@ -473,6 +509,13 @@ class Rotator(urs.Entity):
 
         self.rotate((0, degrees, 0))
 
+        if not self.trail_ready:
+            from .blob_moon_trail_registry_ursina import (
+                BlobMoonTrailRegistryUrsina as moon_registry,
+            )
+
+            self.trail_ready = moon_registry.is_ready()
+
     def on_click(self: Self) -> None:
         """
         Calls the text overlay methods to toggle it on and off. Called when the mouse
@@ -500,7 +543,7 @@ class Rotator(urs.Entity):
                     self.destroy_text_overlay()
                 else:
                     self.update_text_background()
-        if key == "t":
+        if self.trail_ready and key == "t":
             if self.trail is not None:
                 self.trail.enabled = False
                 urs.destroy(self.trail)
@@ -524,7 +567,6 @@ class Rotator(urs.Entity):
         )
 
         if self.trail is not None:
-            self.trail.enabled = False
             urs.destroy(self.trail)
 
         if self.barycenter_blob is not None:
@@ -584,10 +626,10 @@ class BlobSurfaceUrsina:
         send (pos,False) to turn off glowing effect
 
     on_destroy() -> None
-        Call when getting rid of this instance, so it can clean up
+        Called when getting rid of this instance, so it can clean up
 
     destroy() -> None
-        Call when getting rid of this instance, so it can clean up
+        Called when getting rid of this instance, so it can clean up
     """
 
     __slots__ = (
@@ -780,11 +822,11 @@ class BlobSurfaceUrsina:
         self.ursina_blob.position = urs.Vec3(pos)
 
     def on_destroy(self: Self) -> None:
-        """Call when getting rid of this instance, so it can clean up"""
+        """Called when getting rid of this instance, so it can clean up"""
         self.destroy()
 
     def destroy(self: Self) -> None:
-        """Call when getting rid of this instance, so it can clean up"""
+        """Called when getting rid of this instance, so it can clean up"""
 
         if self.ursina_center_blob is not None:
             # self.ursina_center_blob.color = (0, 0, 0, 0)

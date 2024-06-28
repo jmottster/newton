@@ -2,7 +2,7 @@
 Newton's Laws, a simulator of physics at the scale of space
 
 A class that implements an interface for a plugin object for providing
-a graphics/drawing library to this simulator
+a graphics/drawing library to this simulator using Ursina
 
 by Jason Mott, copyright 2024
 """
@@ -217,7 +217,13 @@ class BlobUrsinaFactory:
             urs.destroy(self.loading_screen)
             self.loading_screen = None
 
+        moon_registry.reset()
+
         self.urs_display.first_person_surface.first_person_viewer.stop_following()
+
+        moon_registry.set_first_person_viewer(
+            self.urs_display.first_person_surface.first_person_viewer
+        )
 
         self.loading_screen = BlobLoadingScreenUrsina(max_value=num_blobs)
 
