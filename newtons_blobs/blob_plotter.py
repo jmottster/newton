@@ -315,8 +315,17 @@ class BlobPlotter:
 
         for i in range(0, len(moons)):
 
-            planets[random.randint(0, len(planets) - 1)].add_orbital(moons[i])
-            self.add_pos_vel(moons[i], moons[i].x, moons[i].y, moons[i].z)
+            planet: MassiveBlob = planets[random.randint(0, len(planets) - 1)]
+
+            planet.add_orbital(moons[i])
+            moons[i].update_pos_vel(
+                moons[i].x,
+                moons[i].y,
+                moons[i].z,
+                planet.vx + moons[i].vx,
+                planet.vy + moons[i].vy,
+                planet.vz + moons[i].vz,
+            )
 
     def draw_blobs(self: Self) -> None:
         """

@@ -114,9 +114,6 @@ class TrailRenderer(urs.Entity):
             setattr(self, key, value)
 
         self.segments: int = segments
-        self.points: deque[urs.Vec3] = deque(
-            [self.world_position for _ in range(0, self.segments)]
-        )
 
         self._t: float = 0
         self._t2: float = 0
@@ -132,7 +129,13 @@ class TrailRenderer(urs.Entity):
                 self.barycenter_last_pos = self.barycenter_blob.world_position
             self.thickness = 1
             self.min_spacing = bg_vars.min_moon_radius
-            self.segments = 15
+            self.segments = 250
+
+        self.orig_segments: float = self.segments
+
+        self.points: deque[urs.Vec3] = deque(
+            [self.world_position for _ in range(0, self.segments)]
+        )
 
         self.line_renderer = urs.Entity(
             model=urs.Mesh(
@@ -196,8 +199,13 @@ class TrailRenderer(urs.Entity):
             if not self.line_renderer.enabled:
                 self.line_renderer.enabled = True
 
-                for i in range(0, len(self.points)):
-                    self.points[i] = self.world_position
+                self.points = deque(
+                    [self.world_position for _ in range(0, self.segments)]
+                )
+                self.line_renderer.model.vertices = self.points
+
+                # for i in range(0, len(self.points)):
+                #     self.points[i] = self.world_position
 
     def on_disable(self: Self) -> None:
         """
@@ -394,7 +402,7 @@ class Rotator(urs.Entity):
         is not running
         """
         self.trail = TrailRenderer(
-            segments=200,
+            segments=250,
             min_spacing=bg_vars.max_radius,
             parent=self,
             color=self.trail_color,
@@ -425,7 +433,7 @@ class Rotator(urs.Entity):
                 origin=(0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
-                color=urs.rgb(255, 255, 255, 255),
+                color=urs.color.rgba(255, 255, 255, 255),
                 shader=shd.lit_with_shadows_shader,
                 enabled=False,
             )

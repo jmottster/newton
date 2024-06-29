@@ -222,7 +222,7 @@ class MoonWatcher(urs.Entity):
                             or blob.barycenter_blob.blob_name
                             != self.planets[closest].blob_name
                         ):
-                            blob.trail.enabled = True
+
                             if (
                                 blob.trail.barycenter_blob is None
                                 or blob.trail.barycenter_blob.blob_name
@@ -230,6 +230,15 @@ class MoonWatcher(urs.Entity):
                             ):
                                 blob.barycenter_blob = self.planets[closest]
                                 blob.trail.barycenter_blob = self.planets[closest]
+
+                            blob.trail.segments = round(
+                                blob.trail.orig_segments
+                                * (
+                                    blob.trail.barycenter_blob.scale_x
+                                    / bg_vars.max_radius
+                                )
+                            )
+                            blob.trail.enabled = True
 
                             blob.trail.barycenter_last_pos = (
                                 blob.trail.barycenter_blob.world_position
