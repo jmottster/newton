@@ -575,27 +575,31 @@ class BlobPlotter:
     def plot_circular_grid(self: Self, planets: list[MassiveBlob]) -> None:
         """Iterates through blobs and plots them in a circular grid configuration around the center blob"""
 
-        scaled_half_universe_w = self.blobs[0].x
-        scaled_half_universe_h = self.blobs[0].y
+        scaled_half_universe_w: float = self.blobs[0].x
+        scaled_half_universe_h: float = self.blobs[0].y
 
-        orbiting_blobs = len(planets)
+        orbiting_blobs: int = len(planets)
 
         # Iterators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
-        plot_phi = 0.0
-        plot_phi_offset = 0.0
-        plot_theta = math.pi * 0.5
+        plot_phi: float = 0.0
+        plot_phi_offset: float = 0.0
+        plot_theta: float = math.pi * 0.5
 
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition = AU * 2  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition: float = AU * 2  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
-        plot_radius = AU * 4
+        plot_radius: float = AU * 4
+
+        this_radius: float = plot_radius
+
+        add_random_radius: float = 0
 
         # How far apart each blob will be on each circumference
-        chord_scaled = (math.pi * (plot_radius * 2)) / 6
+        chord_scaled: float = (math.pi * (plot_radius * 2)) / 6
 
         if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
             chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
@@ -605,29 +609,32 @@ class BlobPlotter:
 
         # How many radians to increase for each blob around the circumference (such that
         # we get chord_scaled length between each blob center)
-        pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
+        pi_inc: float = math.asin(chord_scaled / (plot_radius * 2)) * 2
 
         # Divy up the remainder for a more even distribution
         pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
-        blobs_left = orbiting_blobs
+        blobs_left: int = orbiting_blobs
 
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
             pi_inc = (math.pi * 2) / (orbiting_blobs)
+            add_random_radius = plot_radius_partition * orbiting_blobs
 
         for i in range(0, len(planets)):
 
             self.display.update()
 
+            this_radius = plot_radius + (random.random() * add_random_radius)
+
             # Circular grid x,y plot for this blob
             # Get x and y for this blob, vars set up from last iteration or initial setting
-            x = scaled_half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
+            x = scaled_half_universe_w + this_radius * math.sin(plot_theta) * math.cos(
                 plot_phi_offset
             )
-            y = scaled_half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
+            y = scaled_half_universe_h + this_radius * math.sin(plot_theta) * math.sin(
                 plot_phi_offset
             )
-            z = scaled_half_universe_h + plot_radius * math.cos(plot_theta)
+            z = scaled_half_universe_h + this_radius * math.cos(plot_theta)
 
             blobs_left -= 1
             # Set up vars for next iteration, move the "clock dial" another notch,

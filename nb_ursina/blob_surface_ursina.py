@@ -53,6 +53,10 @@ class TrailRenderer(urs.Entity):
         Called by Ursina once per frame. This will keep the trial
         current and only min_spacing * segments long
 
+    calibrate_segments(new: bool = False) -> None
+        Called when the number of items in self.points needs to be adjusted
+        according timescale and (for moons) the size of its barrycenter blob
+
     on_enable() -> None
         Called by Ursina when self.enabled is set to True. This passes the True flag on to
         self.line_renderer
@@ -116,19 +120,20 @@ class TrailRenderer(urs.Entity):
         self.segments: int = segments
 
         self._t: float = 0
-        self._t2: float = 0
 
         self.min_spacing: float = min_spacing
-        self.update_step: float = 0.0
+        self.update_step: float = 0.5
         self.thickness: int = 2
         self.barycenter_blob: Rotator = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
         self.check_barycenter_dist: float = 2
+        self.last_timescale = bg_vars.timescale
         if self.is_moon:
             if self.barycenter_blob is not None:
                 self.barycenter_last_pos = self.barycenter_blob.world_position
             self.thickness = 1
             self.min_spacing = bg_vars.min_moon_radius
+            self.update_step = 0
             self.segments = 250
 
         self.orig_segments: float = self.segments
@@ -136,6 +141,8 @@ class TrailRenderer(urs.Entity):
         self.points: deque[urs.Vec3] = deque(
             [self.world_position for _ in range(0, self.segments)]
         )
+
+        self.last_point_index: int = self.segments - 2
 
         self.line_renderer = urs.Entity(
             model=urs.Mesh(
@@ -156,6 +163,9 @@ class TrailRenderer(urs.Entity):
         current and only min_spacing * segments long
         """
 
+        if self.last_timescale != bg_vars.timescale:
+            self.calibrate_segments()
+
         if self.barycenter_blob is not None:
 
             diff: urs.Vec3 = (
@@ -166,29 +176,63 @@ class TrailRenderer(urs.Entity):
             for i in range(0, len(self.points)):
                 self.points[i] = self.points[i] + diff
 
-            # self._t2 += urs.time.dt
-            # if self._t2 >= self.check_barycenter_dist:
-            #     if (
-            #         urs.distance(
-            #             self.world_position, self.barycenter_blob.world_position
-            #         )
-            #         > bg_vars.au_scale_factor
-            #     ):
-            #         self.barycenter_blob = None
-            #         for i in range(0, len(self.points)):
-            #             self.points[i] = self.world_position
-            #     self._t2 = 0
-
         self._t += urs.time.dt
-        if self._t >= self.update_step:
+
+        if self._t >= self.update_step and (
+            urs.distance(self.points[self.last_point_index], self.points[-1])
+            > self.min_spacing
+        ):
+
+            self.points.popleft()
+            self.points.append(self.world_position)
 
             self._t = 0
-            if urs.distance(self.world_position, self.points[-1]) > self.min_spacing:
+        else:
+            self.points[-1] = self.world_position
 
+        self.line_renderer.model.generate()
+
+    def calibrate_segments(self: Self, new: bool = False) -> None:
+        """
+        Called when the number of items in self.points needs to be adjusted
+        according timescale and (for moons) the size of its barrycenter blob
+        """
+
+        if new:
+            for i in range(0, self.segments):
+                self.points[i] = self.world_position
+
+        if self.barycenter_blob is not None:
+
+            self.segments = round(
+                self.orig_segments * (self.barycenter_blob.scale_x / bg_vars.max_radius)
+            )
+
+            self.segments = round(
+                self.segments * (bg_vars.orig_timescale / bg_vars.timescale)
+            )
+
+            self.segments = urs.clamp(self.segments, 10, self.orig_segments * 2)
+        else:
+
+            self.segments = round(
+                self.orig_segments * (bg_vars.orig_timescale / bg_vars.timescale)
+            )
+
+            self.segments = urs.clamp(self.segments, 10, self.orig_segments * 2)
+
+        self.last_point_index = self.segments - 2
+
+        if len(self.points) > self.segments:
+            while len(self.points) > self.segments:
                 self.points.popleft()
-                self.points.append(self.world_position)
 
-            self.line_renderer.model.generate()
+        else:
+            if len(self.points) < self.segments:
+                while len(self.points) < self.segments:
+                    self.points.appendleft(self.points[0])
+
+        self.last_timescale = bg_vars.timescale
 
     def on_enable(self: Self) -> None:
         """
@@ -199,13 +243,7 @@ class TrailRenderer(urs.Entity):
             if not self.line_renderer.enabled:
                 self.line_renderer.enabled = True
 
-                self.points = deque(
-                    [self.world_position for _ in range(0, self.segments)]
-                )
-                self.line_renderer.model.vertices = self.points
-
-                # for i in range(0, len(self.points)):
-                #     self.points[i] = self.world_position
+                self.calibrate_segments(True)
 
     def on_disable(self: Self) -> None:
         """
@@ -377,8 +415,8 @@ class Rotator(urs.Entity):
         orbital.ursina_blob.rotation_pos = self.rotation_pos
 
         orbit_distance: float = (
-            random.random() * (self.scale_x * 3)
-        ) + self.scale_x * 5
+            random.random() * (self.scale_x * 10)
+        ) + self.scale_x * 3
         move: urs.Vec3 = urs.Vec3(self.left.normalized() * orbit_distance)
 
         orbital.ursina_blob.position = urs.Vec3(self.position + move)

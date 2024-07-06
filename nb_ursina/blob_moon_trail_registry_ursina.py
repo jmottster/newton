@@ -198,7 +198,10 @@ class MoonWatcher(urs.Entity):
                     self.planets[0].world_position,
                 )
                 next_distance: float = 0
-                closest: int = 0
+                closest: int = -1
+                proximity: float = bg_vars.au_scale_factor * 2
+                if distance <= proximity:
+                    closest = 0
 
                 for i in range(1, len(self.planets)):
                     next_distance = urs.distance(
@@ -208,11 +211,13 @@ class MoonWatcher(urs.Entity):
 
                     if next_distance < distance:
                         distance = next_distance
-                        closest = i
+                        if distance <= proximity:
+                            closest = i
 
                 for blob in self.moons:
                     if (
-                        urs.distance(
+                        closest >= 0
+                        and urs.distance(
                             blob.world_position, self.planets[closest].world_position
                         )
                         <= bg_vars.au_scale_factor
@@ -231,13 +236,6 @@ class MoonWatcher(urs.Entity):
                                 blob.barycenter_blob = self.planets[closest]
                                 blob.trail.barycenter_blob = self.planets[closest]
 
-                            blob.trail.segments = round(
-                                blob.trail.orig_segments
-                                * (
-                                    blob.trail.barycenter_blob.scale_x
-                                    / bg_vars.max_radius
-                                )
-                            )
                             blob.trail.enabled = True
 
                             blob.trail.barycenter_last_pos = (

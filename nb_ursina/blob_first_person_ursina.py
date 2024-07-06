@@ -158,6 +158,12 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.speed: float = bg_vars.au_scale_factor / 4
         self.orig_speed: float = self.speed
+        self.min_speed: float = self.orig_speed * 0.05
+        self.max_speed: float = self.orig_speed * 5
+
+        self.orig_speed = (self.min_speed + self.max_speed) / 2
+        self.speed = self.orig_speed
+
         self.roll_speed: float = 20
         self.orig_roll_speed: float = self.roll_speed
         self.direction: urs.Vec3 = None
@@ -203,7 +209,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.gimbal_relative_forward_pos = self.scale_x * 0.103
         self.gimbal_relative_down_pos = self.scale_x * 0.02
 
-        self.speed_inc = self.orig_speed * 0.04
+        self.speed_inc = self.orig_speed * 0.05
 
         self.setup_stage = True
 
@@ -252,8 +258,8 @@ class BlobFirstPersonUrsina(urs.Entity):
 
                 self.speed = urs.clamp(
                     self.speed,
-                    self.orig_speed * 0.10,
-                    self.orig_speed * 2.5,
+                    self.min_speed,
+                    self.max_speed,
                 )
 
                 self.roll_speed = urs.clamp(
