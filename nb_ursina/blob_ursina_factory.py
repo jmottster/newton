@@ -78,10 +78,10 @@ class BlobUrsinaFactory:
 
         bg_vars.set_au_scale_factor(800000)
         bg_vars.set_universe_scale(40)
-        bg_vars.set_center_blob_scale(25)
+        bg_vars.set_center_blob_scale(30)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(25)
+        bg_vars.set_blob_scale(30)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(1)
         # bg_vars.set_start_pos_rotate_y(True)
@@ -182,7 +182,12 @@ class BlobUrsinaFactory:
         A dict will be sent to this method. so the implementor can load the dict up with
         attributes that are desired to be saved (if saving is turned on)
         """
-        pass
+        data["center_blob_scale"] = bg_vars.center_blob_scale
+        data["scale_center_blob_mass_with_size"] = (
+            bg_vars.scale_center_blob_mass_with_size
+        )
+        data["blob_scale"] = bg_vars.blob_scale
+        data["scale_blob_mass_with_size"] = bg_vars.scale_blob_mass_with_size
 
     def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
@@ -193,9 +198,21 @@ class BlobUrsinaFactory:
         self.urs_universe.width = data["universe_size_w"] * bg_vars.au_scale_factor
         self.urs_universe.height = data["universe_size_h"] * bg_vars.au_scale_factor
 
-        self.urs_universe.set_universe_entity(
-            (data["blobs"][0]["radius"] * bg_vars.au_scale_factor) * 1000
-        )
+        if data.get("center_blob_scale") is not None:
+            bg_vars.set_center_blob_scale(data["center_blob_scale"])
+
+        if data.get("scale_center_blob_mass_with_size") is not None:
+            bg_vars.set_scale_center_blob_mass_with_size(
+                data["scale_center_blob_mass_with_size"]
+            )
+
+        if data.get("blob_scale") is not None:
+            bg_vars.set_blob_scale(data["blob_scale"])
+
+        if data.get("scale_blob_mass_with_size") is not None:
+            bg_vars.set_scale_blob_mass_with_size(data["scale_blob_mass_with_size"])
+
+        self.urs_universe.set_universe_entity(bg_vars.background_scale)
 
         self.setup_start_pos(
             urs.Vec3(
@@ -206,9 +223,16 @@ class BlobUrsinaFactory:
 
         if data["paused"]:
             urs.camera.ui.collider = None
+            self.urs_display.paused = True
 
         if not data["show_stats"]:
             self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
+
+        if not data["fullscreen"]:
+            self.urs_display.set_mode(
+                (data["fullscreen_save_w"], data["fullscreen_save_h"]),
+                BlobDisplay.RESIZABLE,
+            )
 
     def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
@@ -267,6 +291,7 @@ class BlobUrsinaFactory:
                 moon_registry.add_planet(new_blob.ursina_blob)
 
         if self.loading_screen.bar_at_max() and self.loading_screen.enabled:
+            moon_registry.purge_none_elements()
             self.setup_start_pos(self.default_start_pos)
             self.loading_screen.enabled = False
             urs.destroy(self.loading_screen)

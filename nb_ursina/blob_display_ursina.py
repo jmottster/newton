@@ -379,6 +379,8 @@ class BlobDisplayUrsina:
         if pos_lock:
             self.first_person_surface.first_person_viewer.pos_unlock()
 
+        self.update()
+
     def is_fullscreen(self: Self) -> bool:
         """Whether or not the display is in fullscreen mode (False if in windowed mode)"""
         return urs.window.fullscreen

@@ -321,7 +321,6 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.pos_lock()
 
         if key == "v":
-
             if self.flashlight_on:
                 self.flashlight.color = (0, 0, 0, 0.3)
                 self.flashlight_on = False

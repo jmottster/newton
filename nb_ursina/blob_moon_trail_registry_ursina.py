@@ -86,11 +86,14 @@ class MoonWatcher(urs.Entity):
     remove_planet(planet: Rotator) -> None
         Removes a blob from the internal planet blob array
 
-    is_ready() -> bool
-        Returns True if all blob arrays are full and the moon blobs all have a barycenter
-
     remove_moon(moon: Rotator) -> None
         Removes a blob from the internal moon blob array
+
+    purge_none_elements(self: Self) -> None
+        Removes any None elements from the planets and moons arrays
+
+    is_ready() -> bool
+        Returns True if all blob arrays are full and the moon blobs all have a barycenter
 
     input(key: str) -> None
         Called by Ursina when a key event happens (looks for T, to turn functionality on/off)
@@ -168,13 +171,16 @@ class MoonWatcher(urs.Entity):
         """Removes a blob from the internal moon blob array"""
         self.moons = np.delete(self.moons, np.where(self.moons == moon)[0])
 
+    def purge_none_elements(self: Self) -> None:
+        """Removes any None elements from the planets and moons arrays"""
+        self.moons = np.delete(self.moons, np.where(self.moons == None)[0])
+        self.planets = np.delete(self.planets, np.where(self.planets == None)[0])
+
     def is_ready(self: Self) -> bool:
         """Returns True if all blob arrays are full and the moon blobs all have a barycenter"""
-        return (
-            self.planets[-1] is not None
-            and self.moons[-1] is not None
-            and self.moons[-1].barycenter_blob is not None
-        )
+        is_ready: bool = self.planets[-1] is not None and self.moons[-1] is not None
+
+        return is_ready
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a key event happens (looks for T, to turn functionality on/off)"""
@@ -224,6 +230,7 @@ class MoonWatcher(urs.Entity):
                     ):
                         if (
                             not blob.trail.enabled
+                            or blob.barycenter_blob is None
                             or blob.barycenter_blob.blob_name
                             != self.planets[closest].blob_name
                         ):
@@ -295,6 +302,9 @@ class BlobMoonTrailRegistryUrsina:
     BlobMoonTrailRegistryUrsina.remove_moon(moon: Rotator) -> None
         Removes a blob from the internal moon blob array
 
+    BlobMoonTrailRegistryUrsina.purge_none_elements(self: Self) -> None
+        Removes any None elements from the planets and moons arrays
+
     BlobMoonTrailRegistryUrsina.is_ready() -> bool
         Returns True if all blob arrays are full and the moon blobs all have a barycenter
 
@@ -342,6 +352,11 @@ class BlobMoonTrailRegistryUrsina:
     def remove_moon(cls, moon: Rotator) -> None:
         """Removes a blob from the internal moon blob array"""
         cls.get_moon_watch_instance().remove_moon(moon)
+
+    @classmethod
+    def purge_none_elements(cls) -> None:
+        """Removes any None elements from the planets and moons arrays"""
+        cls.get_moon_watch_instance().purge_none_elements()
 
     @classmethod
     def is_ready(cls) -> bool:

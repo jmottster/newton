@@ -195,7 +195,7 @@ class TrailRenderer(urs.Entity):
     def calibrate_segments(self: Self, new: bool = False) -> None:
         """
         Called when the number of items in self.points needs to be adjusted
-        according timescale and (for moons) the size of its barrycenter blob
+        according timescale and (for moons) the size of its barycenter blob
         """
 
         if new:
@@ -212,7 +212,7 @@ class TrailRenderer(urs.Entity):
                 self.segments * (bg_vars.orig_timescale / bg_vars.timescale)
             )
 
-            self.segments = urs.clamp(self.segments, 10, self.orig_segments * 2)
+            self.segments = urs.clamp(self.segments, 20, self.orig_segments * 2)
         else:
 
             self.segments = round(
@@ -399,11 +399,14 @@ class Rotator(urs.Entity):
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
 
-        if self.scale_x < bg_vars.min_radius:
+        self.is_moon = self.scale_x < bg_vars.min_radius
+
+        if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
 
-        self.all_on: bool = False
-        self.full_details: bool = False
+        self.all_text_on: bool = False
+        self.text_on: bool = False
+        self.text_full_details: bool = True
 
         self.barycenter_blob: Rotator = None
 
@@ -445,7 +448,7 @@ class Rotator(urs.Entity):
             parent=self,
             color=self.trail_color,
             barycenter_blob=self.barycenter_blob,
-            is_moon=self.scale_x < bg_vars.min_radius,
+            is_moon=self.is_moon,
         )
 
     def create_text_overlay(self: Self) -> None:
@@ -459,7 +462,7 @@ class Rotator(urs.Entity):
 
             self.text = f"{self.blob_name}"
 
-            if self.full_details:
+            if self.text_on and self.text_full_details:
                 self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
             self.info_text = urs.Text(
@@ -497,7 +500,7 @@ class Rotator(urs.Entity):
 
             self.text = f"{self.blob_name}"
 
-            if self.full_details:
+            if self.text_on and self.text_full_details:
                 self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
             self.info_text.text = self.text
@@ -534,7 +537,7 @@ class Rotator(urs.Entity):
 
             self.text = f"{self.blob_name}"
 
-            if self.full_details:
+            if self.text_on and self.text_full_details:
                 self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
             self.text_entity.position = self.position
@@ -567,12 +570,12 @@ class Rotator(urs.Entity):
         Calls the text overlay methods to toggle it on and off. Called when the mouse
         clicks on this blob while the simulation is paused
         """
-        self.full_details = not self.full_details
+        self.text_on = not self.text_on
 
-        if self.full_details:
+        if self.text_on:
             self.create_text_overlay()
         else:
-            if not self.all_on:
+            if not self.all_text_on:
                 self.destroy_text_overlay()
             else:
                 self.update_text_background()
@@ -580,15 +583,21 @@ class Rotator(urs.Entity):
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a keyboard event happens"""
         if key == "b":
-            self.all_on = not self.all_on
+            self.all_text_on = not self.all_text_on
 
-            if self.all_on:
+            if self.all_text_on:
                 self.create_text_overlay()
             else:
-                if not self.full_details:
+                if not self.text_on:
                     self.destroy_text_overlay()
                 else:
                     self.update_text_background()
+
+        if key == "h":
+            self.text_full_details = not self.text_full_details
+            if self.all_text_on or self.text_on:
+                self.update_text_background()
+
         if self.trail_ready and key == "t":
             if self.trail is not None:
                 self.trail.enabled = False
@@ -615,7 +624,7 @@ class Rotator(urs.Entity):
         if self.trail is not None:
             urs.destroy(self.trail)
 
-        if self.barycenter_blob is not None:
+        if self.is_moon:
             self.barycenter_blob = None
             moon_registry.remove_moon(self)
         else:

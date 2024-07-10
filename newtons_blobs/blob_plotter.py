@@ -247,7 +247,7 @@ class BlobPlotter:
             if i > ((NUM_BLOBS - 1) * bg_vars.blob_moon_percent):
 
                 moon = False
-                if random.randint(1, 10) > 6:
+                if random.randint(1, 10) > 4:
                     radius = round(
                         (random.random() * (min_radius_delta - bg_vars.min_radius))
                         + bg_vars.min_radius,
@@ -403,7 +403,7 @@ class BlobPlotter:
                     blob2.y += pos_offsets[1]
                     blob2.z += pos_offsets[2]
 
-                    bp.gravitational_pull(blob1, blob2, dt)
+                    bp.jjm_gravitational_pull(blob1, blob2, dt)
                     bp.collision_detection(blob1, blob2)
 
                     blob2.x -= pos_offsets[0]
@@ -461,7 +461,7 @@ class BlobPlotter:
                         )
 
         for i in range(1, len(self.blobs)):
-            bp.gravitational_pull(self.blobs[0], self.blobs[i], dt)
+            bp.jjm_gravitational_pull(self.blobs[0], self.blobs[i], dt)
             bp.collision_detection(self.blobs[0], self.blobs[i])
 
         if not bg_vars.center_blob_escape:
@@ -618,6 +618,7 @@ class BlobPlotter:
 
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
             pi_inc = (math.pi * 2) / (orbiting_blobs)
+            plot_radius -= AU
             add_random_radius = plot_radius_partition * orbiting_blobs
 
         for i in range(0, len(planets)):
