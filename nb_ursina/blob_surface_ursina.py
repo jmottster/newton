@@ -405,6 +405,7 @@ class Rotator(urs.Entity):
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
 
         self.all_text_on: bool = False
+        self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
 
@@ -588,10 +589,27 @@ class Rotator(urs.Entity):
             if self.all_text_on:
                 self.create_text_overlay()
             else:
+                self.planet_text_only = False
                 if not self.text_on:
                     self.destroy_text_overlay()
                 else:
                     self.update_text_background()
+
+        if key == "n" and self.is_moon:
+
+            if self.all_text_on:
+
+                self.planet_text_only = not self.planet_text_only
+
+                if self.planet_text_only:
+
+                    if not self.text_on:
+                        self.destroy_text_overlay()
+                    else:
+                        self.update_text_background()
+                else:
+
+                    self.create_text_overlay()
 
         if key == "h":
             self.text_full_details = not self.text_full_details
