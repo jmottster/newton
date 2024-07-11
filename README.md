@@ -62,7 +62,7 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
 * Miscellaneous Controls:
   * SPACEBAR - Pause/Unpause
     * Only when paused . . .
-    * MOUSE LEFT CLICK on Blob - Toggle info flag above the blob (name, mass, radius, position, or just name; see J key)
+    * MOUSE LEFT CLICK on Blob - Toggle info flag above the blob (name, mass, radius, position, or just name; see H key)
     * MOUSE RIGHT CLICK on Blob - Follow this blob (blob becomes you reference frame, you move with it, but can still also move freely)
   * ESC - Quit
   * Q - Disengage/reengage mouse
@@ -73,6 +73,7 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * G - Toggle cursor and gimbal on/off
   * B - Toggle show info flag (name of blob above blob) on all blobs, this will impact performance
   * H - Toggle show full details (when info flag is on) or just name (see MOUSE LEFT CLICK)
+  * N - Toggle show info flag for planets only (ONLY when B is activated, doesn't include flagS turned on with MOUSE LEFT CLICK)
   * UP ARROW - Increase timescale (make time go faster)
   * DOWN ARROW - Decrease timescale (make time go slower)
   * 1 - Start over based on options selected with keys 1 and 2
