@@ -54,8 +54,8 @@ class TrailRenderer(urs.Entity):
         current and only min_spacing * segments long
 
     calibrate_segments(new: bool = False) -> None
-        Called when the number of items in self.points needs to be adjusted
-        according timescale and (for moons) the size of its barrycenter blob
+        Called when the number of items in self.last_point_distances >= self.spacing_check
+        this will adjust self.min_spacing and self.segments to control the length of the trail
 
     on_enable() -> None
         Called by Ursina when self.enabled is set to True. This passes the True flag on to
@@ -122,12 +122,11 @@ class TrailRenderer(urs.Entity):
         self._t: float = 0
 
         self.min_spacing: float = min_spacing
-        self.update_step: float = 0.5
+        self.update_step: float = 0.25
         self.thickness: int = 2
         self.barycenter_blob: Rotator = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
         self.check_barycenter_dist: float = 2
-        self.last_timescale = bg_vars.timescale
         if self.is_moon:
             if self.barycenter_blob is not None:
                 self.barycenter_last_pos = self.barycenter_blob.world_position
@@ -143,6 +142,13 @@ class TrailRenderer(urs.Entity):
         )
 
         self.last_point_index: int = self.segments - 2
+
+        self.min_spacing *= 2
+
+        self.spacing_check: int = 25
+        self.last_point_distances: deque[urs.Vec3] = deque(
+            [self.min_spacing for _ in range(0, self.spacing_check)]
+        )
 
         self.line_renderer = urs.Entity(
             model=urs.Mesh(
@@ -163,9 +169,6 @@ class TrailRenderer(urs.Entity):
         current and only min_spacing * segments long
         """
 
-        if self.last_timescale != bg_vars.timescale:
-            self.calibrate_segments()
-
         if self.barycenter_blob is not None:
 
             diff: urs.Vec3 = (
@@ -178,13 +181,22 @@ class TrailRenderer(urs.Entity):
 
         self._t += urs.time.dt
 
-        if self._t >= self.update_step and (
-            urs.distance(self.points[self.last_point_index], self.points[-1])
-            > self.min_spacing
-        ):
+        if self._t >= self.update_step:
 
-            self.points.popleft()
-            self.points.append(self.world_position)
+            if len(self.last_point_distances) >= self.spacing_check:
+                self.calibrate_segments()
+
+            self.last_point_distances.append(
+                urs.distance(self.points[self.last_point_index], self.points[-1])
+            )
+
+            if self.last_point_distances[-1] > self.min_spacing:
+
+                self.points.popleft()
+                self.points.append(self.world_position)
+
+            else:
+                self.points[-1] = self.world_position
 
             self._t = 0
         else:
@@ -194,32 +206,35 @@ class TrailRenderer(urs.Entity):
 
     def calibrate_segments(self: Self, new: bool = False) -> None:
         """
-        Called when the number of items in self.points needs to be adjusted
-        according timescale and (for moons) the size of its barycenter blob
+        Called when the number of items in self.last_point_distances >= self.spacing_check
+        this will adjust self.min_spacing and self.segments to control the length of the trail
         """
+
+        if self.parent.blob_name == CENTER_BLOB_NAME:
+            return
 
         if new:
             for i in range(0, self.segments):
                 self.points[i] = self.world_position
 
+        barycenter = BlobSurfaceUrsina.center_blob
+
         if self.barycenter_blob is not None:
+            barycenter = self.barycenter_blob
 
-            self.segments = round(
-                self.orig_segments * (self.barycenter_blob.scale_x / bg_vars.max_radius)
-            )
+        r = urs.distance(self.parent, barycenter)
 
-            self.segments = round(
-                self.segments * (bg_vars.orig_timescale / bg_vars.timescale)
-            )
+        self.min_spacing = (r * math.pi) / 250
 
-            self.segments = urs.clamp(self.segments, 20, self.orig_segments * 2)
-        else:
+        avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
-            self.segments = round(
-                self.orig_segments * (bg_vars.orig_timescale / bg_vars.timescale)
-            )
+        self.last_point_distances.clear()
 
-            self.segments = urs.clamp(self.segments, 10, self.orig_segments * 2)
+        if avg_length < self.min_spacing:
+            avg_length = self.min_spacing
+
+        arc = r * (math.asin(avg_length / (r * 2)) * 2)
+        self.segments = round((r * math.pi) / arc)
 
         self.last_point_index = self.segments - 2
 
@@ -231,8 +246,6 @@ class TrailRenderer(urs.Entity):
             if len(self.points) < self.segments:
                 while len(self.points) < self.segments:
                     self.points.appendleft(self.points[0])
-
-        self.last_timescale = bg_vars.timescale
 
     def on_enable(self: Self) -> None:
         """
@@ -723,6 +736,7 @@ class BlobSurfaceUrsina:
     center_blob_x: ClassVar[float] = 0
     center_blob_y: ClassVar[float] = 0
     center_blob_z: ClassVar[float] = 0
+    center_blob: urs.Vec3 = urs.Vec3(0, 0, 0)
 
     def __init__(
         self: Self,
@@ -860,6 +874,10 @@ class BlobSurfaceUrsina:
         BlobSurfaceUrsina.center_blob_x = x
         BlobSurfaceUrsina.center_blob_y = y
         BlobSurfaceUrsina.center_blob_z = z
+
+        BlobSurfaceUrsina.center_blob.x = x
+        BlobSurfaceUrsina.center_blob.y = y
+        BlobSurfaceUrsina.center_blob.z = z
 
     def draw(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
