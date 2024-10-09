@@ -76,14 +76,14 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(800000)
-        bg_vars.set_universe_scale(40)
-        bg_vars.set_center_blob_scale(30)
+        bg_vars.set_au_scale_factor(5700000)
+        bg_vars.set_universe_scale(100)
+        bg_vars.set_center_blob_scale(20)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_blob_scale(30)
+        bg_vars.set_blob_scale(20)
         bg_vars.set_scale_blob_mass_with_size(True)
-        bg_vars.set_grid_cells_per_au(1)
+        bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
         bg_vars.set_timescale(DAYS * 2)
@@ -100,7 +100,7 @@ class BlobUrsinaFactory:
 
         bg_vars.print_info()
 
-        self.start_distance = bg_vars.au_scale_factor * 7
+        self.start_distance = bg_vars.au_scale_factor * 14
 
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H

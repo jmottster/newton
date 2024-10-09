@@ -59,15 +59,13 @@ UNIVERSE_SCALE = 4
 # To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
 CENTER_BLOB_SCALE = 10
 
-# Max and min blob sizes, proportional to (normal would be S,
-# but that makes them quite small, to fix this divide S by something)
-BLOB_SCALE = 60
+BLOB_SCALE = 10
 
 SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
-CLOCK_FPS = True
+CLOCK_FPS = False
 
 SECONDS = 1
 MINUTES = SECONDS * 60
@@ -95,7 +93,9 @@ START_ANGULAR_CHAOS = False
 # (more chaos to start), otherwise a perfect circular grid (less chaos to start) will be used
 SQUARE_BLOB_PLOTTER = False
 
+# If true, blobs can escape the bounds of the Universe (thus removing them permanently)
 CENTER_BLOB_ESCAPE = True
+
 # whether to wrap objects at edge detection or bounce them, if escape is False
 WRAP_IF_NO_ESCAPE = True and not CENTER_BLOB_ESCAPE
 

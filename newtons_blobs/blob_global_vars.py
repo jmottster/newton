@@ -71,7 +71,7 @@ class BlobGlobalVars:
     BlobGlobalVars.first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
     BlobGlobalVars.background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
 
-    BlobGlobalVars.grid_cells_per_au: ClassVar[int] - the number of cubed grid cells for every AU
+    BlobGlobalVars.grid_cells_per_au: ClassVar[float] - the number of cubed grid cells for every AU
     BlobGlobalVars.grid_cell_size: ClassVar[int] - the size (in pixels) the each cell in the proximity grid should be (see BlobPlotter.update_blobs())
     BlobGlobalVars.grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
     BlobGlobalVars.grid_key_check_bound: ClassVar[int] - The second to last grid position
@@ -107,7 +107,7 @@ class BlobGlobalVars:
     BlobGlobalVars.set_blob_scale(blob_scale: float) -> None
         Class method to set BlobGlobalVars.blob_scale
 
-    BlobGlobalVars.set_grid_cells_per_au(grid_cells_per_au: int) -> None
+    BlobGlobalVars.set_grid_cells_per_au(grid_cells_per_au: float) -> None
         Class method to set BlobGlobalVars.grid_cells_per_au
 
     BlobGlobalVars.set_center_blob_escape(center_blob_escape: bool) -> None
@@ -214,7 +214,7 @@ class BlobGlobalVars:
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE
 
-    grid_cells_per_au: ClassVar[int] = GRID_CELLS_PER_AU
+    grid_cells_per_au: ClassVar[float] = GRID_CELLS_PER_AU
     grid_cell_size: ClassVar[int] = GRID_CELL_SIZE
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
@@ -262,7 +262,7 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
-    def set_grid_cells_per_au(cls, grid_cells_per_au: int) -> None:
+    def set_grid_cells_per_au(cls, grid_cells_per_au: float) -> None:
         """
         Class method to set BlobGlobalVars.grid_cells_per_au.
         """

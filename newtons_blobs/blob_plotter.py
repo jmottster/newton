@@ -223,17 +223,19 @@ class BlobPlotter:
         planets: list[MassiveBlob] = []
         moons: list[MassiveBlob] = []
 
-        max_radius_delta: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
+        radius_min_max_halfway: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
 
-        min_radius_delta: float = (bg_vars.min_radius + max_radius_delta) / 2
+        radius_halfway_max_halfway: float = (
+            radius_min_max_halfway + bg_vars.max_radius
+        ) / 2
 
-        max_radius_delta = (max_radius_delta + bg_vars.max_radius) / 2
+        ############################################################################
 
-        max_mass_delta: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
+        mass_min_max_halfway: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
 
-        min_mass_delta: float = (bg_vars.min_mass + max_mass_delta) / 2
+        # min_mass_delta: float = (bg_vars.min_mass + mass_min_max_halfway) / 2
 
-        max_mass_delta = (max_mass_delta + bg_vars.max_mass) / 2
+        mass_halfway_max_halfway = (mass_min_max_halfway + bg_vars.max_mass) / 2
 
         moon: bool = False
 
@@ -249,25 +251,31 @@ class BlobPlotter:
                 moon = False
                 if random.randint(1, 10) > 4:
                     radius = round(
-                        (random.random() * (min_radius_delta - bg_vars.min_radius))
+                        (
+                            random.random()
+                            * (radius_min_max_halfway - bg_vars.min_radius)
+                        )
                         + bg_vars.min_radius,
                         2,
                     )
 
                     mass = (
-                        random.random() * (min_mass_delta - bg_vars.min_mass)
+                        random.random() * (mass_min_max_halfway - bg_vars.min_mass)
                         + bg_vars.min_mass
                     )
                 else:
                     radius = round(
-                        (random.random() * (bg_vars.max_radius - max_radius_delta))
-                        + max_radius_delta,
+                        (
+                            random.random()
+                            * (bg_vars.max_radius - radius_halfway_max_halfway)
+                        )
+                        + radius_halfway_max_halfway,
                         2,
                     )
 
                     mass = (
-                        random.random() * (bg_vars.max_mass - max_mass_delta)
-                    ) + max_mass_delta
+                        random.random() * (bg_vars.max_mass - mass_halfway_max_halfway)
+                    ) + mass_halfway_max_halfway
             else:
                 moon = True
                 radius = round(
@@ -461,7 +469,7 @@ class BlobPlotter:
                         )
 
         for i in range(1, len(self.blobs)):
-            bp.jjm_gravitational_pull(self.blobs[0], self.blobs[i], dt)
+            bp.gravitational_pull(self.blobs[0], self.blobs[i], dt)
             bp.collision_detection(self.blobs[0], self.blobs[i])
 
         if not bg_vars.center_blob_escape:
@@ -589,17 +597,18 @@ class BlobPlotter:
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition: float = AU * 2  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition: float = AU * 3  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
         plot_radius: float = AU * 4
 
         this_radius: float = plot_radius
 
-        add_random_radius: float = 0
+        # arc length between each blob, i.e. how many blobs per circumference
+        arc: float = (math.pi * (plot_radius * 2)) / 6
 
         # How far apart each blob will be on each circumference
-        chord_scaled: float = (math.pi * (plot_radius * 2)) / 6
+        chord_scaled: float = 2 * plot_radius * math.sin(arc / (plot_radius * 2))
 
         if chord_scaled < ((bg_vars.max_radius * 3) * bg_vars.scale_up):
             chord_scaled = (bg_vars.max_radius * 3) * bg_vars.scale_up
@@ -610,22 +619,23 @@ class BlobPlotter:
         # How many radians to increase for each blob around the circumference (such that
         # we get chord_scaled length between each blob center)
         pi_inc: float = math.asin(chord_scaled / (plot_radius * 2)) * 2
+        # pi_inc: float = (math.pi * 2) / 5
 
         # Divy up the remainder for a more even distribution
         pi_inc += ((math.pi * 2) % pi_inc) / ((math.pi * 2) / pi_inc)
 
         blobs_left: int = orbiting_blobs
 
+        stagger_radius: bool = False
+
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
+            stagger_radius = True
             pi_inc = (math.pi * 2) / (orbiting_blobs)
-            plot_radius -= AU
-            add_random_radius = plot_radius_partition * orbiting_blobs
+            this_radius -= AU
 
         for i in range(0, len(planets)):
 
             self.display.update()
-
-            this_radius = plot_radius + (random.random() * add_random_radius)
 
             # Circular grid x,y plot for this blob
             # Get x and y for this blob, vars set up from last iteration or initial setting
@@ -640,6 +650,10 @@ class BlobPlotter:
             blobs_left -= 1
             # Set up vars for next iteration, move the "clock dial" another notch,
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
+
+            if stagger_radius:
+                this_radius += AU + (random.random() * plot_radius_partition)
+
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0
 

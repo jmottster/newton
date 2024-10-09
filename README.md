@@ -72,11 +72,13 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * T - Toggle blob trails to show orbit path (doesn't apply to moons)
   * G - Toggle cursor and gimbal on/off
   * B - Toggle show info flag (name of blob above blob) on all blobs, this will impact performance
+  * Y - Toggle exaggerate planet sizes
   * H - Toggle show full details (when info flag is on) or just name (see MOUSE LEFT CLICK)
   * N - Toggle show info flag for planets only (ONLY when B is activated, doesn't include flagS turned on with MOUSE LEFT CLICK)
+  * U - Toggle exaggerate moon sizes
   * UP ARROW - Increase timescale (make time go faster)
   * DOWN ARROW - Decrease timescale (make time go slower)
-  * 1 - Start over based on options selected with keys 1 and 2
+  * 1 - Start over based on options selected with keys 4, 5, and 6
   * 2 - Toggle stat displays
   * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
   * 4 - Toggle Start pattern between square and circular (see below)
@@ -85,12 +87,36 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
 
 Some screen shots:
 
-<img src="./resources/screen_shot009.png"/>
+---
 
-<img src="./resources/screen_shot010.png"/>
+Here's the splash screen as it's starting up . . .
 
-<img src="./resources/screen_shot011.png"/>
+<img src="./resources/0_0_6/screen_shot_001.png"/>
 
-<img src="./resources/screen_shot012.png"/>
 
-<img src="./resources/screen_shot013.png"/>
+
+---
+
+Below is what you first see. It's the center blob orbited by barely seeable blobs (the sun and planets). Given the attempt to keep sizes realistic, planets are much smaller the sun. While the sun to planets sizes are to scale, the spaces between them are smaller to make blobs easier to find and navigating between them bearable.
+
+<img src="./resources/0_0_6/screen_shot_002.png"/>
+
+
+
+---
+
+Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y"). This makes it easier to find them and see where the are in relation to each other. There simulated size is still the smaller one, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale).
+
+<img src="./resources/0_0_6/screen_shot_003.png"/>
+
+<img src="./resources/0_0_6/screen_shot_004.png"/>
+
+<img src="./resources/0_0_6/screen_shot_005.png"/>
+
+<img src="./resources/0_0_6/screen_shot_006.png"/>
+
+<img src="./resources/0_0_6/screen_shot_007.png"/>
+
+<img src="./resources/0_0_6/screen_shot_008.png"/>
+
+<img src="./resources/0_0_6/screen_shot_009.png"/>

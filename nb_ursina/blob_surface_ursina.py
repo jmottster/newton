@@ -351,6 +351,8 @@ class Rotator(urs.Entity):
 
         self.trail_color: urs.Color = kwargs.get("trail_color")
 
+        self.radius: urs.Vec3 = urs.Vec3(kwargs.get("scale"))
+
         super().__init__()
 
         for key in (
@@ -412,10 +414,25 @@ class Rotator(urs.Entity):
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
 
+        self.percent_radius: int = round(
+            (
+                (self.scale_x - bg_vars.min_radius)
+                / (bg_vars.max_radius - bg_vars.min_radius)
+            )
+            * 100
+        )
+
         self.is_moon = self.scale_x < bg_vars.min_radius
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
+            self.percent_radius = round(
+                (
+                    (self.scale_x - bg_vars.min_moon_radius)
+                    / (bg_vars.max_moon_radius - bg_vars.min_moon_radius)
+                )
+                * 100
+            )
 
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
@@ -472,12 +489,12 @@ class Rotator(urs.Entity):
         """
 
         if self.text_entity is None:
-            self.text_entity = urs.Entity(scale=self.scale)
+            self.text_entity = urs.Entity(scale=self.scale)  # type: ignore
 
-            self.text = f"{self.blob_name}"
+            self.text = self.short_overlay_text()
 
             if self.text_on and self.text_full_details:
-                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+                self.text = self.full_overlay_text()
 
             self.info_text = urs.Text(
                 self.text,
@@ -512,10 +529,10 @@ class Rotator(urs.Entity):
         """This is for when text changes, it will ensure the background size updates accordingly"""
         if self.info_text is not None:
 
-            self.text = f"{self.blob_name}"
+            self.text = self.short_overlay_text()
 
             if self.text_on and self.text_full_details:
-                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+                self.text = self.full_overlay_text()
 
             self.info_text.text = self.text
             self.info_text.create_background(
@@ -544,15 +561,21 @@ class Rotator(urs.Entity):
             urs.destroy(self.text_entity)
             self.text_entity = None
 
+    def full_overlay_text(self: Self) -> str:
+        return f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+
+    def short_overlay_text(self: Self) -> str:
+        return f"{self.blob_name}"
+
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
 
         if self.text_entity is not None and self.info_text.enabled:
 
-            self.text = f"{self.blob_name}"
+            self.text = self.short_overlay_text()
 
             if self.text_on and self.text_full_details:
-                self.text = f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+                self.text = self.full_overlay_text()
 
             self.text_entity.position = self.position
             self.text_entity.rotation = urs.camera.parent.rotation
@@ -631,12 +654,26 @@ class Rotator(urs.Entity):
 
         if self.trail_ready and key == "t":
             if self.trail is not None:
-                self.trail.enabled = False
+                self.trail.enabled = False  # type: ignore
                 urs.destroy(self.trail)
                 self.trail = None
 
             elif self.trail is None:
                 self.create_trail()
+
+        if not self.blob_name == CENTER_BLOB_NAME and not self.is_moon and key == "y":
+
+            if self.scale == self.radius:  # type: ignore
+                self.scale = self.radius * 30
+            else:
+                self.scale = self.radius
+
+        if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
+
+            if self.scale == self.radius:
+                self.scale = self.radius * 5
+            else:
+                self.scale = self.radius
 
     def on_disable(self: Self) -> None:
         """
@@ -755,7 +792,7 @@ class BlobSurfaceUrsina:
         self.mass: float = mass
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
-        self.texture: str = None
+        self.texture: str = texture
         self.rotation_speed: float = None
         self.rotation_pos: Tuple[float, float, float] = None
         self.position: Tuple[float, float, float] = (0, 0, 0)
@@ -765,10 +802,14 @@ class BlobSurfaceUrsina:
         urs_color = urs.color.rgba(self.color[0], self.color[1], self.color[2])
 
         if bg_vars.textures_3d:
-            if texture is not None:
-                self.texture = texture
-            else:
-                if self.radius >= (bg_vars.max_radius * 0.75):
+
+            if self.texture is None:
+
+                halfway_max_halfway: float = (
+                    ((bg_vars.min_radius + bg_vars.max_radius) / 2) + bg_vars.max_radius
+                ) / 2
+
+                if self.radius >= (halfway_max_halfway):
                     self.texture = BLOB_TEXTURES_LARGE[
                         random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
                     ]

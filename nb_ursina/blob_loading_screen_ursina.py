@@ -50,6 +50,12 @@ class BlobLoadingScreenUrsina(urs.Entity):
     text_entity_title : urs.Text
         The Entity that renders the title
 
+    text_entity_credit_shadow : urs.Text
+        The Entity that puts a shadow behind the author's name
+
+    text_entity_credit : urs.Text
+        The Entity that renders the author's name
+
     text_entity_loading : urs.Text
         The Entity that renders the "Loading" message
 
@@ -161,6 +167,30 @@ class BlobLoadingScreenUrsina(urs.Entity):
             eternal=True,
         )
 
+        self.text_entity_credit_shadow: urs.Text = urs.Text(
+            parent=self,
+            font=DISPLAY_FONT,
+            size=1,
+            scale=8,
+            text="by Jason Mott",
+            origin=(0, 0),
+            position=(0.99, 1.49),
+            color=urs.color.rgba(0, 0, 0, 255),
+            eternal=True,
+        )
+
+        self.text_entity_credit: urs.Text = urs.Text(
+            parent=self,
+            font=DISPLAY_FONT,
+            size=1,
+            scale=8,
+            text="by Jason Mott",
+            origin=(0, 0),
+            position=(1, 1.5),
+            color=urs.color.rgba(20, 92, 158, 255),
+            eternal=True,
+        )
+
         self.text_entity_loading: urs.Text = urs.Text(
             parent=self,
             font=DISPLAY_FONT,
@@ -242,6 +272,8 @@ class BlobLoadingScreenUrsina(urs.Entity):
         urs.destroy(self.text_entity_loading)
         urs.destroy(self.text_entity_title)
         urs.destroy(self.text_entity_title_shadow)
+        urs.destroy(self.text_entity_credit)
+        urs.destroy(self.text_entity_credit_shadow)
         urs.destroy(self.point_center)
         urs.destroy(self.point2)
         urs.destroy(self.point)
