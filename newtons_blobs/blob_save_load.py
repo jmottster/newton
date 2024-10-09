@@ -33,7 +33,7 @@ class BlobSaveLoad:
 
     Methods
     -------
-    save(get_prefs: bool = True) -> None
+    save(get_prefs: bool = True, file_name: str = "saved.json") -> None
         Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval
 
     load(universe: pygame.Surface, set_prefs: bool = True) -> bool
@@ -51,7 +51,7 @@ class BlobSaveLoad:
         self.savable_loadables: List[SavableLoadablePrefs] = savable_loadables
         self.json_data: Dict[str, Any] = {}
 
-    def save(self: Self, get_prefs: bool = True) -> None:
+    def save(self: Self, get_prefs: bool = True, file_name: str = "saved.json") -> None:
         """
         Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval
         """
@@ -59,7 +59,7 @@ class BlobSaveLoad:
             for savable_loadable in self.savable_loadables:
                 savable_loadable.get_prefs(self.json_data)
 
-        with open(home_path_plus((".newton",), "saved.json"), "w") as json_file:
+        with open(home_path_plus((".newton",), file_name), "w") as json_file:
             json.dump(self.json_data, json_file, indent=3)
 
     def load(self: Self, set_prefs: bool = True) -> bool:

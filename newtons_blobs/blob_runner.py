@@ -180,6 +180,7 @@ class BlobRunner:
             self.message = None
             self.message_counter = 0
             self.blob_plotter.start_over()
+            self.blob_save_load.save(True, "last_blob_plot.json")
 
         def toggle_square_grid() -> None:
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -289,6 +290,7 @@ class BlobRunner:
             self.universe = self.blob_factory.get_blob_universe()
         else:
             self.blob_plotter.plot_blobs()
+            self.blob_save_load.save(True, "last_blob_plot.json")
 
         while self.running:
             self.display.check_events(self.keyboard_events)
