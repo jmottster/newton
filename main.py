@@ -1,9 +1,14 @@
 # Compilation mode, standalone everywhere, except on macOS there app bundle
 # nuitka-project-if: {OS} in ("Windows", "Linux", "FreeBSD", "Darwin"):
+#    nuitka-project: --python-debug
+#    nuitka-project: --standalone
+#    nuitka-project: --include-package=ursina
 #    nuitka-project: --onefile
 # nuitka-project-if: {OS} in ("Windows"):
 #    nuitka-project: --output-filename=newton3D.exe
 #    nuitka-project: --windows-icon-from-ico=newtons_blobs/img/newton_icon.ico
+#    nuitka-project: --force-stdout-spec={MAIN_DIRECTORY}/log.out.txt
+#    nuitka-project: --force-stderr-spec={MAIN_DIRECTORY}/log.err.txt
 # nuitka-project-if: {OS} in ("Linux"):
 #    nuitka-project: --output-filename=newton3D
 #    nuitka-project: --linux-icon=newtons_blobs/img/newton_icon.ico
@@ -36,6 +41,8 @@ by Jason Mott, copyright 2024
 import newtons_blobs as nb
 from nb_ursina import BlobUrsinaFactory
 
+import os, sys
+
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -47,5 +54,10 @@ __status__ = "In Progress"
 
 
 if __name__ == "__main__":
+
+    if "NUITKA_LAUNCH_TOKEN" in os.environ:
+        sys.exit("Error, launch token must not be present or else fork bomb suspected.")
+    os.environ["NUITKA_LAUNCH_TOKEN"] = "1"
+
     blober: nb.BlobRunner = nb.BlobRunner(BlobUrsinaFactory())
     blober.run()

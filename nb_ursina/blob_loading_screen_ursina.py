@@ -99,12 +99,12 @@ class BlobLoadingScreenUrsina(urs.Entity):
             self.max_value = kwargs.get("max_value")
 
         self.health_bar: HealthBar = HealthBar(
-            max_value=self.max_value,
             value=0,
-            position=(-0.25, -0.25, -2),
+            max_value=self.max_value,
             animation_duration=0,
-            parent=self,
-            bar_color=urs.color.rgba(20, 92, 158, 255),
+            position=(-0.25, -0.25, -2),
+            # parent=self,
+            bar_color=urs.color.rgb32(20, 92, 158),
             enabled=False,
             eternal=True,
         )
@@ -119,7 +119,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
         self.point: urs.Entity = urs.Entity(
             parent=self,
             model=urs.Circle(24, mode="point", thickness=0.03),
-            color=urs.color.rgba(20, 92, 158, 255),
+            color=urs.color.rgb32(20, 92, 158),
             scale=2,
             texture="circle",
             eternal=True,
@@ -127,7 +127,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
         self.point2: urs.Entity = urs.Entity(
             parent=self,
             model=urs.Circle(12, mode="point", thickness=0.03),
-            color=urs.color.rgba(20, 92, 158, 255),
+            color=urs.color.rgb32(20, 92, 158),
             scale=1,
             texture="circle",
             eternal=True,
@@ -136,8 +136,8 @@ class BlobLoadingScreenUrsina(urs.Entity):
         self.point_center: urs.Entity = urs.Entity(
             parent=self,
             model=urs.Circle(16, radius=1, mode="ngon"),
-            color=urs.color.rgba(
-                CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 255
+            color=urs.color.rgb32(
+                CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
             ),
             scale=0.1,
             eternal=True,
@@ -151,7 +151,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
             text="Newton's Blobs!",
             origin=(0, 0),
             position=(-0.01, 1.99),
-            color=urs.color.rgba(175, 175, 175, 255),
+            color=urs.color.rgb32(175, 175, 175),
             eternal=True,
         )
 
@@ -163,7 +163,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
             text="Newton's Blobs!",
             origin=(0, 0),
             position=(0, 2),
-            color=urs.color.rgba(20, 92, 158, 255),
+            color=urs.color.rgb32(20, 92, 158),
             eternal=True,
         )
 
@@ -175,7 +175,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
             text="by Jason Mott",
             origin=(0, 0),
             position=(0.99, 1.49),
-            color=urs.color.rgba(0, 0, 0, 255),
+            color=urs.color.rgb32(0, 0, 0),
             eternal=True,
         )
 
@@ -187,7 +187,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
             text="by Jason Mott",
             origin=(0, 0),
             position=(1, 1.5),
-            color=urs.color.rgba(20, 92, 158, 255),
+            color=urs.color.rgb32(20, 92, 158),
             eternal=True,
         )
 
@@ -209,7 +209,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
             parent=self,
             model=urs.Quad(radius=0.025, scale=(urs.camera.aspect_ratio, 1)),
             scale=(5, 5),
-            color=urs.color.rgba(0, 21, 36, 255),
+            color=urs.color.rgb32(0, 21, 36),
             z=1,
             eternal=True,
         )

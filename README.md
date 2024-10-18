@@ -6,9 +6,9 @@
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.6! This is the full 3D version. And now there is full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Pause and click on a blob to get its name, size, and position. Much more to come in the future!
+Alpha release 0.0.6! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlage blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of referece to it when you unpause! Much more to come in the future!
 
-To toggle auto save and load, just press the 3 key. To pause, press the spacebar. Full instructions below.
+To toggle auto save and load, just press the 3 key. To pause, press the spacebar. **Full instructions below.**
 
 #### Installation
 
@@ -38,9 +38,13 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes are properly proportional to each other from Jupiter sized to Earth sized (however,, the center blob is smaller in proportion than the sun would be to them). Time is sped up to about 600 hours per second for the fake 3D version, and 900 hours per second for the 3D version.
+This is a space-level gravity and collision simulator. Movement is controled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
 
-This is a prototype, a proof of concept. Thus, it's not very interactive yet, it's just showing what it can simulate. However, there are movement controls here while you watch it go.
+This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go.
+
+<img src="./newtons_blobs/img/controls.png"/>
+
+<img src="./newtons_blobs/img/controls2.png"/>
 
 * Movement controls:
   * W - Move forward
@@ -60,6 +64,12 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * MOUSE MOVE FORWARD - Pitch up
   * MOUSE MOVE BACKWARD - Pitch down
 * Miscellaneous Controls:
+  * 1 - Start over based on options selected with keys 4, 5, and 6
+  * 2 - Toggle stat displays
+  * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
+  * 4 - Toggle Start pattern between square and circular (see below)
+  * 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+  * 6 - Toggle start orbit with angular chaos
   * SPACEBAR - Pause/Unpause
     * Only when paused . . .
     * MOUSE LEFT CLICK on Blob - Toggle info flag above the blob (name, mass, radius, position, or just name; see H key)
@@ -78,12 +88,6 @@ This is a prototype, a proof of concept. Thus, it's not very interactive yet, it
   * U - Toggle exaggerate moon sizes
   * UP ARROW - Increase timescale (make time go faster)
   * DOWN ARROW - Decrease timescale (make time go slower)
-  * 1 - Start over based on options selected with keys 4, 5, and 6
-  * 2 - Toggle stat displays
-  * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
-  * 4 - Toggle Start pattern between square and circular (see below)
-  * 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
-  * 6 - Toggle start orbit with angular chaos
 
 Some screen shots:
 
@@ -93,15 +97,11 @@ Here's the splash screen as it's starting up . . .
 
 <img src="./resources/0_0_6/screen_shot_001.png"/>
 
-
-
 ---
 
-Below is what you first see. It's the center blob orbited by barely seeable blobs (the sun and planets). Given the attempt to keep sizes realistic, planets are much smaller the sun. While the sun to planets sizes are to scale, the spaces between them are smaller to make blobs easier to find and navigating between them bearable.
+Below is what you first see. It's the center blob orbited by barely seeable blobs (the sun and planets). Given the attempt to keep sizes realistic, planets are much smaller than the sun. While the sun to planets sizes are to scale, the spaces between them are smaller to make blobs easier to find and navigating between them bearable.
 
 <img src="./resources/0_0_6/screen_shot_002.png"/>
-
-
 
 ---
 
@@ -109,14 +109,38 @@ Below is the same scene as above, but with the "exaggerate planet sizes" feature
 
 <img src="./resources/0_0_6/screen_shot_003.png"/>
 
+---
+
+Below is
+
 <img src="./resources/0_0_6/screen_shot_004.png"/>
+
+---
+
+Below is
 
 <img src="./resources/0_0_6/screen_shot_005.png"/>
 
+---
+
+Below is
+
 <img src="./resources/0_0_6/screen_shot_006.png"/>
+
+---
+
+Below is
 
 <img src="./resources/0_0_6/screen_shot_007.png"/>
 
+---
+
+Below is
+
 <img src="./resources/0_0_6/screen_shot_008.png"/>
+
+---
+
+Below is
 
 <img src="./resources/0_0_6/screen_shot_009.png"/>

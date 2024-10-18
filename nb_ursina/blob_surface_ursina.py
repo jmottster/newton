@@ -505,7 +505,7 @@ class Rotator(urs.Entity):
                 origin=(0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
-                color=urs.color.rgba(255, 255, 255, 255),
+                color=urs.color.rgb32(255, 255, 255),
                 shader=shd.lit_with_shadows_shader,
                 enabled=False,
             )
@@ -538,7 +538,7 @@ class Rotator(urs.Entity):
             self.info_text.create_background(
                 self.info_text.size * 0.5,
                 self.info_text.size * 0.25,
-                urs.color.rgb(
+                urs.color.rgb32(
                     BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
                 ),
             )
@@ -797,9 +797,9 @@ class BlobSurfaceUrsina:
         self.rotation_pos: Tuple[float, float, float] = None
         self.position: Tuple[float, float, float] = (0, 0, 0)
 
-        self.trail_color: urs.Color = urs.color.rgba(25, 100, 150, 255)
+        self.trail_color: urs.Color = urs.color.rgb32(25, 100, 150)
 
-        urs_color = urs.color.rgba(self.color[0], self.color[1], self.color[2])
+        urs_color = urs.color.rgb32(self.color[0], self.color[1], self.color[2])
 
         if bg_vars.textures_3d:
 
@@ -828,16 +828,16 @@ class BlobSurfaceUrsina:
 
         if color == CENTER_BLOB_COLOR:
 
-            urs_color = urs.color.rgba(150, 150, 150, 255)
+            urs_color = urs.color.rgb32(150, 150, 150)
 
             enabled: bool = not bg_vars.black_hole_mode
             self.texture = "nb_ursina/textures/sun03.png"
 
             if not enabled:
-                urs_color = urs.color.rgba(100, 100, 100, 0)
+                urs_color = urs.color.rgba(0, 0, 0, 0)
 
             if not bg_vars.textures_3d:
-                urs_color = urs.rgb(
+                urs_color = urs.color.rgb32(
                     CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
                 )
                 texture = None
@@ -865,14 +865,14 @@ class BlobSurfaceUrsina:
                 shadow_map_resolution=(4096, 4096),
                 max_distance=bg_vars.universe_size * 1000,
                 attenuation=(1, 0, 0),
-                color=(5, 5, 5, 5),
+                color=urs.color.rgba(5, 5, 5, 5),
             )
         else:
 
             if not bg_vars.textures_3d:
                 self.texture = None
             else:
-                urs_color = urs.color.rgba(255, 255, 255, 255)
+                urs_color = urs.color.rgb32(255, 255, 255)
 
             self.ursina_blob = Rotator(
                 blob_name=self.name,

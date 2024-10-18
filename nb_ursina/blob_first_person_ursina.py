@@ -89,17 +89,17 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.center_cursor: urs.Entity = urs.Entity(
             parent=urs.camera.ui,
             model="quad",
-            color=urs.color.rgb(179, 0, 27),
+            color=urs.color.rgb32(179, 0, 27),
             scale=(0.008, 0.008, 0.008),
             position=(0, 0, 2),
             rotation_z=45,
             eternal=kwargs["eternal"],
         )
 
-        color: urs.Color = urs.color.rgba(200, 200, 200, 150)
+        color: urs.Color = urs.color.rgba(0.78, 0.78, 0.78, 0.59)
         self.gimbal_texture: str = "nb_ursina/textures/sun03.png"
         if not bg_vars.textures_3d:
-            color = urs.rgba(
+            color = urs.color.rgba32(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
             )
             self.gimbal_texture = None
@@ -113,7 +113,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.temp_scale * 0.005,
             ),
             texture=self.gimbal_texture,
-            texture_scale=(1, 1, 1),
+            texture_scale=(1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
         )
@@ -121,7 +121,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
             model="arrow",
-            color=urs.rgb(179, 0, 27),
+            color=urs.color.rgb32(179, 0, 27),
             scale=(1, 3, 1.75),
             position=(0, 0, 0.5),
             rotation_x=90,

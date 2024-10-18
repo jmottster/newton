@@ -183,7 +183,7 @@ class BlobDisplayUrsina:
             cog_menu=False,
         )
 
-        urs.window.color = urs.color.rgb(
+        urs.window.color = urs.color.rgb32(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
 
