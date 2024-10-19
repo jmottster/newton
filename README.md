@@ -6,7 +6,7 @@
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.6! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlage blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of referece to it when you unpause! Much more to come in the future!
+Alpha release 0.0.6! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
 
 To toggle auto save and load, just press the 3 key. To pause, press the spacebar. **Full instructions below.**
 
@@ -19,14 +19,15 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 1. Download Windows executable here:
    1. [Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.exe)
 2. Save where you want to store it
-3. Double click and enjoy (runs as is, no system installation)
+3. You may need to whitelist the executable with your malware protection software
+4. Double click and enjoy (runs as is, no system installation)
 
 ###### The nerdy way
 
 1. **Requirements:**
    1. git and github account
-   2. python 3.11 or newer
-      1. Ursina 6.1.2
+   2. python 3.12 or newer
+      1. Ursina 7.0.0
       2. Numpy 1.26.3
       3. Pygame-CE 2.4.0 (only to run fake 3D version)
 2. **In terminal:**
@@ -38,9 +39,9 @@ Two ways, the easy way (Windows only) and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator. Movement is controled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
+This is a space-level gravity and collision simulator. Movement is controlled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
 
-This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go.
+This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go. A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/controls_quick_reference.pdf).
 
 <img src="./newtons_blobs/img/controls.png"/>
 
@@ -105,42 +106,42 @@ Below is what you first see. It's the center blob orbited by barely seeable blob
 
 ---
 
-Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y"). This makes it easier to find them and see where the are in relation to each other. There simulated size is still the smaller one, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale).
+Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y"). This makes it easier to find them and see where the are in relation to each other. Their simulated sizes are still the smaller ones, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale). While its easier to see them as you move toward them, you will not see their moons until you return them to their normal sizes (by pressing "Y"). Of course, as you get closer, you won't need their size to be exaggerated. 
 
 <img src="./resources/0_0_6/screen_shot_003.png"/>
 
 ---
 
-Below is
+Below is the scene with blobs all regular size and orbit trails toggled on (by pressing "T"). This makes it easier to see where the planet blobs are while maintaining the properly scaled sizes. As you move closer to a blob it will be more visible and eventually you can get close enough to see their moons as well.
 
 <img src="./resources/0_0_6/screen_shot_004.png"/>
 
 ---
 
-Below is
+Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y") as well as orbit trails toggled on (by pressing "T"). This makes it easier to find them and see where the are in relation to each other and their respective orbits. Their simulated sizes are still the smaller ones, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale).
 
 <img src="./resources/0_0_6/screen_shot_005.png"/>
 
 ---
 
-Below is
+Below is a close up scene of a planet blob (normal size) and its orbiting moon blobs (normal size). This is typical of what you'd see as you move closer to a blob at normal size.
 
 <img src="./resources/0_0_6/screen_shot_006.png"/>
 
 ---
 
-Below is
+Below is the same scene as above, but with the "exaggerate moon sizes" feature toggled on (by pressing "U"). This won't always be necessary, depending on the size of the planet blob. Larger gas giant sized blobs will require it more, as moon blobs are quite small by comparison. 
 
 <img src="./resources/0_0_6/screen_shot_007.png"/>
 
 ---
 
-Below is
+Below is a close up scene of a planet blob (normal size) and its orbiting moon blobs (normal size) with orbit trails toggled on (by pressing "T").
 
 <img src="./resources/0_0_6/screen_shot_008.png"/>
 
 ---
 
-Below is
+Below is the same as above with the "exaggerate moon sizes" feature toggled on (by pressing "U") and with orbit trails toggled on (by pressing "T").
 
 <img src="./resources/0_0_6/screen_shot_009.png"/>
