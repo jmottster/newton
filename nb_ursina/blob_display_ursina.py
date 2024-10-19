@@ -131,6 +131,9 @@ class BlobDisplayUrsina:
     fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
 
+    fps_get_dt() -> float
+        Returns the elapsed time for the previous frame in seconds
+
     fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
 
@@ -180,7 +183,7 @@ class BlobDisplayUrsina:
             cog_menu=False,
         )
 
-        urs.window.color = urs.color.rgb(
+        urs.window.color = urs.color.rgb32(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
 
@@ -205,6 +208,7 @@ class BlobDisplayUrsina:
 
         self.paused: bool = False
         self.show_stats: bool = True
+        self.entity_follow: bool = False
 
         self.event_queue: EventQueue = EventQueue(eternal=True)
 
@@ -221,7 +225,7 @@ class BlobDisplayUrsina:
     def load_key_ints(self: Self) -> Dict[str, int]:
         """Loads up the Dict that holds integers that represent keys. (see get_key_code)"""
         mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
-        morekeys = ("escape", "space")
+        morekeys = ("escape", "space", "up arrow", "down arrow", "right mouse down")
 
         key_ints: Dict[str, int] = {}
         i = 0
@@ -260,8 +264,23 @@ class BlobDisplayUrsina:
             if not self.show_stats:
                 self.text_entity_cache.clear()
 
+        def toggle_entity_follow() -> None:
+            if self.paused:
+                self.entity_follow = not self.entity_follow
+                if self.entity_follow and urs.mouse.hovered_entity is not None:
+                    self.first_person_surface.first_person_viewer.start_following(
+                        urs.mouse.hovered_entity
+                    )
+                else:
+                    self.entity_follow = False
+                    self.first_person_surface.first_person_viewer.stop_following()
+            else:
+                self.entity_follow = False
+                self.first_person_surface.first_person_viewer.stop_following()
+
         keyboard_events[self.get_key_code("space")] = pause_game
         keyboard_events[self.get_key_code("2")] = toggle_stats
+        keyboard_events[self.get_key_code("right mouse down")] = toggle_entity_follow
 
         return keyboard_events
 
@@ -301,7 +320,11 @@ class BlobDisplayUrsina:
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
         """
-        return self.key_ints[key]
+
+        try:
+            return self.key_ints[key]
+        except:
+            return -1
 
     def check_events(
         self: Self, keyboard_events: Dict[int, Callable[[], None]]
@@ -313,17 +336,19 @@ class BlobDisplayUrsina:
         """
         for _ in range(len(self.event_queue.input_queue)):
             key = self.event_queue.input_queue.popleft()
-            if (
-                self.key_ints.get(key) is not None
-                and keyboard_events.get(self.key_ints[key]) is not None
-            ):
-                keyboard_events[self.key_ints[key]]()
+            if self.key_ints.get(key) is not None:
+                if keyboard_events.get(self.key_ints[key]) is not None:
+                    keyboard_events[self.key_ints[key]]()
                 if self.urs_keyboard_events.get(self.key_ints[key]) is not None:
                     self.urs_keyboard_events[self.key_ints[key]]()
 
     def fps_clock_tick(self: Self, fps: int) -> None:
         """Control the FPS rate by sending the desired rate here every frame of while loop"""
         self.fps.clock.tick(fps)
+
+    def fps_get_dt(self: Self) -> float:
+        """Returns the elapsed time for the previous frame in seconds"""
+        return self.fps.clock.dt
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
@@ -353,6 +378,8 @@ class BlobDisplayUrsina:
 
         if pos_lock:
             self.first_person_surface.first_person_viewer.pos_unlock()
+
+        self.update()
 
     def is_fullscreen(self: Self) -> bool:
         """Whether or not the display is in fullscreen mode (False if in windowed mode)"""

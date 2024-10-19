@@ -6,7 +6,7 @@ Wrapper classes for Panda3D light classes
 by Jason Mott, copyright 2024
 """
 
-from typing import Self
+from typing import Self, Tuple
 
 from panda3d.core import NodePath  # type: ignore
 from panda3d.core import Light as PandaLight  # type: ignore
@@ -50,6 +50,7 @@ class BlobLight(urs.Entity):
 
     def __init__(self: Self, **kwargs):
         super().__init__()
+
         self.rotation_x = 90
         self._color: urs.Color = urs.color.white
         self._light: PandaLight = self.init_light()
@@ -111,6 +112,8 @@ class BlobPointLight(BlobLight):
 
         self.light_name: str = kwargs.get("light_name")
         self.entity_set_light: urs.Entity = kwargs.get("entity_set_light")
+        self.attenuation: Tuple[int, int, int] = kwargs.get("attenuation")
+        self.max_distance: float = float(kwargs.get("max_distance"))
         super().__init__()
 
         for key, value in kwargs.items():
@@ -118,7 +121,12 @@ class BlobPointLight(BlobLight):
 
     def init_light(self: Self) -> PandaLight:
         """Returns an instance of PandaPointLight(). See Panda3D documentation"""
-        return PandaPointLight(f"point_light_{self.light_name}")
+        light: PandaPointLight = PandaPointLight(f"point_light_{self.light_name}")
+        light.setMaxDistance(self.max_distance)
+        light.setAttenuation(
+            (self.attenuation[0], self.attenuation[1], self.attenuation[2])
+        )
+        return light
 
 
 class BlobAmbientLight(BlobLight):
@@ -148,4 +156,5 @@ class BlobAmbientLight(BlobLight):
 
     def init_light(self: Self) -> PandaLight:
         """Returns an instance of PandaAmbientLight(). See Panda3D documentation"""
-        return PandaAmbientLight(f"ambient_light_{self.light_name}")
+        light: PandaAmbientLight = PandaAmbientLight(f"ambient_light_{self.light_name}")
+        return light

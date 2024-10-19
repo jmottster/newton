@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Dict, Tuple, Self
 
 
 from .globals import *
-from .blob_global_vars import BlobGlobalVars
+from .blob_global_vars import BlobGlobalVars as bg_vars
 from .blob_surface import BlobSurface
 
 __author__ = "Jason Mott"
@@ -66,8 +66,8 @@ class MassiveBlob:
         Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
         (closer=bigger/further=smaller), a 3d effect according the the z position
 
-    advance() -> None
-        Applies velocity to blob, changing its x,y coordinates for next frame draw
+    advance(dt: float) -> None
+        Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)
 
     destroy() -> None
         Call when no longer needed, so it can clean up and disappear
@@ -107,9 +107,9 @@ class MassiveBlob:
         "pause",
     )
 
-    center_blob_x: ClassVar[float] = BlobGlobalVars.universe_size_w / 2
-    center_blob_y: ClassVar[float] = BlobGlobalVars.universe_size_h / 2
-    center_blob_z: ClassVar[float] = BlobGlobalVars.universe_size_d / 2
+    center_blob_x: ClassVar[float] = bg_vars.universe_size_w / 2
+    center_blob_y: ClassVar[float] = bg_vars.universe_size_h / 2
+    center_blob_z: ClassVar[float] = bg_vars.universe_size_d / 2
 
     def __init__(
         self: Self,
@@ -125,15 +125,13 @@ class MassiveBlob:
         vz: float,
     ):
 
-        self.scaled_universe_size_half_z: float = (
-            universe_size * BlobGlobalVars.scale_up
-        ) / 2
+        self.scaled_universe_size_half_z: float = (universe_size * bg_vars.scale_up) / 2
         self.universe_size = universe_size
 
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
-        self.scaled_radius: float = self.radius * BlobGlobalVars.scale_up
+        self.scaled_radius: float = self.radius * bg_vars.scale_up
         self.orig_radius: Tuple[float, float, float] = (
             self.scaled_radius,
             self.scaled_radius / 2,
@@ -152,13 +150,27 @@ class MassiveBlob:
         self.escaped: bool = False
         self.pause: bool = False
 
-        if not BlobGlobalVars.true_3d:
+        if not bg_vars.true_3d:
             self.fake_blob_z()
+
+    def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
+
+        if bg_vars.true_3d:
+
+            vel: Tuple[float, float, float] = None
+
+            vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
+
+            x = orbital.blob_surface.position[0] * bg_vars.scale_up
+            y = orbital.blob_surface.position[1] * bg_vars.scale_up
+            z = orbital.blob_surface.position[2] * bg_vars.scale_up
+
+            orbital.update_pos_vel(x, y, z, vel[0], vel[1], vel[2])
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["name"] = self.name
-        data["radius"] = self.orig_radius[2] / BlobGlobalVars.au_scale_factor
+        data["radius"] = self.orig_radius[2] / bg_vars.au_scale_factor
         data["color"] = self.blob_surface.color
         if getattr(self.blob_surface, "texture"):
             data["texture"] = self.blob_surface.texture
@@ -176,24 +188,24 @@ class MassiveBlob:
 
     def grid_key(self: Self) -> Tuple[int, int, int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
-        x = int((self.x * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
-        y = int((self.y * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
-        z = int((self.z * BlobGlobalVars.scale_down) / BlobGlobalVars.grid_cell_size)
+        x = int((self.x * bg_vars.scale_down) / bg_vars.grid_cell_size)
+        y = int((self.y * bg_vars.scale_down) / bg_vars.grid_cell_size)
+        z = int((self.z * bg_vars.scale_down) / bg_vars.grid_cell_size)
 
-        if x <= 0:
-            x = 1
-        if x >= BlobGlobalVars.grid_key_check_bound:
-            x = BlobGlobalVars.grid_key_check_bound - 1
+        # if x <= 0:
+        #     x = 1
+        if x > bg_vars.grid_key_check_bound:
+            x = bg_vars.grid_key_check_bound
 
-        if y <= 0:
-            y = 1
-        if y >= BlobGlobalVars.grid_key_check_bound:
-            y = BlobGlobalVars.grid_key_check_bound - 1
+        # if y <= 0:
+        #     y = 1
+        if y > bg_vars.grid_key_check_bound:
+            y = bg_vars.grid_key_check_bound
 
-        if z <= 0:
-            z = 1
-        if z >= BlobGlobalVars.grid_key_check_bound:
-            z = BlobGlobalVars.grid_key_check_bound - 1
+        # if z <= 0:
+        #     z = 1
+        if z > bg_vars.grid_key_check_bound:
+            z = bg_vars.grid_key_check_bound
 
         return (
             x,
@@ -203,9 +215,9 @@ class MassiveBlob:
 
     def draw(self: Self) -> None:
         """Tells the instance to call draw on the BlobSurface instance"""
-        x = self.x * BlobGlobalVars.scale_down
-        y = self.y * BlobGlobalVars.scale_down
-        z = self.z * BlobGlobalVars.scale_down
+        x = self.x * bg_vars.scale_down
+        y = self.y * bg_vars.scale_down
+        z = self.z * bg_vars.scale_down
 
         if self.name != CENTER_BLOB_NAME:
             self.blob_surface.draw((x, y, z), LIGHTING)
@@ -228,26 +240,28 @@ class MassiveBlob:
         self.scaled_radius = self.orig_radius[0] + (
             self.orig_radius[1] * (diff / self.scaled_universe_size_half_z)
         )
-        self.radius = round(self.scaled_radius * BlobGlobalVars.scale_down)
+        self.radius = round(self.scaled_radius * bg_vars.scale_down)
         self.blob_surface.resize(self.radius)
 
-    def advance(self: Self) -> None:
-        """Applies velocity to blob, changing its x,y coordinates for next frame draw"""
+    def advance(self: Self, dt: float) -> None:
+        """Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)"""
 
-        if not BlobGlobalVars.true_3d and self.name == CENTER_BLOB_NAME:
+        if not bg_vars.true_3d and self.name == CENTER_BLOB_NAME:
             self.fake_blob_z()
             return
 
+        timescale: float = bg_vars.timescale * dt
+
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
-        self.x += self.vx * BlobGlobalVars.timescale
+        self.x += self.vx * timescale
 
         # Advance y by velocity (one frame, with TIMESCALE elapsed time)
-        self.y += self.vy * BlobGlobalVars.timescale
+        self.y += self.vy * timescale
 
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
-        self.z += self.vz * BlobGlobalVars.timescale
+        self.z += self.vz * timescale
 
-        if not BlobGlobalVars.true_3d:
+        if not bg_vars.true_3d:
             self.fake_blob_z()
 
     def destroy(self: Self) -> None:
@@ -266,7 +280,7 @@ class MassiveBlob:
         self.vy = vy
         self.vz = vz
 
-        if not BlobGlobalVars.true_3d:
+        if not bg_vars.true_3d:
             self.fake_blob_z()
 
     def rotate_x(self: Self) -> None:

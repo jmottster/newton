@@ -45,6 +45,9 @@ class BlobUniverse(Protocol):
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the center point x,y,z
 
+    get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
+        Returns a tuple of offset values from center to given x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
@@ -77,6 +80,12 @@ class BlobUniverse(Protocol):
 
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the center point x,y,z"""
+        pass
+
+    def get_center_offset(
+        self: Self, x: float, y: float, z: float
+    ) -> Tuple[float, float, float]:
+        """Returns a tuple of offset values from center to given x,y,z"""
         pass
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:

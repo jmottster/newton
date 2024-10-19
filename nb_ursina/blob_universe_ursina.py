@@ -12,7 +12,7 @@ import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import resource_path
 
 __author__ = "Jason Mott"
@@ -37,6 +37,9 @@ class BlobUniverseUrsina:
 
     Methods
     -------
+    set_universe_entity(scale: float) -> None
+        Creates the Entity that renders the dome of the background image (stars)
+
     get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for the universe, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
@@ -49,6 +52,9 @@ class BlobUniverseUrsina:
 
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the center point x,y,z
+
+    get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
+        Returns a tuple of offset values from center to given x,y,z
 
     fill(color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
@@ -67,17 +73,29 @@ class BlobUniverseUrsina:
         self.height = size_h
 
         self.universe: urs.Entity = None
-        self.set_universe_entity(BlobGlobalVars.background_scale)
+        self.set_universe_entity(bg_vars.background_scale)
 
         # urs.scene.scale = urs.Vec3(self.width, self.height, self.height)
 
     def set_universe_entity(self: Self, scale: float) -> None:
+        """Creates the Entity that renders the dome of the background image (stars)"""
+
+        texture: str = "nb_ursina/textures/space/blue_nebulae_1.png"
+
+        # texture: str = (
+        #     "nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg"
+        # )
+
+        model: str = "sky_dome"
+        if not bg_vars.textures_3d:
+            model = None
+            texture = None
         self.universe = urs.Entity(
             shader=shd.unlit_shader,
             position=(0, 0, 0),
-            model="sky_dome",
+            model=model,
             scale=scale,
-            texture="nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg",
+            texture=texture,
             texture_scale=(1, 1),
             rotation_x=90,
             eternal=True,
@@ -104,10 +122,18 @@ class BlobUniverseUrsina:
 
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the center point x,y,z"""
-        x = self.get_width() * BlobGlobalVars.scale_up
-        y = self.get_height() * BlobGlobalVars.scale_up
-        z = self.get_height() * BlobGlobalVars.scale_up
+        x = self.get_width() * bg_vars.scale_up
+        y = self.get_height() * bg_vars.scale_up
+        z = self.get_height() * bg_vars.scale_up
         return (x / 2, y / 2, z / 2)
+
+    def get_center_offset(
+        self: Self, x: float, y: float, z: float
+    ) -> Tuple[float, float, float]:
+        """Returns a tuple of offset values from center to given x,y,z"""
+        center_x, center_y, center_z = self.get_center_blob_start_pos()
+
+        return (center_x - x, center_y - y, center_z - z)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""
@@ -117,7 +143,7 @@ class BlobUniverseUrsina:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
         urs.scene.clear()
         self.width, self.height = (
-            BlobGlobalVars.universe_size_w,
-            BlobGlobalVars.universe_size_h,
+            bg_vars.universe_size_w,
+            bg_vars.universe_size_h,
         )
-        self.set_universe_entity(BlobGlobalVars.background_scale)
+        self.set_universe_entity(bg_vars.background_scale)

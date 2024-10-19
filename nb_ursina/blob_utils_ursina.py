@@ -73,13 +73,19 @@ class FPS:
                 self.frame_rate: float = float(FRAME_RATE)
                 self.globalClock = ClockObject.getGlobalClock()
                 self.globalClock.setMode(ClockObject.MLimited)
-                self.globalClock.setFrameRate(self.frame_rate)
-                self.globalClock.setAverageFrameRateInterval(4)
+                self.globalClock.setFrameRate(self.frame_rate + 10)
+                if CLOCK_FPS:
+                    self.globalClock.setAverageFrameRateInterval(4)
+                else:
+                    self.globalClock.setAverageFrameRateInterval(0)
+                self.dt: float = 1 / self.frame_rate  # self.globalClock.getDt()
 
             def tick(self: Self, time: float):
                 if time != self.frame_rate:
                     self.frame_rate = time
                     self.globalClock.setFrameRate(time)
+
+                self.dt = 1 / self.frame_rate  # self.globalClock.getDt()
 
             def getAverageFrameRate(self: Self):
                 return self.globalClock.getAverageFrameRate()
@@ -94,7 +100,7 @@ class FPS:
             resolution=100 * self.font_size,
             parent=FontUtils.get_text_parent(),
             scale=0.1,
-            color=urs.color.rgb(255, 255, 255),
+            color=urs.color.rgb32(255, 255, 255),
             enabled=False,
             origin=(-0.5, -0.5),
             eternal=True,
@@ -110,7 +116,7 @@ class FPS:
         self.text.create_background(
             self.text.size * 0.3,
             self.text.size * 0.5,
-            urs.color.rgb(
+            urs.color.rgb32(
                 BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
             ),
         )
@@ -190,7 +196,7 @@ class TempMessage(urs.Entity):
             resolution=100 * (STAT_FONT_SIZE / 100),
             parent=FontUtils.get_text_parent(),
             scale=0.1,
-            color=urs.color.rgb(255, 255, 255),
+            color=urs.color.rgb32(255, 255, 255),
             enabled=True,
             origin=(0, 0),
             eternal=True,
@@ -207,7 +213,7 @@ class TempMessage(urs.Entity):
         self.temp_text.create_background(
             self.temp_text.size * 1.5,
             self.temp_text.size,
-            urs.color.rgb(
+            urs.color.rgb32(
                 BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
             ),
         )
@@ -320,7 +326,7 @@ class StatText(urs.Entity):
             resolution=100 * (STAT_FONT_SIZE / 100),
             parent=FontUtils.get_text_parent(),
             scale=0.1,
-            color=urs.color.rgb(255, 255, 255),
+            color=urs.color.rgb32(255, 255, 255),
             enabled=True,
             origin=(-0.5, -0.5),
             eternal=True,
@@ -337,7 +343,7 @@ class StatText(urs.Entity):
         self.stat_text.create_background(
             self.stat_text.size * 0.5,
             self.stat_text.size * 0.75,
-            urs.color.rgb(
+            urs.color.rgb32(
                 BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
             ),
         )

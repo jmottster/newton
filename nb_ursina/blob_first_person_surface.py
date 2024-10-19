@@ -12,7 +12,7 @@ import ursina as urs  # type: ignore
 
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
 
 from .blob_universe_ursina import BlobUniverseUrsina
@@ -83,11 +83,11 @@ class FirstPersonSurface:
     ):
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
-            scale=BlobGlobalVars.first_person_scale,
+            scale=bg_vars.first_person_scale,
             universe=self.universe,
             start_z=radius,
             eternal=True,
-            mass=MIN_MASS,
+            mass=bg_vars.min_mass,
         )
         self.radius = radius
         self.color = color

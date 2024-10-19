@@ -48,6 +48,7 @@ class FPS:
 
     def __init__(self: Self):
         self.clock: pygame.time.Clock = pygame.time.Clock()
+        self.dt: float = 0
         self.font: pygame.font.Font = pygame.font.Font(
             resource_path(Path(DISPLAY_FONT)), STAT_FONT_SIZE
         )
@@ -113,6 +114,9 @@ class BlobDisplayPygame:
 
     fps_clock_tick(fps: int) -> None
         Control the FPS rate by sending the desired rate here every frame of while loop
+
+    fps_get_dt() -> float
+        Returns the elapsed time for the previous frame in seconds
 
     fps_render(pos: Tuple[float, float]) -> None
         Will print the current achieved rate on the screen
@@ -207,7 +211,11 @@ class BlobDisplayPygame:
         Returns the key code of the provided character (keyboard character). For use in creating a dict that
         holds function references in a dict
         """
-        return pygame.key.key_code(key)
+
+        try:
+            return pygame.key.key_code(key)
+        except:
+            return -1
 
     def check_events(
         self: Self, keyboard_events: Dict[int, Callable[[], None]]
@@ -227,7 +235,11 @@ class BlobDisplayPygame:
 
     def fps_clock_tick(self: Self, fps: int) -> None:
         """Control the FPS rate by sending the desired rate here every frame of while loop"""
-        self.fps.clock.tick(fps)
+        self.fps.dt = self.fps.clock.tick(fps) / 1000
+
+    def fps_get_dt(self: Self) -> float:
+        """Returns the elapsed time for the previous frame in seconds"""
+        return self.fps.dt
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
