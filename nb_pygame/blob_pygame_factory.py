@@ -51,7 +51,7 @@ class BlobPygameFactory:
     reset(self: Self) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface
 
     get_blob_universe() -> BlobUniverse
@@ -68,18 +68,26 @@ class BlobPygameFactory:
 
     def __init__(self: Self):
 
-        BlobGlobalVars.set_blob_scale(S / 6)
-        BlobGlobalVars.set_au_scale_factor(175)
-        BlobGlobalVars.set_universe_scale(15)
-        BlobGlobalVars.set_center_blob_scale(20)
-        BlobGlobalVars.set_grid_cells_per_au(5)
+        BlobGlobalVars.set_au_scale_factor(100)
+        BlobGlobalVars.set_universe_scale(40)
+        BlobGlobalVars.set_center_blob_scale(30)
+        BlobGlobalVars.set_scale_center_blob_mass_with_size(True)
+        BlobGlobalVars.set_black_hole_mode(False)
+        BlobGlobalVars.set_blob_scale(100)
+        BlobGlobalVars.set_scale_blob_mass_with_size(True)
+        BlobGlobalVars.set_grid_cells_per_au(1)
         # BlobGlobalVars.set_start_pos_rotate_y(True)
         # BlobGlobalVars.set_start_pos_rotate_z(True)
-        BlobGlobalVars.set_timescale(HOURS * 10)
+        BlobGlobalVars.set_timescale(DAYS * 2)
+        BlobGlobalVars.set_timescale_inc(HOURS * 15)
         BlobGlobalVars.set_true_3d(False)
         # BlobGlobalVars.set_start_perfect_orbit(False)
-        # BlobGlobalVars.set_start_angular_chaos(True)
+        BlobGlobalVars.set_start_angular_chaos(False)
         # BlobGlobalVars.set_square_blob_plotter(True)
+        BlobGlobalVars.set_center_blob_escape(False)
+        BlobGlobalVars.set_wrap_if_no_escape(True)
+
+        BlobGlobalVars.print_info()
 
         self.py_display: BlobDisplayPygame = BlobDisplayPygame(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
@@ -107,19 +115,23 @@ class BlobPygameFactory:
 
         x_offset = 0
         y_offset = 0
+        z_offset = 0
         center_blob_pos = self.py_universe.get_center_blob_start_pos()
 
         for blob_pref in data["blobs"]:
             if blob_pref["name"] == CENTER_BLOB_NAME:
                 x_offset = center_blob_pos[0] - blob_pref["x"]
                 y_offset = center_blob_pos[1] - blob_pref["y"]
+                z_offset = center_blob_pos[2] - blob_pref["z"]
                 blob_pref["x"] = center_blob_pos[0]
                 blob_pref["y"] = center_blob_pos[1]
+                blob_pref["z"] = center_blob_pos[2]
             else:
                 blob_pref["x"] += x_offset
                 blob_pref["y"] += y_offset
+                blob_pref["z"] += z_offset
 
-    def reset(self: Self) -> None:
+    def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
         pass
 
@@ -127,6 +139,7 @@ class BlobPygameFactory:
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
         rotation_speed: float = None,
@@ -138,6 +151,7 @@ class BlobPygameFactory:
             BlobSurfacePygame(
                 name,
                 radius,
+                mass,
                 color,
                 self.get_blob_universe(),
                 texture,

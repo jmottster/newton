@@ -42,7 +42,7 @@ class BlobPluginFactory(Protocol):
     reset(self: Self) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -74,7 +74,7 @@ class BlobPluginFactory(Protocol):
         """
         pass
 
-    def reset(self: Self) -> None:
+    def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
         pass
 
@@ -82,6 +82,7 @@ class BlobPluginFactory(Protocol):
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
         rotation_speed: float = None,

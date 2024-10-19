@@ -13,7 +13,7 @@ import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import resource_path
 
 from .blob_surface_ursina import BlobSurfaceUrsina
@@ -80,30 +80,39 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.temp_scale: float = kwargs["scale"]
         self.start_z: float = kwargs["start_z"]
-        self.flashlight_color: urs.Vec3 = urs.color.rgb(0.3, 0.3, 0.3, 0.3)
+        self.flashlight_color: urs.Vec3 = urs.color.rgba(0.3, 0.3, 0.3, 0.3)
+        if not bg_vars.textures_3d:
+            self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
 
         self.center_cursor: urs.Entity = urs.Entity(
             parent=urs.camera.ui,
             model="quad",
-            color=urs.color.rgb(179, 0, 27),
+            color=urs.color.rgb32(179, 0, 27),
             scale=(0.008, 0.008, 0.008),
             position=(0, 0, 2),
             rotation_z=45,
             eternal=kwargs["eternal"],
         )
 
+        color: urs.Color = urs.color.rgba(0.78, 0.78, 0.78, 0.59)
+        self.gimbal_texture: str = "nb_ursina/textures/sun03.png"
+        if not bg_vars.textures_3d:
+            color = urs.color.rgba32(
+                CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
+            )
+            self.gimbal_texture = None
         self.gimbal: urs.Entity = urs.Entity(
             model="sphere",
-            color=urs.color.rgb(200, 200, 200, 150),
+            color=color,
             position=(0, 0, self.start_z),
             scale=(
-                self.temp_scale * 0.025,
-                self.temp_scale * 0.025,
-                self.temp_scale * 0.025,
+                self.temp_scale * 0.005,
+                self.temp_scale * 0.005,
+                self.temp_scale * 0.005,
             ),
-            texture="nb_ursina/textures/sun03.png",
+            texture=self.gimbal_texture,
             texture_scale=(1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
@@ -112,7 +121,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
             model="arrow",
-            color=urs.rgb(179, 0, 27),
+            color=urs.color.rgb32(179, 0, 27),
             scale=(1, 3, 1.75),
             position=(0, 0, 0.5),
             rotation_x=90,
@@ -127,7 +136,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             position=(0, 0, 0),
             shadows=False,
             shadow_map_resolution=(4096, 4096),
-            max_distance=500,
+            max_distance=bg_vars.universe_size,
             attenuation=(1, 0, 0),
             color=self.flashlight_color,
             eternal=kwargs["eternal"],
@@ -147,10 +156,16 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.ui.collider = "sphere"
         urs.camera.ui.position = (0, 0, 0)
 
-        self.speed: float = 5
+        self.speed: float = bg_vars.au_scale_factor / 4
+        self.orig_speed: float = self.speed
+        self.min_speed: float = self.orig_speed * 0.05
+        self.max_speed: float = self.orig_speed * 5
+
+        self.orig_speed = (self.min_speed + self.max_speed) / 2
+        self.speed = self.orig_speed
+
         self.roll_speed: float = 20
-        self.orig_speed: float = 5
-        self.orig_roll_speed: float = 20
+        self.orig_roll_speed: float = self.roll_speed
         self.direction: urs.Vec3 = None
         # self.m_direction: urs.Vec3 = None
         self.position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
@@ -162,12 +177,16 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         urs.mouse.locked = True
         self.mouse_sensitivity: urs.Vec3 = urs.Vec2(35, 35)
-        self.scroll_smoothness: float = 6
         self.scroll_speed: float = 0
         self.mouse_scroll_up: int = 0
         self.mouse_scroll_down: int = 0
 
         self.on_destroy: Callable[[], None] = self.on_disable
+
+        self.follow_entity: urs.Entity = None
+        self.follow_entity_last_pos: urs.Vec3 = None
+
+        self.hud = True
 
         for key in (
             "model",
@@ -187,22 +206,12 @@ class BlobFirstPersonUrsina(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.speed *= BlobGlobalVars.au_scale_factor * 0.05
-        # self.roll_speed *= self.temp_scale * 4
-        self.orig_speed *= BlobGlobalVars.au_scale_factor * 0.05
-        # self.orig_roll_speed *= self.temp_scale * 4
-        self.scroll_smoothness *= BlobGlobalVars.au_scale_factor * 0.05
-        self.speed_inc = self.orig_speed * 0.04
+        self.gimbal_relative_forward_pos = self.scale_x * 0.103
+        self.gimbal_relative_down_pos = self.scale_x * 0.02
+
+        self.speed_inc = self.orig_speed * 0.05
 
         self.setup_stage = True
-
-        # self.cam_pos = urs.Text(
-        #     f"({self.x},{self.y},{self.z})",
-        #     position=(0, 0.03, 0),
-        #     parent=urs.camera.ui,
-        #     origin=(0, 0),
-        #     scale=0.75,
-        # )
 
     def setup_lock(self: Self) -> None:
         """
@@ -211,6 +220,16 @@ class BlobFirstPersonUrsina(urs.Entity):
         """
         self.setup_stage = True
         self.pos_lock()
+
+    def start_following(self: Self, follow_entity: urs.Entity) -> None:
+        self.follow_entity = follow_entity
+        self.follow_entity_last_pos = self.follow_entity.position
+        self.gimbal.texture = self.follow_entity.texture
+
+    def stop_following(self: Self) -> None:
+        self.follow_entity = None
+        self.follow_entity_last_pos = None
+        self.gimbal.texture = self.gimbal_texture
 
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
@@ -239,47 +258,26 @@ class BlobFirstPersonUrsina(urs.Entity):
 
                 self.speed = urs.clamp(
                     self.speed,
-                    self.orig_speed * 0.05,
-                    self.orig_speed * 2.5,
+                    self.min_speed,
+                    self.max_speed,
                 )
 
                 self.roll_speed = urs.clamp(
                     self.roll_speed,
                     5,
-                    80,
+                    self.orig_roll_speed * 2.5,
                 )
 
                 self.report_throttle_speed()
 
-            # self.scroll_speed += thrust * self.scroll_smoothness
-
-            # self.m_direction = urs.Vec3(self.up * self.scroll_speed).normalized()
-
-            # if self.scroll_speed > -(
-            #     self.scroll_smoothness / 4
-            # ) and self.scroll_speed < (self.scroll_smoothness / 4):
-            #     self.scroll_speed = 0
-
-            # elif self.scroll_speed < 0:
-            #     self.scroll_speed = urs.clamp(
-            #         self.scroll_speed,
-            #         -(self.scroll_smoothness),
-            #         -(self.scroll_smoothness / 4),
-            #     )
-
-            # elif self.scroll_speed > 0:
-            #     self.scroll_speed = urs.clamp(
-            #         self.scroll_speed,
-            #         self.scroll_smoothness / 4,
-            #         self.scroll_smoothness,
-            #     )
-
-            # self.velocity = self.m_direction * urs.time.dt * abs(self.scroll_speed)
-
-            # self.scroll_speed *= 0.95
-
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
+
+            if self.follow_entity is not None:
+                self.position += (
+                    self.follow_entity.position - self.follow_entity_last_pos
+                )
+                self.follow_entity_last_pos = self.follow_entity.position
 
             self.direction = urs.Vec3(
                 self.forward * (urs.held_keys["w"] - urs.held_keys["s"])
@@ -298,13 +296,20 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
 
             self.gimbal.rotation = self.rotation
-            self.gimbal.position = self.position + (self.forward / 2)
-            self.gimbal.position += self.gimbal.down * 4
-            self.gimbal.look_at(self.center_blob)
+            self.gimbal.position = (
+                self.position
+                + self.forward.normalized() * self.gimbal_relative_forward_pos
+            )
+            self.gimbal.position += (
+                self.gimbal.down.normalized() * self.gimbal_relative_down_pos
+            )
+
+            if self.follow_entity is not None:
+                self.gimbal.look_at(self.follow_entity)
+            else:
+                self.gimbal.look_at(self.center_blob)
 
             self.universe.universe.position = self.world_position
-
-            # self.cam_pos.text = f"({round(self.world_position[0],2)}, {round(self.world_position[1],2)}, {round(self.world_position[2],2)})"
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a keyboard event happens"""
@@ -316,7 +321,6 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.pos_lock()
 
         if key == "v":
-
             if self.flashlight_on:
                 self.flashlight.color = (0, 0, 0, 0.3)
                 self.flashlight_on = False
@@ -328,6 +332,18 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.speed = self.orig_speed
             self.roll_speed = self.orig_roll_speed
             self.report_throttle_speed()
+
+        if key == "g":
+            self.hud = not self.hud
+
+            if self.hud:
+                self.gimbal_arrow.enabled = True
+                self.gimbal.enabled = True
+                self.center_cursor.enabled = True
+            else:
+                self.gimbal_arrow.enabled = False
+                self.gimbal.enabled = False
+                self.center_cursor.enabled = False
 
         if key == "scroll up":
             self.mouse_scroll_up = 1
@@ -387,9 +403,6 @@ class BlobFirstPersonUrsina(urs.Entity):
     def on_enable(self: Self) -> None:
         """Called by Ursina when this Entity is enabled"""
         urs.mouse.locked = True
-        self.gimbal_arrow.enabled = True
-        self.gimbal.enabled = True
-        self.center_cursor.enabled = True
         if hasattr(self, "_mouse_position"):
             urs.mouse.position = self._mouse_position
         urs.mouse.enabled = True
@@ -402,9 +415,6 @@ class BlobFirstPersonUrsina(urs.Entity):
         """Called by Ursina when this Entity is disabled"""
 
         urs.mouse.locked = False
-        self.gimbal_arrow.enabled = False
-        self.gimbal.enabled = False
-        self.center_cursor.enabled = False
         self._mouse_position = urs.mouse.position
         urs.mouse.enabled = False
         # store original position and rotation

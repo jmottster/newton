@@ -48,6 +48,9 @@ class BlobUniversePygame:
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the center point x,y,z
 
+    get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
+        Returns a tuple of offset values from center to given x,y,z
+
     fill(self: Self, color: Tuple[int, int, int]) -> None
         Fill the entire area wit a particular color to prepare for drawing another screen
 
@@ -80,6 +83,14 @@ class BlobUniversePygame:
         y = self.get_height() * BlobGlobalVars.scale_up
         z = self.get_height() * BlobGlobalVars.scale_up
         return (x / 2, y / 2, z / 2)
+
+    def get_center_offset(
+        self: Self, x: float, y: float, z: float
+    ) -> Tuple[float, float, float]:
+        """Returns a tuple of offset values from center to given x,y,z"""
+        center_x, center_y, center_z = self.get_center_blob_start_pos()
+
+        return (center_x - x, center_y - y, center_z - z)
 
     def fill(self: Self, color: Tuple[int, int, int]) -> None:
         """Fill the entire area wit a particular color to prepare for drawing another screen"""

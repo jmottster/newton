@@ -18,6 +18,7 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars
 from newtons_blobs import resource_path
 from newtons_blobs import BlobUniverse
+from newtons_blobs import BlobSurface
 from .blob_universe_pygame import BlobUniversePygame
 
 __author__ = "Jason Mott"
@@ -39,6 +40,8 @@ class BlobSurfacePygame:
         The name of this instance
     radius : float
         the size of the blob, by radius value
+    mass : float
+        the mass of the blob, in kg
     color : Tuple[int, int, int]
         a three value tuple for RGB color value of blob
     universe : BlobUniverse
@@ -49,11 +52,16 @@ class BlobSurfacePygame:
         Not used, this is a 2d implementation
     rotation_pos : Tuple[float, float, float] = None
         Not used, this is a 2d implementation
+    position : Tuple[float,float,float] = (0,0,0)
+        The x,y,z position for this blob
 
     Methods
     -------
     Except for the three below, all the methods are internal use only. Comment annotations explain what's going on
     as best they can. :)
+
+    set_orbital_pos_vel(orbital: BlobSurface) -> Tuple[float,float,float]
+        Sets orbital to a position appropriate for an orbital of this blob, and returns velocity as a tuple
 
     resize(radius: float) -> None
         Sets a new radius for this blob
@@ -121,6 +129,7 @@ class BlobSurfacePygame:
         "py_universe",
         "name",
         "radius",
+        "mass",
         "width_center",
         "height_center",
         "size",
@@ -153,6 +162,7 @@ class BlobSurfacePygame:
         self: Self,
         name: str,
         radius: float,
+        mass: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
         texture: str = None,
@@ -167,6 +177,7 @@ class BlobSurfacePygame:
         self.py_universe: BlobUniversePygame = cast(BlobUniversePygame, universe)
         self.name: str = name
         self.radius: float = radius
+        self.mass: float = mass
         # Double size of box, because radius can get twice the size
         self.width_center: float = radius + (radius)
         self.height_center: float = radius + (radius)
@@ -199,6 +210,15 @@ class BlobSurfacePygame:
         self.mask_image: pygame.Surface = None
         self.draw_alpha_image()
         self.draw_mask()
+
+    def set_orbital_pos_vel(
+        self: Self, orbital: BlobSurface
+    ) -> Tuple[float, float, float]:
+        """
+        Sets orbital to a position appropriate for an orbital of this blob,
+        and returns velocity as a tuple
+        """
+        pass
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""

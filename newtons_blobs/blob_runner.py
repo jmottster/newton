@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 from typing import Any, Callable, Dict, Self
 
 from .globals import *
-from .blob_global_vars import BlobGlobalVars
+from newtons_blobs import BlobGlobalVars as bg_vars
 from .blob_plugin_factory import BlobPluginFactory
 from .blob_save_load import BlobSaveLoad
 from .blob_plotter import BlobPlotter
@@ -98,7 +98,7 @@ class BlobRunner:
         self.auto_save_load: bool = AUTO_SAVE_LOAD
         self.running: bool = True
         self.paused: bool = False
-        self.elapsed_time: int = 0
+        self.elapsed_time: float = 0
         self.show_stats: bool = True
         self.message: str = None
         self.message_counter: int = 0
@@ -180,6 +180,7 @@ class BlobRunner:
             self.message = None
             self.message_counter = 0
             self.blob_plotter.start_over()
+            self.blob_save_load.save(True, "last_blob_plot.json")
 
         def toggle_square_grid() -> None:
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -232,6 +233,33 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
+        def get_timescale_str() -> str:
+            return_str = f"Timescale is now {int(bg_vars.timescale/DAYS)} days and "
+
+            return_str += f"{int( ( (bg_vars.timescale) - (DAYS * int(bg_vars.timescale/DAYS))       ) /HOURS)}h:"
+
+            return_str += f"{int( ( (bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS))     ) /MINUTES)}m:"
+
+            return_str += f"{int( ( (bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES)) ) )}s per second"
+
+            return return_str
+
+        def time_faster() -> None:
+            if bg_vars.timescale < (bg_vars.timescale_inc):
+                bg_vars.set_timescale(bg_vars.timescale_inc)
+            else:
+                bg_vars.set_timescale(bg_vars.timescale + (bg_vars.timescale_inc))
+            self.message = get_timescale_str()
+            self.message_counter = 60 * 2
+
+        def time_slower() -> None:
+            if bg_vars.timescale <= (bg_vars.timescale_inc):
+                bg_vars.set_timescale(bg_vars.timescale_inc)
+            else:
+                bg_vars.set_timescale(bg_vars.timescale - (bg_vars.timescale_inc))
+            self.message = get_timescale_str()
+            self.message_counter = 60 * 2
+
         keyboard_events[self.display.get_key_code("escape")] = quit_game
         keyboard_events[self.display.get_key_code("space")] = pause_game
         keyboard_events[self.display.get_key_code("f")] = toggle_fullscreen
@@ -241,6 +269,10 @@ class BlobRunner:
         keyboard_events[self.display.get_key_code("4")] = toggle_square_grid
         keyboard_events[self.display.get_key_code("5")] = toggle_perfect_orbit
         keyboard_events[self.display.get_key_code("6")] = toggle_angular_chaos
+        keyboard_events[self.display.get_key_code("up")] = time_faster
+        keyboard_events[self.display.get_key_code("down")] = time_slower
+        keyboard_events[self.display.get_key_code("up arrow")] = time_faster
+        keyboard_events[self.display.get_key_code("down arrow")] = time_slower
 
         return keyboard_events
 
@@ -258,6 +290,7 @@ class BlobRunner:
             self.universe = self.blob_factory.get_blob_universe()
         else:
             self.blob_plotter.plot_blobs()
+            self.blob_save_load.save(True, "last_blob_plot.json")
 
         while self.running:
             self.display.check_events(self.keyboard_events)
@@ -298,11 +331,11 @@ class BlobRunner:
 
         self.display.update()
 
-        if not self.paused:
-            self.blob_plotter.update_blobs()
-            self.elapsed_time += 1
-
         self.display.fps_clock_tick(FRAME_RATE)
+
+        if not self.paused:
+            self.blob_plotter.update_blobs(self.display.fps_get_dt())
+            self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
 
     def draw_stats(self: Self, message: str = None) -> None:
         """
@@ -350,15 +383,16 @@ class BlobRunner:
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM),
         )
 
-        # Bottom right, showing number of blobs escaped the sun
-        self.display.blit_text(
-            f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
-            (
-                self.display.get_width() - 20,
-                self.display.get_height() - 20,
-            ),
-            (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
-        )
+        if bg_vars.center_blob_escape:
+            # Bottom right, showing number of blobs escaped the sun
+            self.display.blit_text(
+                f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
+                (
+                    self.display.get_width() - 20,
+                    self.display.get_height() - 20,
+                ),
+                (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
+            )
 
     def get_elapsed_time_in(self: Self, divisor: float) -> float:
         """
@@ -366,12 +400,15 @@ class BlobRunner:
         Returns float number of units determined by divisor. E.g., if YEARS is divisor,
         returns number of years elapsed since last start.
         """
-        return round((self.elapsed_time * BlobGlobalVars.timescale) / divisor, 2)
+        return round(self.elapsed_time / divisor, 2)
 
     def display_elapsed_time(self: Self) -> None:
         """Draws the elapsed time to the display instance"""
+        text: str = ""
+        if self.paused:
+            text = "Paused"
         self.display.blit_text(
-            f"Years elapsed: {self.get_elapsed_time_in(YEARS)}",
+            f"Years elapsed: {self.get_elapsed_time_in(YEARS)} {text}",
             (20, 20),
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP_PLUS),
         )
