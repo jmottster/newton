@@ -12,7 +12,7 @@ To toggle auto save and load, just press the 3 key. To pause, press the spacebar
 
 #### Installation
 
-Two ways, the easy way (Windows only) and the nerdy way . . .
+Two ways, the easy way and the nerdy way . . .
 
 ###### The easy way (Windows 10 and Ubuntu 24.04 only)
 
