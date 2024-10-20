@@ -1,0 +1,6 @@
+newton3D*
+main.build/**
+main.dist/**
+**/__pycache__/**
+testers/**
+save/**
