@@ -10,7 +10,7 @@
 # nuitka-project: --include-data-dir=./nb_ursina/textures=nb_ursina/textures
 # nuitka-project: --include-data-dir=./newtons_blobs/font=newtons_blobs/font
 # nuitka-project: --include-data-dir=./newtons_blobs/img=newtons_blobs/img
-# nuitka-project: --onefile-tempdir-spec="{CACHE_DIR}/{COMPANY}/{PRODUCT}/{VERSION}"
+# nuitka-project: --onefile-tempdir-spec="{CACHE_DIR}/jason_mott/newtons_blobs/{VERSION}"
 #
 # Compilation mode, standalone everywhere
 # nuitka-project-if: {OS} in ("Windows", "Linux", "Darwin"):
@@ -21,11 +21,10 @@
 #    nuitka-project: --output-filename=newton3D.exe
 #    nuitka-project: --windows-icon-from-ico=newtons_blobs/img/newton_icon.ico
 # nuitka-project-if: {OS} in ("Linux"):
-#    nuitka-project: --disable-console
-#    nuitka-project: --output-filename=newton3D
+#    nuitka-project: --output-filename=newton3D.bin
 #    nuitka-project: --linux-icon=newtons_blobs/img/newton_icon.ico
+#    nuitka-project: --include-data-files=./newtons_blobs/font/OpenSans-Regular.ttf=OpenSans-Regular.ttf
 # nuitka-project-if: {OS} in ("Darwin"):
-#    nuitka-project: --disable-console
 #    nuitka-project: --macos-create-app-bundle
 #    nuitka-project: --output-filename=newton3D
 #    nuitka-project: --macos-app-icon=newtons_blobs/img/newton_icon.ico
@@ -34,7 +33,6 @@
 # nuitka-project-if: os.getenv("DEBUG_COMPILATION", "no") == "yes":
 #    nuitka-project: --force-stdout-spec={MAIN_DIRECTORY}/log.out.txt
 #    nuitka-project: --force-stderr-spec={MAIN_DIRECTORY}/log.err.txt
-
 
 """
 Newton's Laws, a simulator of physics at the scale of space
