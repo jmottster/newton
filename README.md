@@ -2,7 +2,7 @@
 
 ### Version 0.0.6 Alpha Prototype 3D
 
-*A simulator of Newton's laws of physics, using space scale objects*
+_A simulator of Newton's laws of physics, using space scale objects_
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
@@ -12,15 +12,18 @@ To toggle auto save and load, just press the 3 key. To pause, press the spacebar
 
 #### Installation
 
-Two ways, the easy way (Windows only) and the nerdy way . . .
+Two ways, the easy way and the nerdy way . . .
 
-###### The easy way (Windows only)
+###### The easy way (Windows 10 and Ubuntu 24.04 only)
 
-1. Download Windows executable here:
-   1. [Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.exe)
-2. Save where you want to store it
-3. You may need to whitelist the executable with your malware protection software
-4. Double click and enjoy (runs as is, no system installation)
+1. Download Ubuntu 24.04 executable here:
+   1. [Ubuntu Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.bin)
+2. Download Windows 10 executable here:
+   1. [Windows Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.exe)
+3. Save where you want to store it
+4. You may need to whitelist the executable with your malware protection software
+5. These may work on other versions of Windows and Ubuntu, but haven't been tested for it
+6. Double click and enjoy (runs as is, no system installation)
 
 ###### The nerdy way
 
@@ -47,48 +50,48 @@ This is a prototype, a proof of concept. It's mostly showing what it can simulat
 
 <img src="./newtons_blobs/img/controls2.png"/>
 
-* Movement controls:
-  * W - Move forward
-  * S - Move backward
-  * A - Move left
-  * D - Move right
-  * E - Move up
-  * X - Move down
-  * MOUSE WHEEL SCROLL UP - increase speed
-  * MOUSE WHEEL SCROLL DOWN - decrease speed
-  * R - Return to default speed
-* Rotation controls:
-  * Z - Roll left
-  * C - Roll right
-  * MOUSE MOVE LEFT - Yaw left
-  * MOUSE MOVE RIGHT - Yaw right
-  * MOUSE MOVE FORWARD - Pitch up
-  * MOUSE MOVE BACKWARD - Pitch down
-* Miscellaneous Controls:
-  * 1 - Start over based on options selected with keys 4, 5, and 6
-  * 2 - Toggle stat displays
-  * 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
-  * 4 - Toggle Start pattern between square and circular (see below)
-  * 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
-  * 6 - Toggle start orbit with angular chaos
-  * SPACEBAR - Pause/Unpause
-    * Only when paused . . .
-    * MOUSE LEFT CLICK on Blob - Toggle info flag above the blob (name, mass, radius, position, or just name; see H key)
-    * MOUSE RIGHT CLICK on Blob - Follow this blob (blob becomes you reference frame, you move with it, but can still also move freely)
-  * ESC - Quit
-  * Q - Disengage/reengage mouse
-  * R - Return to default speed
-  * F - Toggle fullscreen/windowed mode
-  * V - Toggle ambient light (helps to see dark side of blobs)
-  * T - Toggle blob trails to show orbit path (doesn't apply to moons)
-  * G - Toggle cursor and gimbal on/off
-  * B - Toggle show info flag (name of blob above blob) on all blobs, this will impact performance
-  * Y - Toggle exaggerate planet sizes
-  * H - Toggle show full details (when info flag is on) or just name (see MOUSE LEFT CLICK)
-  * N - Toggle show info flag for planets only (ONLY when B is activated, doesn't include flagS turned on with MOUSE LEFT CLICK)
-  * U - Toggle exaggerate moon sizes
-  * UP ARROW - Increase timescale (make time go faster)
-  * DOWN ARROW - Decrease timescale (make time go slower)
+- Movement controls:
+  - W - Move forward
+  - S - Move backward
+  - A - Move left
+  - D - Move right
+  - E - Move up
+  - X - Move down
+  - MOUSE WHEEL SCROLL UP - increase speed
+  - MOUSE WHEEL SCROLL DOWN - decrease speed
+  - R - Return to default speed
+- Rotation controls:
+  - Z - Roll left
+  - C - Roll right
+  - MOUSE MOVE LEFT - Yaw left
+  - MOUSE MOVE RIGHT - Yaw right
+  - MOUSE MOVE FORWARD - Pitch up
+  - MOUSE MOVE BACKWARD - Pitch down
+- Miscellaneous Controls:
+  - 1 - Start over based on options selected with keys 4, 5, and 6
+  - 2 - Toggle stat displays
+  - 3 - Toggle auto save/load feature (if on, will save app state upon exit and reload it on next startup)
+  - 4 - Toggle Start pattern between square and circular (see below)
+  - 5 - Toggle start velocities between perfect orbit and random (it'll be within a range that works)
+  - 6 - Toggle start orbit with angular chaos
+  - SPACEBAR - Pause/Unpause
+    - Only when paused . . .
+    - MOUSE LEFT CLICK on Blob - Toggle info flag above the blob (name, mass, radius, position, or just name; see H key)
+    - MOUSE RIGHT CLICK on Blob - Follow this blob (blob becomes you reference frame, you move with it, but can still also move freely)
+  - ESC - Quit
+  - Q - Disengage/reengage mouse
+  - R - Return to default speed
+  - F - Toggle fullscreen/windowed mode
+  - V - Toggle ambient light (helps to see dark side of blobs)
+  - T - Toggle blob trails to show orbit path (doesn't apply to moons)
+  - G - Toggle cursor and gimbal on/off
+  - B - Toggle show info flag (name of blob above blob) on all blobs, this will impact performance
+  - Y - Toggle exaggerate planet sizes
+  - H - Toggle show full details (when info flag is on) or just name (see MOUSE LEFT CLICK)
+  - N - Toggle show info flag for planets only (ONLY when B is activated, doesn't include flagS turned on with MOUSE LEFT CLICK)
+  - U - Toggle exaggerate moon sizes
+  - UP ARROW - Increase timescale (make time go faster)
+  - DOWN ARROW - Decrease timescale (make time go slower)
 
 Some screen shots:
 
@@ -106,7 +109,7 @@ Below is what you first see. It's the center blob orbited by barely seeable blob
 
 ---
 
-Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y"). This makes it easier to find them and see where the are in relation to each other. Their simulated sizes are still the smaller ones, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale). While its easier to see them as you move toward them, you will not see their moons until you return them to their normal sizes (by pressing "Y"). Of course, as you get closer, you won't need their size to be exaggerated. 
+Below is the same scene as above, but with the "exaggerate planet sizes" feature toggled on (by pressing "Y"). This makes it easier to find them and see where the are in relation to each other. Their simulated sizes are still the smaller ones, so if they get close in this state, they may overlap each other (i.e., collisions would still happen at the smaller scale). While its easier to see them as you move toward them, you will not see their moons until you return them to their normal sizes (by pressing "Y"). Of course, as you get closer, you won't need their size to be exaggerated.
 
 <img src="./resources/0_0_6/screen_shot_003.png"/>
 
@@ -130,7 +133,7 @@ Below is a close up scene of a planet blob (normal size) and its orbiting moon b
 
 ---
 
-Below is the same scene as above, but with the "exaggerate moon sizes" feature toggled on (by pressing "U"). This won't always be necessary, depending on the size of the planet blob. Larger gas giant sized blobs will require it more, as moon blobs are quite small by comparison. 
+Below is the same scene as above, but with the "exaggerate moon sizes" feature toggled on (by pressing "U"). This won't always be necessary, depending on the size of the planet blob. Larger gas giant sized blobs will require it more, as moon blobs are quite small by comparison.
 
 <img src="./resources/0_0_6/screen_shot_007.png"/>
 

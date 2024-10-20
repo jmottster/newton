@@ -102,12 +102,12 @@ class BlobUrsinaFactory:
 
         self.start_distance = bg_vars.au_scale_factor * 14
 
+        urs.Text.default_font = DISPLAY_FONT
+        # urs.Text.size = 0.5
+
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
         )
-
-        urs.Text.default_font = DISPLAY_FONT
-        # urs.Text.size = 0.5
 
         self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina(
             bg_vars.universe_size_w, bg_vars.universe_size_h
