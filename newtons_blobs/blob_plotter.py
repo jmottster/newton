@@ -660,6 +660,8 @@ class BlobPlotter:
                 # Increase the radius for the next go around the center blob
                 plot_radius += plot_radius_partition
 
+                this_radius = plot_radius
+
                 # How many radians to increase for each blob around the circumference (such that
                 # we get chord_scaled length between each blob center)
                 pi_inc = math.asin(chord_scaled / (plot_radius * 2)) * 2
