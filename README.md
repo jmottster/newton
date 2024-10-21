@@ -2,7 +2,7 @@
 
 ### Version 0.0.6 Alpha Prototype 3D
 
-_A simulator of Newton's laws of physics, using space scale objects_
+_A simulator of Newton's laws of physics: randomly generates solar systems_
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
@@ -42,7 +42,7 @@ Two ways, the easy way and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator. Movement is controlled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
+This is a space-level gravity and collision simulator that randomly generates solar systems. Movement is controlled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
 
 This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go. A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/controls_quick_reference.pdf).
 
