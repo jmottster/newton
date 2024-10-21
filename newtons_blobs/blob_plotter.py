@@ -602,8 +602,6 @@ class BlobPlotter:
         # The start radius (smallest circle around center blob)
         plot_radius: float = AU * 4
 
-        this_radius: float = plot_radius
-
         # arc length between each blob, i.e. how many blobs per circumference
         arc: float = (math.pi * (plot_radius * 2)) / 6
 
@@ -631,7 +629,7 @@ class BlobPlotter:
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
             stagger_radius = True
             pi_inc = (math.pi * 2) / (orbiting_blobs)
-            this_radius -= AU
+            plot_radius -= AU
 
         for i in range(0, len(planets)):
 
@@ -639,28 +637,26 @@ class BlobPlotter:
 
             # Circular grid x,y plot for this blob
             # Get x and y for this blob, vars set up from last iteration or initial setting
-            x = scaled_half_universe_w + this_radius * math.sin(plot_theta) * math.cos(
+            x = scaled_half_universe_w + plot_radius * math.sin(plot_theta) * math.cos(
                 plot_phi_offset
             )
-            y = scaled_half_universe_h + this_radius * math.sin(plot_theta) * math.sin(
+            y = scaled_half_universe_h + plot_radius * math.sin(plot_theta) * math.sin(
                 plot_phi_offset
             )
-            z = scaled_half_universe_h + this_radius * math.cos(plot_theta)
+            z = scaled_half_universe_h + plot_radius * math.cos(plot_theta)
 
             blobs_left -= 1
             # Set up vars for next iteration, move the "clock dial" another notch,
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
 
             if stagger_radius:
-                this_radius += AU + (random.random() * plot_radius_partition)
+                plot_radius += AU + (random.random() * plot_radius_partition)
 
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0
 
                 # Increase the radius for the next go around the center blob
                 plot_radius += plot_radius_partition
-
-                this_radius = plot_radius
 
                 # How many radians to increase for each blob around the circumference (such that
                 # we get chord_scaled length between each blob center)
