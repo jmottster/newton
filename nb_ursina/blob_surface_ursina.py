@@ -447,6 +447,7 @@ class Rotator(urs.Entity):
         self.rotate((0, (random.random() * 360.00), 0))
         orbital.ursina_blob.world_rotation = self.world_rotation
         orbital.ursina_blob.rotation_pos = self.rotation_pos
+        orbital.rotation_pos = self.rotation_pos
 
         orbit_distance: float = (
             random.random() * (self.scale_x * 10)
