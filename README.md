@@ -1,12 +1,12 @@
 # Newton's Blobs
 
-### Version 0.0.6 Alpha Prototype 3D
+### Version 0.0.7 Alpha Prototype 3D
 
 _A simulator of Newton's laws of physics: randomly generates solar systems_
 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.0.6! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
+Alpha release 0.0.7! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
 
 To toggle auto save and load, just press the 3 key. To pause, press the spacebar. **Full instructions below.**
 
@@ -17,9 +17,9 @@ Two ways, the easy way and the nerdy way . . .
 ###### The easy way (Windows 10 and Ubuntu 24.04 only)
 
 1. Download Ubuntu 24.04 executable here:
-   1. [Ubuntu Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.bin)
+   1. [Ubuntu Release 0.0.7](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.7/newton3D.bin)
 2. Download Windows 10 executable here:
-   1. [Windows Release 0.0.6](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/newton3D.exe)
+   1. [Windows Release 0.0.7](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.7/newton3D.exe)
 3. Save where you want to store it
 4. You may need to whitelist the executable with your malware protection software
 5. These may work on other versions of Windows and Ubuntu, but haven't been tested for it
@@ -44,7 +44,7 @@ Two ways, the easy way and the nerdy way . . .
 
 This is a space-level gravity and collision simulator that randomly generates solar systems. Movement is controlled with keyboard and mouse just like a first person shooter game. At the center is a sun mass blob, and orbiting it are randomly created Earth to Jupiter mass blobs, and they have moon sized (Mimas to Ganymede mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated, of course, but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Mimas sized. Time is sped up to about 48 hours per second, and is adjustable via arrow keys.
 
-This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go. A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.6/controls_quick_reference.pdf).
+This is a prototype, a proof of concept. It's mostly showing what it can simulate. However, there are movement and exploration controls here while you watch it go. A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.0.7/controls_quick_reference.pdf).
 
 <img src="./newtons_blobs/img/controls.png"/>
 

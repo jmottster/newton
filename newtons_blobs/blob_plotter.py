@@ -233,9 +233,20 @@ class BlobPlotter:
 
         mass_min_max_halfway: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
 
-        # min_mass_delta: float = (bg_vars.min_mass + mass_min_max_halfway) / 2
-
         mass_halfway_max_halfway = (mass_min_max_halfway + bg_vars.max_mass) / 2
+
+        ############################################################################
+        ############################################################################
+
+        moon_radius_min_max_halfway: float = (
+            bg_vars.min_moon_radius + bg_vars.max_moon_radius
+        ) / 2
+
+        ############################################################################
+
+        moon_mass_min_max_halfway: float = (
+            bg_vars.min_moon_mass + bg_vars.max_moon_mass
+        ) / 2
 
         moon: bool = False
 
@@ -286,9 +297,17 @@ class BlobPlotter:
                     + bg_vars.min_moon_radius,
                     2,
                 )
-                mass = (
-                    random.random() * (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
-                ) + bg_vars.min_moon_mass
+
+                if radius > moon_radius_min_max_halfway:
+                    mass = (
+                        random.random()
+                        * (bg_vars.max_moon_mass - moon_mass_min_max_halfway)
+                    ) + moon_mass_min_max_halfway
+                else:
+                    mass = (
+                        random.random()
+                        * (moon_mass_min_max_halfway - bg_vars.min_moon_mass)
+                    ) + bg_vars.min_moon_mass
 
             # Phew, let's instantiate this puppy . . .
             self.blobs[i] = MassiveBlob(
