@@ -7,7 +7,8 @@ by Jason Mott, copyright 2024
 """
 
 from typing import Any, ClassVar, Dict, Tuple, Self
-
+import numpy as np
+import numpy.typing as npt
 
 from .globals import *
 from .blob_global_vars import BlobGlobalVars as bg_vars
@@ -101,6 +102,7 @@ class MassiveBlob:
         "vx",
         "vy",
         "vz",
+        "time_step_plots",
         "dead",
         "swallowed",
         "escaped",
@@ -145,6 +147,7 @@ class MassiveBlob:
         self.vx: float = vx  # x velocity per frame
         self.vy: float = vy  # y velocity per frame
         self.vz: float = vz  # z velocity per frame
+        self.time_step_plots: npt.NDArray = None
         self.dead: bool = False
         self.swallowed: bool = False
         self.escaped: bool = False
@@ -245,12 +248,53 @@ class MassiveBlob:
         self.radius = round(self.scaled_radius * bg_vars.scale_down)
         self.blob_surface.resize(self.radius)
 
+    def set_time_step_plots(self: Self, time_steps: int) -> None:
+
+        if self.time_step_plots is None or self.time_step_plots.size != (
+            time_steps * 6
+        ):
+            self.time_step_plots = np.empty((time_steps, 6), dtype=np.float64)
+            for i in range(0, time_steps):
+                self.time_step_plots[i] = np.array(
+                    [self.x, self.y, self.z, self.vx, self.vy, self.vz],
+                    dtype=np.float64,
+                )
+
     def advance(self: Self, dt: float) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)"""
 
         if not bg_vars.true_3d and self.name == CENTER_BLOB_NAME:
             self.fake_blob_z()
             return
+
+        if self.time_step_plots is not None:
+            # if self.name == "40":
+            #     print(
+            #         f"{np.array(
+            #         [self.x, self.y, self.z, self.vx, self.vy, self.vz], dtype=np.float64
+            #     )}"
+            #     )
+            #     print(f"{self.time_step_plots[-1]}")
+
+            # self.x = self.time_step_plots[-1, 0]
+            # self.y = self.time_step_plots[-1, 1]
+            # self.z = self.time_step_plots[-1, 2]
+            # self.vx = self.time_step_plots[-1, 3]
+            # self.vy = self.time_step_plots[-1, 4]
+            # self.vz = self.time_step_plots[-1, 5]
+
+            self.x = self.time_step_plots[0, 0]
+            self.y = self.time_step_plots[0, 1]
+            self.z = self.time_step_plots[0, 2]
+            self.vx = self.time_step_plots[0, 3]
+            self.vy = self.time_step_plots[0, 4]
+            self.vz = self.time_step_plots[0, 5]
+
+            # self.x = self.time_step_plots[-1, 0] + self.vx * bg_vars.timescale_interval
+            # self.y = self.time_step_plots[-1, 1] + self.vy * bg_vars.timescale_interval
+            # self.z = self.time_step_plots[-1, 2] + self.vz * bg_vars.timescale_interval
+            self.time_step_plots = None
+            # return
 
         timescale: float = bg_vars.timescale * dt
 
