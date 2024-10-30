@@ -85,6 +85,7 @@ class BlobGlobalVars:
 
     BlobGlobalVars.timescale: ClassVar[int] - number of seconds to pass with each frame
     BlobGlobalVars.orig_timescale: ClassVar[int] - number of seconds to pass with each frame, original value
+    BlobGlobalVars.timescale_interval: ClassVar[int] - number of seconds between each orbit plot (between frame draws)
     BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
     BlobGlobalVars.num_planets: ClassVar[int] - how many blobs to make planets (out of NUM_BLOBS)
     BlobGlobalVars.textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
@@ -164,6 +165,9 @@ class BlobGlobalVars:
     BlobGlobalVars.set_orig_timescale(timescale: int) -> None
         Class method to set BlobGlobalVars.orig_timescale
 
+    BlobGlobalVars.set_timescale_interval(timescale_interval: int) -> None
+        Class method to set BlobGlobalVars.timescale_interval
+
     BlobGlobalVars.set_timescale_inc(timescale_inc: int) -> None
         Class method to set BlobGlobalVars.timescale_inc
 
@@ -240,6 +244,7 @@ class BlobGlobalVars:
 
     timescale: ClassVar[int] = TIMESCALE
     orig_timescale: ClassVar[int] = TIMESCALE
+    timescale_interval: ClassVar[int] = TIMESCALE_INTERVAL
     timescale_inc: ClassVar[int] = MINUTES
     num_planets: ClassVar[int] = NUM_PLANETS
     textures_3d: ClassVar[bool] = TEXTURES_3D
@@ -418,6 +423,11 @@ class BlobGlobalVars:
     def set_orig_timescale(cls, orig_timescale: int) -> None:
         """Class method to set BlobGlobalVars.orig_timescale"""
         cls.orig_timescale = orig_timescale
+
+    @classmethod
+    def set_timescale_interval(cls, timescale_interval: int) -> None:
+        """Class method to set BlobGlobalVars.timescale_interval"""
+        cls.timescale_interval = timescale_interval
 
     @classmethod
     def set_timescale_inc(cls, timescale_inc: int) -> None:

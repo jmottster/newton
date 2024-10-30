@@ -6,6 +6,9 @@ A static class used to provide physics methods for MassiveBlobs
 by Jason Mott, copyright 2024
 """
 
+from typing import Self, Tuple
+import numpy as np
+import numpy.typing as npt
 import math
 from decimal import *
 from typing import Self
@@ -54,6 +57,60 @@ class position_marker:
         self.pos.x += self.vel.x * self.time_step
         self.pos.y += self.vel.y * self.time_step
         self.pos.z += self.vel.z * self.time_step
+
+
+class position_marker_blob:
+    def __init__(self: Self, blob: MassiveBlob, time_step: float = 1) -> None:
+
+        self.blob: MassiveBlob = blob
+        self.pos: point = point(
+            self.blob.time_step_plots[0, 0],
+            self.blob.time_step_plots[0, 1],
+            self.blob.time_step_plots[0, 2],
+        )
+        self.vel: point = point(
+            self.blob.time_step_plots[0, 3],
+            self.blob.time_step_plots[0, 4],
+            self.blob.time_step_plots[0, 5],
+        )
+        self.time_step: float = time_step
+        self.next_inc: int = 0
+        self.num_steps: int = len(self.blob.time_step_plots)
+        self.cache: npt.NDArray = None
+
+    def move(self: Self, inc: int) -> None:
+
+        self.next_inc = inc + 1
+
+        self.pos.x += self.vel.x * self.time_step
+        self.pos.y += self.vel.y * self.time_step
+        self.pos.z += self.vel.z * self.time_step
+
+        self.cache = self.blob.time_step_plots[inc].copy()
+
+        # self.blob.time_step_plots[inc, 0] = self.pos.x
+        # self.blob.time_step_plots[inc, 1] = self.pos.y
+        # self.blob.time_step_plots[inc, 2] = self.pos.z
+        self.blob.time_step_plots[inc, 3] = self.vel.x
+        self.blob.time_step_plots[inc, 4] = self.vel.y
+        self.blob.time_step_plots[inc, 5] = self.vel.z
+
+        self.cache = np.subtract(self.blob.time_step_plots[inc], self.cache)
+
+        if self.next_inc < self.num_steps:
+            self.blob.time_step_plots[self.next_inc] = np.add(
+                self.blob.time_step_plots[self.next_inc], self.cache
+            )
+            # self.pos = point(
+            #     self.blob.time_step_plots[self.next_inc, 0],
+            #     self.blob.time_step_plots[self.next_inc, 1],
+            #     self.blob.time_step_plots[self.next_inc, 2],
+            # )
+            self.vel = point(
+                self.blob.time_step_plots[self.next_inc, 3],
+                self.blob.time_step_plots[self.next_inc, 4],
+                self.blob.time_step_plots[self.next_inc, 5],
+            )
 
 
 class BlobPhysics:
@@ -390,6 +447,7 @@ class BlobPhysics:
         Uses the Jason Mott method, which runs several steps (num_steps) to get to the final timescale step,
         thus making it more accurate than a straight line to the final step would be.
         """
+
         blob1_location: position_marker = position_marker(
             point(blob1.x, blob1.y, blob1.z), point(0, 0, 0)
         )
@@ -400,11 +458,17 @@ class BlobPhysics:
 
         if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
 
-            last_step: int = num_steps - 1
-            timescale: float = bg_vars.timescale * dt / num_steps
+            interval: float = bg_vars.timescale_interval
+            timescale: float = bg_vars.timescale * dt
 
-            blob1_location.time_step = timescale
-            blob2_location.time_step = timescale
+            num_steps = round(timescale / interval)
+            last_step: int = num_steps - 1
+            # print(
+            #     f"num_steps: {num_steps} {timescale} / {interval} {timescale / interval}"
+            # )
+
+            blob1_location.time_step = interval
+            blob2_location.time_step = interval
 
             F: float = 0.0
             F1: float = 0.0
@@ -419,13 +483,13 @@ class BlobPhysics:
                 F1 = F / blob1.mass
                 F2 = F / blob2.mass
 
-                blob1_location.vel.x -= d.dx * F1 * timescale
-                blob1_location.vel.y -= d.dy * F1 * timescale
-                blob1_location.vel.z -= d.dz * F1 * timescale
+                blob1_location.vel.x -= d.dx * F1 * interval
+                blob1_location.vel.y -= d.dy * F1 * interval
+                blob1_location.vel.z -= d.dz * F1 * interval
 
-                blob2_location.vel.x += d.dx * F2 * timescale
-                blob2_location.vel.y += d.dy * F2 * timescale
-                blob2_location.vel.z += d.dz * F2 * timescale
+                blob2_location.vel.x += d.dx * F2 * interval
+                blob2_location.vel.y += d.dy * F2 * interval
+                blob2_location.vel.z += d.dz * F2 * interval
 
                 if i < last_step:
 
@@ -446,3 +510,150 @@ class BlobPhysics:
             # If out of Sun's gravitational range, kill it
             blob2.dead = True
             blob2.escaped = True
+
+    @staticmethod
+    def leap_frog_gravitational_pull(
+        blob1: MassiveBlob, blob2: MassiveBlob, dt: float
+    ) -> None:
+
+        timescale: float = bg_vars.timescale * dt
+        interval: float = bg_vars.timescale_interval
+        half_interval: float = interval * 0.5
+        # t_vec: npt.NDArray = np.arange(0, timescale, interval, dtype=float)
+        t_vec_len: int = round(timescale / interval)  # len(t_vec)
+        blob_vec_len: int = 6
+
+        GM: float = BlobPhysics.g * blob1.mass * blob2.mass
+
+        def force(
+            blob1_vec: npt.NDArray, blob2_vec: npt.NDArray
+        ) -> Tuple[npt.NDArray, npt.NDArray]:
+
+            dx: float = blob1_vec[0] - blob2_vec[0]
+            dy: float = blob1_vec[1] - blob2_vec[1]
+            dz: float = blob1_vec[2] - blob2_vec[2]
+
+            r: float = math.sqrt(dx**2 + dy**2 + dz**2)
+            F: float = GM / r**3
+
+            F1: float = F / blob1.mass
+            F2: float = F / blob2.mass
+
+            vx1: float = blob1_vec[3]
+            vy1: float = blob1_vec[4]
+            vz1: float = blob1_vec[5]
+
+            vx2: float = blob2_vec[3]
+            vy2: float = blob2_vec[4]
+            vz2: float = blob2_vec[5]
+
+            dt_vec1: npt.NDArray = np.array(
+                [
+                    vx1 * interval,
+                    vy1 * interval,
+                    vz1 * interval,
+                    -(dx * F1 * interval),
+                    -(dy * F1 * interval),
+                    -(dz * F1 * interval),
+                ]
+            )
+            # dt_vec1[0] = vx1
+            # dt_vec1[1] = vy1
+            # dt_vec1[2] = vz1
+            # dt_vec1[3] -= dx * F1
+            # dt_vec1[4] -= dy * F1
+            # dt_vec1[5] -= dz * F1
+
+            dt_vec2: npt.NDArray = np.array(
+                [
+                    vx2 * interval,
+                    vy2 * interval,
+                    vz2 * interval,
+                    (dx * F2 * interval),
+                    (dy * F2 * interval),
+                    (dz * F2 * interval),
+                ]
+            )
+            # dt_vec2[0] = vx2
+            # dt_vec2[1] = vy2
+            # dt_vec2[2] = vz2
+            # dt_vec2[3] = dx * F2
+            # dt_vec2[4] = dy * F2
+            # dt_vec2[5] = dz * F2
+
+            return (dt_vec1, dt_vec2)
+
+        blob1.set_time_step_plots(t_vec_len)
+        blob2.set_time_step_plots(t_vec_len)
+
+        F1: npt.NDArray = None
+        F2: npt.NDArray = None
+
+        # F1, F2 = force(blob1.time_step_plots[0], blob2.time_step_plots[0])
+
+        # b1_half_step: npt.NDArray = np.add(
+        #     blob1.time_step_plots[0], np.multiply(F1, half_interval)
+        # )
+        # temp: npt.NDArray = np.multiply(F2, half_interval)
+        # b2_half_step: npt.NDArray = np.add(blob2.time_step_plots[0], temp)
+
+        F1, F2 = force(blob1.time_step_plots[0], blob2.time_step_plots[0])
+
+        blob1.time_step_plots[0] = np.add(
+            blob1.time_step_plots[0], F1
+        )  # np.multiply(F1, interval)
+
+        blob2.time_step_plots[0] = np.add(
+            blob2.time_step_plots[0], F2
+        )  # np.multiply(F2, interval)
+
+        i_prev: int = 0
+
+        for i in range(1, t_vec_len):
+
+            if blob2.name == "40":
+                print(
+                    f"laep_frog 2: ----- with {blob1.name}-----------------------------------"
+                )
+                # print(f"{blob2.time_step_plots[i]}")
+                print(f"{np.multiply(blob2.time_step_plots[i],bg_vars.scale_down)}")
+
+            blob1.time_step_plots[i] = np.add(
+                blob1.time_step_plots[i],
+                np.subtract(blob1.time_step_plots[i_prev], blob1.time_step_plots[i]),
+            )
+
+            blob2.time_step_plots[i] = np.add(
+                blob2.time_step_plots[i],
+                np.subtract(blob2.time_step_plots[i_prev], blob2.time_step_plots[i]),
+            )
+
+            if blob2.name == "40":
+                # print(f"{blob2.time_step_plots[i]}")
+                print(f"{np.multiply(blob2.time_step_plots[i],bg_vars.scale_down)}")
+
+            F1, F2 = force(blob1.time_step_plots[i], blob2.time_step_plots[i])
+
+            blob1.time_step_plots[i] = np.add(
+                blob1.time_step_plots[i], F1
+            )  # np.multiply(F1, interval)
+
+            blob2.time_step_plots[i] = np.add(
+                blob2.time_step_plots[i], F2
+            )  # np.multiply(F2, interval)
+
+            # F1, F2 = force(blob1.time_step_plots[i_next], blob2.time_step_plots[i_next])
+            # b1_half_step = np.add(
+            #     blob1.time_step_plots[i_next], np.multiply(F1, interval)
+            # )
+            # temp = np.multiply(F2, half_interval)
+            # b2_half_step = np.add(blob2.time_step_plots[i_next], temp)
+
+            if blob2.name == "40":
+                # print(f"{blob2.time_step_plots[i]}")
+                print(f"{np.multiply(blob2.time_step_plots[i],bg_vars.scale_down)}")
+                print(
+                    f"laep_frog 2: ------------------------------------------------------"
+                )
+
+            i_prev += 1
