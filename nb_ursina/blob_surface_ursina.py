@@ -26,6 +26,7 @@ from newtons_blobs import BlobUniverse
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import BLOB_TEXTURES_SMALL, BLOB_TEXTURES_LARGE
 from .blob_lights import BlobPointLight, BlobAmbientLight
+from .blob_utils_ursina import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -122,7 +123,7 @@ class TrailRenderer(urs.Entity):
         self._t: float = 0
 
         self.min_spacing: float = min_spacing
-        self.update_step: float = 0.25
+        self.update_step: float = 1
         self.thickness: int = 2
         self.barycenter_blob: Rotator = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
@@ -135,7 +136,7 @@ class TrailRenderer(urs.Entity):
             self.update_step = 0
             self.segments = 250
 
-        self.orig_segments: float = self.segments
+        self.orig_segments: int = self.segments
 
         self.points: deque[urs.Vec3] = deque(
             [self.world_position for _ in range(0, self.segments)]
@@ -143,9 +144,9 @@ class TrailRenderer(urs.Entity):
 
         self.last_point_index: int = self.segments - 2
 
-        self.min_spacing *= 2
+        # self.min_spacing *= 2
 
-        self.spacing_check: int = 25
+        self.spacing_check: int = self.orig_segments - 10
         self.last_point_distances: deque[urs.Vec3] = deque(
             [self.min_spacing for _ in range(0, self.spacing_check)]
         )
@@ -181,7 +182,7 @@ class TrailRenderer(urs.Entity):
 
         self._t += urs.time.dt
 
-        if self._t >= self.update_step:
+        if not FPS.paused and (self._t >= self.update_step):
 
             if len(self.last_point_distances) >= self.spacing_check:
                 self.calibrate_segments()
@@ -224,17 +225,24 @@ class TrailRenderer(urs.Entity):
 
         r = urs.distance(self.parent, barycenter)
 
-        self.min_spacing = (r * math.pi) / 250
+        self.min_spacing = (r * math.pi) / self.orig_segments
 
         avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
         self.last_point_distances.clear()
 
+        # print(
+        #     f"{self.parent.blob_name}: avg_length < self.min_spacing: {round(avg_length,2)} < {round(self.min_spacing,2)}"
+        # )
+
         if avg_length < self.min_spacing:
             avg_length = self.min_spacing
+            self.segments = self.orig_segments
+        else:
+            arc = r * (math.asin(avg_length / (r * 2)) * 2)
+            self.segments = round((r * math.pi) / arc)
 
-        arc = r * (math.asin(avg_length / (r * 2)) * 2)
-        self.segments = round((r * math.pi) / arc)
+        # print(f"{self.parent.blob_name}: self.segments: {self.segments}")
 
         self.last_point_index = self.segments - 2
 
@@ -590,11 +598,13 @@ class Rotator(urs.Entity):
             )
             self.info_text.text = self.text
 
-        degrees = self.rotation_speed * (
-            (ClockObject.getGlobalClock().getDt() * bg_vars.timescale) / HOURS
-        )
+        if not FPS.paused:
 
-        self.rotate((0, degrees, 0))
+            degrees = self.rotation_speed * (
+                (ClockObject.getGlobalClock().getDt() * bg_vars.timescale) / HOURS
+            )
+
+            self.rotate((0, degrees, 0))
 
         if not self.trail_ready:
             from .blob_moon_trail_registry_ursina import (
@@ -832,7 +842,7 @@ class BlobSurfaceUrsina:
             urs_color = urs.color.rgb32(150, 150, 150)
 
             enabled: bool = not bg_vars.black_hole_mode
-            self.texture = "nb_ursina/textures/sun03.png"
+            self.texture = "textures/sun03.png"
 
             if not enabled:
                 urs_color = urs.color.rgba(0, 0, 0, 0)
@@ -860,10 +870,10 @@ class BlobSurfaceUrsina:
             )
             self.ursina_center_blob = BlobPointLight(
                 # parent=self.ursina_blob,
+                shadows=True,
                 scale=(self.radius, self.radius, self.radius),
                 position=(0, 0, 0),
-                shadows=True,
-                shadow_map_resolution=(4096, 4096),
+                shadow_map_resolution=(2048, 2048),
                 max_distance=bg_vars.universe_size * 1000,
                 attenuation=(1, 0, 0),
                 color=urs.color.rgba(5, 5, 5, 5),

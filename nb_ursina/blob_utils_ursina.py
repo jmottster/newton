@@ -67,6 +67,8 @@ class FPS:
         Renders the fps to the display object at x,y coordinates
     """
 
+    paused: bool = False
+
     def __init__(self: Self):
         class Clock:
             def __init__(self: Self):

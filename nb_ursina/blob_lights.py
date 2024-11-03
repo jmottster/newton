@@ -108,13 +108,19 @@ class BlobPointLight(BlobLight):
         Returns an instance of PandaPointLight(). See Panda3D documentation
     """
 
-    def __init__(self: Self, **kwargs):
+    def __init__(self: Self, shadows=True, **kwargs):
 
         self.light_name: str = kwargs.get("light_name")
         self.entity_set_light: urs.Entity = kwargs.get("entity_set_light")
         self.attenuation: Tuple[int, int, int] = kwargs.get("attenuation")
         self.max_distance: float = float(kwargs.get("max_distance"))
+        self.shadow_map_resolution: Tuple[int, int] = kwargs.get(
+            "shadow_map_resolution"
+        )
+
         super().__init__()
+
+        # self.shadows = shadows
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -127,6 +133,23 @@ class BlobPointLight(BlobLight):
             (self.attenuation[0], self.attenuation[1], self.attenuation[2])
         )
         return light
+
+    @property
+    def shadows(self):
+        return self._shadows
+
+    @shadows.setter
+    def shadows(self, value):
+        self._shadows = value
+        if value:
+            self._light.set_shadow_caster(
+                True,
+                int(self.shadow_map_resolution[0]),
+                int(self.shadow_map_resolution[1]),
+            )
+            # self.update_bounds()
+        else:
+            self._light.set_shadow_caster(False)
 
 
 class BlobAmbientLight(BlobLight):

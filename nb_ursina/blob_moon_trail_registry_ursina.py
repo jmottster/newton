@@ -99,7 +99,7 @@ class MoonWatcher(urs.Entity):
         Called by Ursina when a key event happens (looks for T, to turn functionality on/off)
 
     update() -> None
-        Called by Ursina once per frame. This is where all the checks happens and moon trails
+        Called by Ursina once per self.update_step seconds. This is where all the checks happens and moon trails
         are turned on and off
 
     on_destroy() -> None
@@ -147,7 +147,7 @@ class MoonWatcher(urs.Entity):
         self.first_person_viewer: urs.Entity = None
 
         self._t: float = 0
-        self.update_step: float = 1
+        self.update_step: float = 6
 
         self.trail_on: bool = False
 
@@ -191,7 +191,7 @@ class MoonWatcher(urs.Entity):
 
     def update(self: Self) -> None:
         """
-        Called by Ursina once per frame. This is where all the checks happens and moon trails
+        Called by Ursina once per self.update_step seconds. This is where all the checks happens and moon trails
         are turned on and off
         """
 

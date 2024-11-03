@@ -28,6 +28,7 @@ from .blob_moon_trail_registry_ursina import (
 )
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
+from .blob_utils_ursina import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -224,6 +225,7 @@ class BlobUrsinaFactory:
         if data["paused"]:
             urs.camera.ui.collider = None
             self.urs_display.paused = True
+            FPS.paused = True
 
         if not data["show_stats"]:
             self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
