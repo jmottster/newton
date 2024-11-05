@@ -135,6 +135,12 @@ class BlobGlobalVars:
     BlobGlobalVars.set_scale_blob_mass_with_size(scale_blob_mass_with_size: bool) -> None
         Class method to set whether or not to scale the mass in proportion to radius scaling
 
+    BlobGlobalVars.set_first_person_scale(first_person_scale: float) -> None
+        Class method to set the scale of the first person entity
+
+    BlobGlobalVars.set_background_scale(background_scale: float) -> None
+        Class method to set the scale of the background entity (which displays the space scene)
+
     BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
         Class method to set whether or not to swap y and z in the starting plot of blobs
 
@@ -322,9 +328,6 @@ class BlobGlobalVars:
             cls.min_moon_mass = cls.org_min_moon_mass * cls.blob_scale
             cls.max_moon_mass = cls.org_max_moon_mass * cls.blob_scale
 
-        cls.first_person_scale = cls.au_scale_factor * 0.05
-        cls.background_scale = cls.universe_size
-
         cls.grid_cell_size = int(
             cls.universe_size / (cls.universe_scale * cls.grid_cells_per_au)
         )
@@ -367,6 +370,16 @@ class BlobGlobalVars:
     def set_scale_blob_mass_with_size(cls, scale_blob_mass_with_size: bool) -> None:
         """Class method to set whether or not to scale the mass in proportion to radius scaling"""
         cls.scale_blob_mass_with_size = scale_blob_mass_with_size
+
+    @classmethod
+    def set_first_person_scale(cls, first_person_scale: float) -> None:
+        """Class method to set the scale of the first person entity"""
+        cls.first_person_scale = first_person_scale
+
+    @classmethod
+    def set_background_scale(cls, background_scale: float) -> None:
+        """Class method to set the scale of the background entity (which displays the space scene)"""
+        cls.background_scale = background_scale
 
     @classmethod
     def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:

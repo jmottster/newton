@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.5"
+__version__ = "0.0.9"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
@@ -54,12 +54,12 @@ TEXTURES_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
 # Number of AU to equal universe size
-UNIVERSE_SCALE = 4
+UNIVERSE_SCALE = 100
 
 # To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
-CENTER_BLOB_SCALE = 10
+CENTER_BLOB_SCALE = 20
 
-BLOB_SCALE = 10
+BLOB_SCALE = 20
 
 SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
@@ -73,7 +73,7 @@ HOURS = MINUTES * 60
 DAYS = HOURS * 24
 YEARS = DAYS * 365.25
 
-TIMESCALE = HOURS * 5  # elapsed time per second, in seconds
+TIMESCALE = HOURS * 6  # elapsed time per second, in seconds
 
 AUTO_SAVE_LOAD = True
 LIGHTING = True
@@ -129,9 +129,9 @@ MAX_MASS = J_MASS
 MIN_MOON_MASS = MIM_MASS
 MAX_MOON_MASS = GAN_MASS
 
-FIRST_PERSON_SCALE = CENTER_BLOB_RADIUS * 0.1
-BACKGROUND_SCALE = CENTER_BLOB_RADIUS * 1000
-GRID_CELLS_PER_AU = 10
+FIRST_PERSON_SCALE = MAX_RADIUS * 2.5
+BACKGROUND_SCALE = FIRST_PERSON_SCALE * 10000
+GRID_CELLS_PER_AU = 0.5
 GRID_CELL_SIZE = int(UNIVERSE_SIZE / (UNIVERSE_SCALE * GRID_CELLS_PER_AU))
 GRID_KEY_UPPER_BOUND = int(UNIVERSE_SIZE / GRID_CELL_SIZE)
 GRID_KEY_CHECK_BOUND = GRID_KEY_UPPER_BOUND - 1
