@@ -78,7 +78,7 @@ class BlobUniverseUrsina:
     def set_universe_entity(self: Self, scale: float) -> None:
         """Creates the Entity that renders the dome of the background image (stars)"""
 
-        texture: str = "textures/space/multi_nebulae_3.png"
+        texture: str = "textures/space/multi_nebulae_2.png"
 
         model: str = "background_sphere"
         if not bg_vars.textures_3d:
