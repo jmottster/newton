@@ -92,7 +92,6 @@ class BlobUniverseUrsina:
             texture=texture,
             texture_scale=(1, 1),
             rotation_x=90,
-            eternal=True,
         )
 
     def get_framework(self: Self) -> Any:
@@ -135,6 +134,9 @@ class BlobUniverseUrsina:
 
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
+
+        urs.destroy(self.universe, 0)
+        self.universe = None
         urs.scene.clear()
         self.width, self.height = (
             bg_vars.universe_size_w,
