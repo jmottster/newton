@@ -4,3 +4,4 @@ main.dist/**
 **/__pycache__/**
 testers/**
 save/**
+.vscode/**

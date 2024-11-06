@@ -67,6 +67,9 @@ class FPS:
         Renders the fps to the display object at x,y coordinates
     """
 
+    paused: bool = False
+    dt: float = 0.0
+
     def __init__(self: Self):
         class Clock:
             def __init__(self: Self):
@@ -79,13 +82,15 @@ class FPS:
                 else:
                     self.globalClock.setAverageFrameRateInterval(0)
                 self.dt: float = 1 / self.frame_rate  # self.globalClock.getDt()
+                FPS.dt = self.dt
 
             def tick(self: Self, time: float):
                 if time != self.frame_rate:
                     self.frame_rate = time
                     self.globalClock.setFrameRate(time)
 
-                self.dt = 1 / self.frame_rate  # self.globalClock.getDt()
+                # self.dt = self.globalClock.getDt()
+                # FPS.dt = self.dt
 
             def getAverageFrameRate(self: Self):
                 return self.globalClock.getAverageFrameRate()

@@ -170,7 +170,17 @@ class BlobDisplayUrsina:
 
     def __init__(self: Self, size_w: float, size_h: float):
 
-        urs.application.asset_folder = Path(__file__).parent.parent
+        urs.application.asset_folder = Path(__file__).parent
+        urs.application.compressed_textures_folder = (
+            urs.application.asset_folder.joinpath("textures").joinpath(
+                "textures_compressed/"
+            )
+        )
+        urs.application.compressed_models_folder = (
+            urs.application.asset_folder.joinpath("models").joinpath(
+                "models_compressed/"
+            )
+        )
 
         self.app: urs.Ursina = urs.Ursina(
             title=WINDOW_TITLE,
@@ -248,9 +258,9 @@ class BlobDisplayUrsina:
         def pause_game() -> None:
             self.paused = not self.paused
             if self.paused:
-                pass
+                FPS.paused = self.paused
             else:
-                pass
+                FPS.paused = self.paused
 
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats

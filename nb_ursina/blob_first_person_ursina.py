@@ -18,7 +18,6 @@ from newtons_blobs import resource_path
 
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_textures import BLOB_TEXTURES_SMALL
 from .blob_utils_ursina import TempMessage
 from .blob_lights import BlobAmbientLight
 
@@ -86,6 +85,14 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
 
+        super().__init__()
+
+        urs.camera.parent = self
+        urs.camera.position = (0, 0, -0.15)
+        urs.camera.rotation = (0, 0, 0)
+        urs.camera.ui.collider = "sphere"
+        urs.camera.ui.position = (0, 0, 0)
+
         self.center_cursor: urs.Entity = urs.Entity(
             parent=urs.camera.ui,
             model="quad",
@@ -97,23 +104,24 @@ class BlobFirstPersonUrsina(urs.Entity):
         )
 
         color: urs.Color = urs.color.rgba(0.78, 0.78, 0.78, 0.59)
-        self.gimbal_texture: str = "nb_ursina/textures/sun03.png"
+        self.gimbal_texture: str = "textures/sun03.png"
         if not bg_vars.textures_3d:
             color = urs.color.rgba32(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
             )
             self.gimbal_texture = None
         self.gimbal: urs.Entity = urs.Entity(
+            parent=self,
             model="sphere",
             color=color,
-            position=(0, 0, self.start_z),
+            position=(0, -0.03, 0),
             scale=(
-                self.temp_scale * 0.005,
-                self.temp_scale * 0.005,
-                self.temp_scale * 0.005,
+                0.009,
+                0.009,
+                0.009,
             ),
             texture=self.gimbal_texture,
-            texture_scale=(1, 1),
+            # texture_scale=(1, 1),
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
         )
@@ -131,30 +139,21 @@ class BlobFirstPersonUrsina(urs.Entity):
             eternal=kwargs["eternal"],
         )
 
+        self.gimbal_look_at: urs.Entity = urs.Entity(
+            scale=self.temp_scale * 0.009,
+            world_position=self.gimbal.world_position,
+            eternal=kwargs["eternal"],
+        )
+
         self.flashlight: BlobAmbientLight = BlobAmbientLight(
             parent=self.gimbal,
             position=(0, 0, 0),
             shadows=False,
-            shadow_map_resolution=(4096, 4096),
             max_distance=bg_vars.universe_size,
             attenuation=(1, 0, 0),
             color=self.flashlight_color,
             eternal=kwargs["eternal"],
         )
-
-        super().__init__()
-
-        self.center_blob: urs.Vec3 = urs.Vec3(
-            BlobSurfaceUrsina.center_blob_x,
-            BlobSurfaceUrsina.center_blob_y,
-            BlobSurfaceUrsina.center_blob_z,
-        )
-
-        urs.camera.parent = self
-        urs.camera.position = (0, 0, 0)
-        urs.camera.rotation = (0, 0, 0)
-        urs.camera.ui.collider = "sphere"
-        urs.camera.ui.position = (0, 0, 0)
 
         self.speed: float = bg_vars.au_scale_factor / 4
         self.orig_speed: float = self.speed
@@ -164,10 +163,15 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.orig_speed = (self.min_speed + self.max_speed) / 2
         self.speed = self.orig_speed
 
-        self.roll_speed: float = 20
+        self.roll_speed: float = 75
         self.orig_roll_speed: float = self.roll_speed
+        self.min_roll_speed: float = 10
+        self.max_roll_speed: float = 90
+
+        self.orig_roll_speed = (self.min_roll_speed + self.max_roll_speed) / 2
+        self.roll_speed = self.orig_roll_speed
+
         self.direction: urs.Vec3 = None
-        # self.m_direction: urs.Vec3 = None
         self.position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
         self.velocity: urs.Vec3 = urs.Vec3(0, 0, 0)
         self.world_position: urs.Vec3 = urs.Vec3(0, 0, self.start_z)
@@ -206,10 +210,9 @@ class BlobFirstPersonUrsina(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.gimbal_relative_forward_pos = self.scale_x * 0.103
-        self.gimbal_relative_down_pos = self.scale_x * 0.02
+        self.speed_inc: float = self.orig_speed * 0.05
 
-        self.speed_inc = self.orig_speed * 0.05
+        self.roll_speed_inc: float = self.max_roll_speed * 0.05
 
         self.setup_stage = True
 
@@ -243,18 +246,12 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             self.rotate((-(urs.mouse.velocity[1] * self.mouse_sensitivity[0]), 0, 0))
 
-            self.rotate(
-                urs.Vec3(0, 0, (urs.held_keys["z"] - urs.held_keys["c"]))
-                * urs.time.dt
-                * self.roll_speed
-            )
-
             thrust: int = self.mouse_scroll_up - self.mouse_scroll_down
 
             if thrust != 0:
 
                 self.speed += self.speed_inc * thrust
-                self.roll_speed += 5 * thrust
+                self.roll_speed += self.roll_speed_inc * thrust
 
                 self.speed = urs.clamp(
                     self.speed,
@@ -264,11 +261,17 @@ class BlobFirstPersonUrsina(urs.Entity):
 
                 self.roll_speed = urs.clamp(
                     self.roll_speed,
-                    5,
-                    self.orig_roll_speed * 2.5,
+                    self.min_roll_speed,
+                    self.max_roll_speed,
                 )
 
                 self.report_throttle_speed()
+
+            self.rotate(
+                urs.Vec3(0, 0, (urs.held_keys["z"] - urs.held_keys["c"]))
+                * urs.time.dt
+                * self.roll_speed
+            )
 
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
@@ -289,25 +292,18 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             self.position += self.velocity
 
-            self.center_blob = urs.Vec3(
-                BlobSurfaceUrsina.center_blob_x,
-                BlobSurfaceUrsina.center_blob_y,
-                BlobSurfaceUrsina.center_blob_z,
-            )
-
-            self.gimbal.rotation = self.rotation
-            self.gimbal.position = (
-                self.position
-                + self.forward.normalized() * self.gimbal_relative_forward_pos
-            )
-            self.gimbal.position += (
-                self.gimbal.down.normalized() * self.gimbal_relative_down_pos
-            )
-
             if self.follow_entity is not None:
-                self.gimbal.look_at(self.follow_entity)
-            else:
-                self.gimbal.look_at(self.center_blob)
+                self.gimbal_look_at.world_position = self.gimbal.get_position()
+                self.gimbal_look_at.world_rotation = self.world_rotation
+
+                self.gimbal_look_at.look_at(self.follow_entity)
+            elif BlobSurfaceUrsina.center_blob is not None:
+                self.gimbal_look_at.world_position = self.gimbal.get_position()
+                self.gimbal_look_at.world_rotation = self.world_rotation
+
+                self.gimbal_look_at.look_at(BlobSurfaceUrsina.center_blob)
+
+            self.gimbal.world_rotation = self.gimbal_look_at.world_rotation
 
             self.universe.universe.position = self.world_position
 

@@ -225,6 +225,10 @@ class BlobPlotter:
 
         radius_min_max_halfway: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
 
+        radius_halfway_min_halfway: float = (
+            bg_vars.min_radius + radius_min_max_halfway
+        ) / 2
+
         radius_halfway_max_halfway: float = (
             radius_min_max_halfway + bg_vars.max_radius
         ) / 2
@@ -232,6 +236,8 @@ class BlobPlotter:
         ############################################################################
 
         mass_min_max_halfway: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
+
+        mass_halfway_min_halfway: float = (bg_vars.min_mass + mass_min_max_halfway) / 2
 
         mass_halfway_max_halfway = (mass_min_max_halfway + bg_vars.max_mass) / 2
 
@@ -264,14 +270,14 @@ class BlobPlotter:
                     radius = round(
                         (
                             random.random()
-                            * (radius_min_max_halfway - bg_vars.min_radius)
+                            * (radius_halfway_min_halfway - bg_vars.min_radius)
                         )
                         + bg_vars.min_radius,
                         2,
                     )
 
                     mass = (
-                        random.random() * (mass_min_max_halfway - bg_vars.min_mass)
+                        random.random() * (mass_halfway_min_halfway - bg_vars.min_mass)
                         + bg_vars.min_mass
                     )
                 else:
@@ -430,7 +436,7 @@ class BlobPlotter:
                     blob2.y += pos_offsets[1]
                     blob2.z += pos_offsets[2]
 
-                    bp.jjm_gravitational_pull(blob1, blob2, dt)
+                    bp.euler_gravitational_pull(blob1, blob2, dt)
                     bp.collision_detection(blob1, blob2)
 
                     blob2.x -= pos_offsets[0]
@@ -488,7 +494,7 @@ class BlobPlotter:
                         )
 
         for i in range(1, len(self.blobs)):
-            bp.gravitational_pull(self.blobs[0], self.blobs[i], dt)
+            bp.euler_gravitational_pull(self.blobs[0], self.blobs[i], dt)
             bp.collision_detection(self.blobs[0], self.blobs[i])
 
         if not bg_vars.center_blob_escape:

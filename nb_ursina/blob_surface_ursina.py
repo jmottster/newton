@@ -24,8 +24,9 @@ from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
 
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_textures import BLOB_TEXTURES_SMALL, BLOB_TEXTURES_LARGE
+from .blob_textures import BLOB_TEXTURES_ROCKY, BLOB_TEXTURES_GAS, BLOB_TEXTURES_MOON
 from .blob_lights import BlobPointLight, BlobAmbientLight
+from .blob_utils_ursina import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -122,7 +123,7 @@ class TrailRenderer(urs.Entity):
         self._t: float = 0
 
         self.min_spacing: float = min_spacing
-        self.update_step: float = 0.25
+        self.update_step: float = 0
         self.thickness: int = 2
         self.barycenter_blob: Rotator = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
@@ -135,17 +136,15 @@ class TrailRenderer(urs.Entity):
             self.update_step = 0
             self.segments = 250
 
-        self.orig_segments: float = self.segments
+        self.orig_segments: int = self.segments
 
         self.points: deque[urs.Vec3] = deque(
             [self.world_position for _ in range(0, self.segments)]
         )
 
-        self.last_point_index: int = self.segments - 2
+        # self.min_spacing *= 2
 
-        self.min_spacing *= 2
-
-        self.spacing_check: int = 25
+        self.spacing_check: int = self.orig_segments - 10
         self.last_point_distances: deque[urs.Vec3] = deque(
             [self.min_spacing for _ in range(0, self.spacing_check)]
         )
@@ -162,6 +161,8 @@ class TrailRenderer(urs.Entity):
 
         if self.is_moon:
             self.enabled = False
+        else:
+            self.calibrate_segments(True)
 
     def update(self: Self) -> None:
         """
@@ -179,15 +180,15 @@ class TrailRenderer(urs.Entity):
             for i in range(0, len(self.points)):
                 self.points[i] = self.points[i] + diff
 
-        self._t += urs.time.dt
+        self._t += FPS.dt
 
-        if self._t >= self.update_step:
+        if not FPS.paused and (self._t >= self.update_step):
 
             if len(self.last_point_distances) >= self.spacing_check:
                 self.calibrate_segments()
 
             self.last_point_distances.append(
-                urs.distance(self.points[self.last_point_index], self.points[-1])
+                urs.distance(self.points[-2], self.points[-1])
             )
 
             if self.last_point_distances[-1] > self.min_spacing:
@@ -213,30 +214,36 @@ class TrailRenderer(urs.Entity):
         if self.parent.blob_name == CENTER_BLOB_NAME:
             return
 
-        if new:
-            for i in range(0, self.segments):
-                self.points[i] = self.world_position
-
-        barycenter = BlobSurfaceUrsina.center_blob
+        barycenter: Rotator = BlobSurfaceUrsina.center_blob
+        avg_length: float = 0.0
 
         if self.barycenter_blob is not None:
             barycenter = self.barycenter_blob
 
         r = urs.distance(self.parent, barycenter)
 
-        self.min_spacing = (r * math.pi) / 250
+        self.min_spacing = (r * math.pi) / self.orig_segments
 
-        avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
+        if new:
+            for i in range(0, self.segments):
+                self.points[i] = self.world_position
+            avg_length = self.min_spacing
+        else:
+            avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
         self.last_point_distances.clear()
 
-        if avg_length < self.min_spacing:
+        if avg_length <= self.min_spacing:
             avg_length = self.min_spacing
+            self.segments = self.orig_segments
+        else:
+            arc = r * (math.asin(avg_length / (r * 2)) * 2)
+            self.segments = round((r * math.pi) / arc)
 
-        arc = r * (math.asin(avg_length / (r * 2)) * 2)
-        self.segments = round((r * math.pi) / arc)
-
-        self.last_point_index = self.segments - 2
+        if new:
+            self.spacing_check = 10
+        else:
+            self.spacing_check = self.segments - 10
 
         if len(self.points) > self.segments:
             while len(self.points) > self.segments:
@@ -414,6 +421,10 @@ class Rotator(urs.Entity):
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
 
+        self.percent_mass: int = round(
+            (self.mass - bg_vars.min_mass) / (bg_vars.max_mass - bg_vars.min_mass) * 100
+        )
+
         self.percent_radius: int = round(
             (
                 (self.scale_x - bg_vars.min_radius)
@@ -426,6 +437,12 @@ class Rotator(urs.Entity):
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
+            self.percent_mass = round(
+                (self.mass - bg_vars.min_moon_mass)
+                / (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
+                * 100
+            )
+
             self.percent_radius = round(
                 (
                     (self.scale_x - bg_vars.min_moon_radius)
@@ -563,7 +580,7 @@ class Rotator(urs.Entity):
             self.text_entity = None
 
     def full_overlay_text(self: Self) -> str:
-        return f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+        return f"{self.blob_name}: mass: {float(self.mass)} ({self.percent_mass}%) radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
     def short_overlay_text(self: Self) -> str:
         return f"{self.blob_name}"
@@ -580,21 +597,22 @@ class Rotator(urs.Entity):
 
             self.text_entity.position = self.position
             self.text_entity.rotation = urs.camera.parent.rotation
-            dx = urs.camera.parent.world_x - self.text_entity.world_x
-            dy = urs.camera.parent.world_y - self.text_entity.world_y
-            dz = urs.camera.parent.world_z - self.text_entity.world_z
+            dx = urs.camera.world_x - self.text_entity.world_x
+            dy = urs.camera.world_y - self.text_entity.world_y
+            dz = urs.camera.world_z - self.text_entity.world_z
             d = math.sqrt(dx**2 + dy**2 + dz**2)
+
             self.text_entity.scale = self.text_scale * d
             self.text_entity.position += self.text_entity.up * (
                 (self.world_scale_x * self.text_position) / d
             )
             self.info_text.text = self.text
 
-        degrees = self.rotation_speed * (
-            (ClockObject.getGlobalClock().getDt() * bg_vars.timescale) / HOURS
-        )
+        if not FPS.paused:
 
-        self.rotate((0, degrees, 0))
+            degrees = self.rotation_speed * ((FPS.dt * bg_vars.timescale) / HOURS)
+
+            self.rotate((0, degrees, 0))
 
         if not self.trail_ready:
             from .blob_moon_trail_registry_ursina import (
@@ -767,14 +785,14 @@ class BlobSurfaceUrsina:
         "texture",
         "rotation_speed",
         "rotation_pos",
-        "ursina_center_blob",
+        "ursina_center_blob_light",
         "ursina_blob",
     )
 
     center_blob_x: ClassVar[float] = 0
     center_blob_y: ClassVar[float] = 0
     center_blob_z: ClassVar[float] = 0
-    center_blob: urs.Vec3 = urs.Vec3(0, 0, 0)
+    center_blob: Rotator = None
 
     def __init__(
         self: Self,
@@ -811,12 +829,16 @@ class BlobSurfaceUrsina:
                 ) / 2
 
                 if self.radius >= (halfway_max_halfway):
-                    self.texture = BLOB_TEXTURES_LARGE[
-                        random.randint(1, len(BLOB_TEXTURES_LARGE) - 1)
+                    self.texture = BLOB_TEXTURES_GAS[
+                        random.randint(1, len(BLOB_TEXTURES_GAS) - 1)
+                    ]
+                elif self.radius >= bg_vars.min_radius:
+                    self.texture = BLOB_TEXTURES_ROCKY[
+                        random.randint(1, len(BLOB_TEXTURES_ROCKY) - 1)
                     ]
                 else:
-                    self.texture = BLOB_TEXTURES_SMALL[
-                        random.randint(1, len(BLOB_TEXTURES_SMALL) - 1)
+                    self.texture = BLOB_TEXTURES_MOON[
+                        random.randint(1, len(BLOB_TEXTURES_MOON) - 1)
                     ]
 
         if rotation_speed is not None:
@@ -824,15 +846,15 @@ class BlobSurfaceUrsina:
         if rotation_pos is not None:
             self.rotation_pos = rotation_pos
 
-        self.ursina_center_blob: BlobPointLight = None
+        self.ursina_center_blob_light: BlobPointLight = None
         self.ursina_blob: Rotator = None
 
         if color == CENTER_BLOB_COLOR:
 
-            urs_color = urs.color.rgb32(150, 150, 150)
+            urs_color = urs.color.rgb32(255, 255, 255)
 
             enabled: bool = not bg_vars.black_hole_mode
-            self.texture = "nb_ursina/textures/sun03.png"
+            self.texture = "textures/space/solar_system_scope/8k_sun.jpg"
 
             if not enabled:
                 urs_color = urs.color.rgba(0, 0, 0, 0)
@@ -858,16 +880,17 @@ class BlobSurfaceUrsina:
                 shader=shd.lit_with_shadows_shader,
                 enabled=enabled,
             )
-            self.ursina_center_blob = BlobPointLight(
+            self.ursina_center_blob_light = BlobPointLight(
                 # parent=self.ursina_blob,
+                shadows=True,
                 scale=(self.radius, self.radius, self.radius),
                 position=(0, 0, 0),
-                shadows=True,
-                shadow_map_resolution=(4096, 4096),
+                shadow_map_resolution=(2048, 2048),
                 max_distance=bg_vars.universe_size * 1000,
                 attenuation=(1, 0, 0),
-                color=urs.color.rgba(5, 5, 5, 5),
+                color=urs.color.rgba(10, 10, 10, 10),
             )
+            BlobSurfaceUrsina.center_blob = self.ursina_blob
         else:
 
             if not bg_vars.textures_3d:
@@ -917,10 +940,6 @@ class BlobSurfaceUrsina:
         BlobSurfaceUrsina.center_blob_y = y
         BlobSurfaceUrsina.center_blob_z = z
 
-        BlobSurfaceUrsina.center_blob.x = x
-        BlobSurfaceUrsina.center_blob.y = y
-        BlobSurfaceUrsina.center_blob.z = z
-
     def draw(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
     ) -> None:
@@ -941,17 +960,17 @@ class BlobSurfaceUrsina:
         """
         if lighting:
             # self.universe.center_blob_light_on(self.ursina_blob)
-            if not self.ursina_center_blob.enabled:
-                self.ursina_center_blob.enabled = True
+            if not self.ursina_center_blob_light.enabled:
+                self.ursina_center_blob_light.enabled = True
                 # self.ursina_center_blob.position = urs.Vec3(pos)
         else:
             # self.universe.center_blob_light_off()
-            if self.ursina_center_blob.enabled:
-                self.ursina_center_blob.enabled = False
+            if self.ursina_center_blob_light.enabled:
+                self.ursina_center_blob_light.enabled = False
         # print(f"center blob light: {self.ursina_center_blob.world_position}")
 
         self.position = pos
-        self.ursina_center_blob.position = urs.Vec3(pos)
+        self.ursina_center_blob_light.position = urs.Vec3(pos)
         self.ursina_blob.position = urs.Vec3(pos)
 
     def on_destroy(self: Self) -> None:
@@ -961,11 +980,14 @@ class BlobSurfaceUrsina:
     def destroy(self: Self) -> None:
         """Called when getting rid of this instance, so it can clean up"""
 
-        if self.ursina_center_blob is not None:
+        if self.ursina_center_blob_light is not None:
             # self.ursina_center_blob.color = (0, 0, 0, 0)
-            self.ursina_center_blob.destroy()
-            urs.destroy(self.ursina_center_blob)
-            self.ursina_center_blob = None
+            self.ursina_center_blob_light.destroy()
+            urs.destroy(self.ursina_center_blob_light)
+            self.ursina_center_blob_light = None
+
+        if BlobSurfaceUrsina.center_blob is not None:
+            BlobSurfaceUrsina.center_blob = None
 
         urs.destroy(self.ursina_blob)
         self.ursina_blob = None

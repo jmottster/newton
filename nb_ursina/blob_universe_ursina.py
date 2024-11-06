@@ -75,18 +75,15 @@ class BlobUniverseUrsina:
         self.universe: urs.Entity = None
         self.set_universe_entity(bg_vars.background_scale)
 
-        # urs.scene.scale = urs.Vec3(self.width, self.height, self.height)
-
     def set_universe_entity(self: Self, scale: float) -> None:
         """Creates the Entity that renders the dome of the background image (stars)"""
 
-        texture: str = "nb_ursina/textures/space/blue_nebulae_1.png"
+        urs.destroy(self.universe, 0)
+        self.universe = None
 
-        # texture: str = (
-        #     "nb_ursina/textures/space/solar_system_scope/8k_stars_milky_way.jpg"
-        # )
+        texture: str = "textures/space/multi_nebulae_2.png"
 
-        model: str = "sky_dome"
+        model: str = "background_sphere"
         if not bg_vars.textures_3d:
             model = None
             texture = None
@@ -98,7 +95,6 @@ class BlobUniverseUrsina:
             texture=texture,
             texture_scale=(1, 1),
             rotation_x=90,
-            eternal=True,
         )
 
     def get_framework(self: Self) -> Any:
@@ -141,6 +137,7 @@ class BlobUniverseUrsina:
 
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
+
         urs.scene.clear()
         self.width, self.height = (
             bg_vars.universe_size_w,

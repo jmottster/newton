@@ -135,6 +135,12 @@ class BlobGlobalVars:
     BlobGlobalVars.set_scale_blob_mass_with_size(scale_blob_mass_with_size: bool) -> None
         Class method to set whether or not to scale the mass in proportion to radius scaling
 
+    BlobGlobalVars.set_first_person_scale(first_person_scale: float) -> None
+        Class method to set the scale of the first person entity
+
+    BlobGlobalVars.set_background_scale(background_scale: float) -> None
+        Class method to set the scale of the background entity (which displays the space scene)
+
     BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
         Class method to set whether or not to swap y and z in the starting plot of blobs
 
@@ -206,6 +212,7 @@ class BlobGlobalVars:
     max_mass: ClassVar[float] = MAX_MASS
     min_moon_mass: ClassVar[float] = MIN_MOON_MASS
     max_moon_mass: ClassVar[float] = MAX_MOON_MASS
+
     org_min_mass: ClassVar[float] = min_mass
     org_max_mass: ClassVar[float] = max_mass
     org_min_moon_mass: ClassVar[float] = min_moon_mass
@@ -299,31 +306,24 @@ class BlobGlobalVars:
         cls.universe_size_w = cls.universe_size
         cls.universe_size_d = cls.universe_size
 
-        cls.center_blob_radius = (cls.au_scale_factor * cls.center_blob_scale) * (
-            S / AU
-        )
+        cls.center_blob_radius = (
+            cls.au_scale_factor * (S / AU)
+        ) * cls.center_blob_scale
 
         if cls.scale_center_blob_mass_with_size and not cls.black_hole_mode:
             cls.center_blob_mass = cls.org_center_blob_mass * cls.center_blob_scale
 
-        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
-        cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
+        cls.min_radius = (cls.au_scale_factor * (E / AU)) * cls.blob_scale
+        cls.max_radius = (cls.au_scale_factor * (J / AU)) * cls.blob_scale
 
-        cls.min_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (MIM / AU)
-        # if cls.min_moon_radius < 10:
-        #     cls.min_moon_radius = 10
-        cls.max_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (GAN / AU)
-        # if cls.max_moon_radius <= cls.min_moon_radius:
-        #     cls.max_moon_radius = cls.min_moon_radius * 2
+        cls.min_moon_radius = (cls.au_scale_factor * (MIM / AU)) * cls.blob_scale
+        cls.max_moon_radius = (cls.au_scale_factor * (GAN / AU)) * cls.blob_scale
 
         if cls.scale_blob_mass_with_size:
             cls.min_mass = cls.org_min_mass * cls.blob_scale
             cls.max_mass = cls.org_max_mass * cls.blob_scale
             cls.min_moon_mass = cls.org_min_moon_mass * cls.blob_scale
             cls.max_moon_mass = cls.org_max_moon_mass * cls.blob_scale
-
-        cls.first_person_scale = cls.au_scale_factor * 0.05
-        cls.background_scale = cls.universe_size
 
         cls.grid_cell_size = int(
             cls.universe_size / (cls.universe_scale * cls.grid_cells_per_au)
@@ -367,6 +367,16 @@ class BlobGlobalVars:
     def set_scale_blob_mass_with_size(cls, scale_blob_mass_with_size: bool) -> None:
         """Class method to set whether or not to scale the mass in proportion to radius scaling"""
         cls.scale_blob_mass_with_size = scale_blob_mass_with_size
+
+    @classmethod
+    def set_first_person_scale(cls, first_person_scale: float) -> None:
+        """Class method to set the scale of the first person entity"""
+        cls.first_person_scale = first_person_scale
+
+    @classmethod
+    def set_background_scale(cls, background_scale: float) -> None:
+        """Class method to set the scale of the background entity (which displays the space scene)"""
+        cls.background_scale = background_scale
 
     @classmethod
     def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:

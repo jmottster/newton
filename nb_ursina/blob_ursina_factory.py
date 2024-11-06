@@ -28,6 +28,7 @@ from .blob_moon_trail_registry_ursina import (
 )
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
+from .blob_utils_ursina import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -86,6 +87,8 @@ class BlobUrsinaFactory:
         bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
+        bg_vars.set_first_person_scale(bg_vars.max_radius * 2.5)
+        bg_vars.set_background_scale(bg_vars.first_person_scale * 10000)
         bg_vars.set_timescale(DAYS * 2)
         bg_vars.set_orig_timescale(DAYS * 2)
         bg_vars.set_timescale_inc(HOURS * 6)
@@ -224,6 +227,7 @@ class BlobUrsinaFactory:
         if data["paused"]:
             urs.camera.ui.collider = None
             self.urs_display.paused = True
+            FPS.paused = True
 
         if not data["show_stats"]:
             self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
