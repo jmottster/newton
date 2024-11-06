@@ -421,6 +421,10 @@ class Rotator(urs.Entity):
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
 
+        self.percent_mass: int = round(
+            (self.mass - bg_vars.min_mass) / (bg_vars.max_mass - bg_vars.min_mass) * 100
+        )
+
         self.percent_radius: int = round(
             (
                 (self.scale_x - bg_vars.min_radius)
@@ -433,6 +437,12 @@ class Rotator(urs.Entity):
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
+            self.percent_mass = round(
+                (self.mass - bg_vars.min_moon_mass)
+                / (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
+                * 100
+            )
+
             self.percent_radius = round(
                 (
                     (self.scale_x - bg_vars.min_moon_radius)
@@ -570,7 +580,7 @@ class Rotator(urs.Entity):
             self.text_entity = None
 
     def full_overlay_text(self: Self) -> str:
-        return f"{self.blob_name}: mass: {float(self.mass)} radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+        return f"{self.blob_name}: mass: {float(self.mass)} ({self.percent_mass}%) radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
     def short_overlay_text(self: Self) -> str:
         return f"{self.blob_name}"

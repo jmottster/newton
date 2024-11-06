@@ -78,6 +78,9 @@ class BlobUniverseUrsina:
     def set_universe_entity(self: Self, scale: float) -> None:
         """Creates the Entity that renders the dome of the background image (stars)"""
 
+        urs.destroy(self.universe, 0)
+        self.universe = None
+
         texture: str = "textures/space/multi_nebulae_2.png"
 
         model: str = "background_sphere"
@@ -135,8 +138,6 @@ class BlobUniverseUrsina:
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""
 
-        urs.destroy(self.universe, 0)
-        self.universe = None
         urs.scene.clear()
         self.width, self.height = (
             bg_vars.universe_size_w,

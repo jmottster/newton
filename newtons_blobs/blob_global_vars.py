@@ -212,6 +212,7 @@ class BlobGlobalVars:
     max_mass: ClassVar[float] = MAX_MASS
     min_moon_mass: ClassVar[float] = MIN_MOON_MASS
     max_moon_mass: ClassVar[float] = MAX_MOON_MASS
+
     org_min_mass: ClassVar[float] = min_mass
     org_max_mass: ClassVar[float] = max_mass
     org_min_moon_mass: ClassVar[float] = min_moon_mass
@@ -305,22 +306,18 @@ class BlobGlobalVars:
         cls.universe_size_w = cls.universe_size
         cls.universe_size_d = cls.universe_size
 
-        cls.center_blob_radius = (cls.au_scale_factor * cls.center_blob_scale) * (
-            S / AU
-        )
+        cls.center_blob_radius = (
+            cls.au_scale_factor * (S / AU)
+        ) * cls.center_blob_scale
 
         if cls.scale_center_blob_mass_with_size and not cls.black_hole_mode:
             cls.center_blob_mass = cls.org_center_blob_mass * cls.center_blob_scale
 
-        cls.min_radius = (cls.au_scale_factor * cls.blob_scale) * (E / AU)
-        cls.max_radius = (cls.au_scale_factor * cls.blob_scale) * (J / AU)
+        cls.min_radius = (cls.au_scale_factor * (E / AU)) * cls.blob_scale
+        cls.max_radius = (cls.au_scale_factor * (J / AU)) * cls.blob_scale
 
-        cls.min_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (MIM / AU)
-        # if cls.min_moon_radius < 10:
-        #     cls.min_moon_radius = 10
-        cls.max_moon_radius = (cls.au_scale_factor * cls.blob_scale) * (GAN / AU)
-        # if cls.max_moon_radius <= cls.min_moon_radius:
-        #     cls.max_moon_radius = cls.min_moon_radius * 2
+        cls.min_moon_radius = (cls.au_scale_factor * (MIM / AU)) * cls.blob_scale
+        cls.max_moon_radius = (cls.au_scale_factor * (GAN / AU)) * cls.blob_scale
 
         if cls.scale_blob_mass_with_size:
             cls.min_mass = cls.org_min_mass * cls.blob_scale
