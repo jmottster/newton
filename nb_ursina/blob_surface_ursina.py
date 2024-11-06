@@ -631,10 +631,14 @@ class Rotator(urs.Entity):
         if self.text_on:
             self.create_text_overlay()
         else:
-            if not self.all_text_on:
-                self.destroy_text_overlay()
+            if self.all_text_on:
+
+                if self.is_moon and self.planet_text_only:
+                    self.destroy_text_overlay()
+                else:
+                    self.update_text_background()
             else:
-                self.update_text_background()
+                self.destroy_text_overlay()
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a keyboard event happens"""
