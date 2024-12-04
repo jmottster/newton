@@ -8,6 +8,8 @@ by Jason Mott, copyright 2024
 
 from typing import Any, Tuple, Self
 
+from panda3d.core import CullFaceAttrib  # type: ignore
+
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
@@ -81,13 +83,14 @@ class BlobUniverseUrsina:
         urs.destroy(self.universe, 0)
         self.universe = None
 
-        texture: str = "textures/space/multi_nebulae_2.png"
+        texture: str = "textures/backgrounds/multi_nebulae_2.png"
 
         model: str = "background_sphere"
         if not bg_vars.textures_3d:
             model = None
             texture = None
         self.universe = urs.Entity(
+            unlit=True,
             shader=shd.unlit_shader,
             position=(0, 0, 0),
             model=model,
@@ -95,6 +98,10 @@ class BlobUniverseUrsina:
             texture=texture,
             texture_scale=(1, 1),
             rotation_x=90,
+        )
+
+        self.universe.setAttrib(
+            CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise)
         )
 
     def get_framework(self: Self) -> Any:

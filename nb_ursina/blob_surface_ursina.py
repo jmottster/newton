@@ -6,13 +6,19 @@ A class used to represent an object that draws a blob, with a distinction of the
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 import math
-import random
 from typing import ClassVar, Tuple, Self, cast
 from collections import deque
 
+from panda3d.core import (  # type: ignore
+    PointLight,
+    Spotlight,
+    PerspectiveLens,
+    NodePath,
+)  # type: ignore
 
-from panda3d.core import ClockObject  # type: ignore
+import builtins
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -22,11 +28,13 @@ from newtons_blobs import BlobSurface
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import BlobUniverse
+from newtons_blobs import blob_random
 
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_textures import BLOB_TEXTURES_ROCKY, BLOB_TEXTURES_GAS, BLOB_TEXTURES_MOON
-from .blob_lights import BlobPointLight, BlobAmbientLight
-from .blob_utils_ursina import FPS
+from .blob_textures import *
+
+from .fps import FPS
+from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -89,7 +97,7 @@ class TrailRenderer(urs.Entity):
         self: Self,
         segments: int = 2,
         min_spacing: float = 0.05,
-        barycenter_blob: "Rotator" = None,
+        barycenter_blob: "BlobCore" = None,
         **kwargs,
     ):
 
@@ -125,7 +133,7 @@ class TrailRenderer(urs.Entity):
         self.min_spacing: float = min_spacing
         self.update_step: float = 0
         self.thickness: int = 2
-        self.barycenter_blob: Rotator = barycenter_blob
+        self.barycenter_blob: BlobCore = barycenter_blob
         self.barycenter_last_pos: urs.Vec3 = None
         self.check_barycenter_dist: float = 2
         if self.is_moon:
@@ -156,8 +164,12 @@ class TrailRenderer(urs.Entity):
                 thickness=self.thickness,
             ),
             color=self.color,
+            unlit=True,
             shader=shd.unlit_shader,
         )
+
+        for bit in range(1, len(BlobCore.bit_masks)):
+            self.line_renderer.hide(BlobCore.bit_masks[bit])
 
         if self.is_moon:
             self.enabled = False
@@ -211,10 +223,13 @@ class TrailRenderer(urs.Entity):
         this will adjust self.min_spacing and self.segments to control the length of the trail
         """
 
-        if self.parent.blob_name == CENTER_BLOB_NAME:
+        if (
+            self.parent.blob_name == CENTER_BLOB_NAME
+            or BlobSurfaceUrsina.center_blob is None
+        ):
             return
 
-        barycenter: Rotator = BlobSurfaceUrsina.center_blob
+        barycenter: BlobCore = BlobSurfaceUrsina.center_blob
         avg_length: float = 0.0
 
         if self.barycenter_blob is not None:
@@ -286,9 +301,10 @@ class TrailRenderer(urs.Entity):
         self.barycenter_blob = None
 
 
-class Rotator(urs.Entity):
+class BlobCore(BlobRotator):
     """
-    A class to create a blob Entity that rotates
+    A class to create a blob Entity that rotates,
+    can light up if center blob, gives special lights for rings, and has trails
 
     Attributes
     ----------
@@ -300,6 +316,19 @@ class Rotator(urs.Entity):
     -------
     set_orbital_pos_vel(orbital: BlobSurface) -> None
         Sets orbital to a position and velocity appropriate for an orbital of this blob
+
+    create_light() -> None
+        Creates a point light at the center of this blob. Used for
+        center blob only.
+
+    create_ring_light() -> None
+        Creates a spotlight just for this blob, used to correct
+        poor shadowing on rings by the point light from center blob.
+        Thus only used on gas giants with rings.
+
+    update_ring_light() -> None
+        Updates the position of the spotlight created in create_ring_light(), and
+        ensures the light is pointing at this blob.
 
     create_trail() -> None
         Creates the orbital trail. Called by input() when the "t" key is pressed if it
@@ -330,101 +359,89 @@ class Rotator(urs.Entity):
         Called when this Entity is set to enabled=False. This calls clean up method for
         text overlay
 
-     on_destroy() -> None
+    on_destroy() -> None
         Called when this Entity is destroyed
 
     """
 
-    __slots__ = (
-        "mass",
-        "rotation_speed",
-        "rotation_pos",
-        "trail_color",
-        "trail",
-        "barycenter_blob",
-    )
+    # __slots__ = (
+    #     "mass",
+    #     "rotation_speed",
+    #     "rotation_pos",
+    #     "trail_color",
+    #     "trail",
+    #     "barycenter_blob",
+    #     "blob_name",
+    # )
+
+    camera_mask_counter: int = 0
+    bit_masks: list = [0b0001, 0b0010, 0b0100, 0b1000, 0b10000, 0b100000]
 
     def __init__(self: Self, **kwargs):
 
-        self.rotation_speed: float = None
-        self.rotation_pos: Tuple[float, float, float] = None
-
-        self.rotation_speed = kwargs.get("rotation_speed")
-        self.rotation_pos = kwargs.get("rotation_pos")
-
-        self.blob_name: str = kwargs.get("name")
-
         self.mass: float = kwargs.get("mass")
-
         self.trail_color: urs.Color = kwargs.get("trail_color")
+        self.light: PointLight = None
+        self.light_bit_mask: int = None
+        self.light_scale: float = None
 
-        self.radius: urs.Vec3 = urs.Vec3(kwargs.get("scale"))
-
-        super().__init__()
+        super().__init__(
+            blob_material=kwargs.get("blob_material"),
+            blob_name=kwargs.get("blob_name"),
+            rotation_speed=kwargs.get("rotation_speed"),
+            rotation_pos=kwargs.get("rotation_pos"),
+            position=kwargs.get("position"),
+            texture_name=kwargs.get("texture_name"),
+            ring_texture=kwargs.get("ring_texture"),
+            radius=kwargs.get("radius"),
+            scale=kwargs.get("scale"),
+            center_light=kwargs.get("center_light"),
+        )
 
         for key in (
             "model",
+            "shader",
+            "texture",
+            "texture_scale",
+            "texture_offset",
+            "mass",
+            "trail_color",
+            "blob_material",
+            "blob_name",
+            "rotation_speed",
+            "rotation_pos",
+            "position",
+            "texture_name",
+            "ring_texture",
+            "radius",
+            "scale",
+        ):
+            if key in kwargs:
+                del kwargs[key]
+
+        for key in (
             "origin",
             "origin_x",
             "origin_y",
             "origin_z",
             "collider",
-            "shader",
-            "texture",
-            "texture_scale",
-            "texture_offset",
         ):
             if key in kwargs:
                 setattr(self, key, kwargs[key])
                 del kwargs[key]
-
         for key, value in kwargs.items():
             setattr(self, key, value)
 
         self.trail: TrailRenderer = None
         self.trail_ready: bool = False
-
-        self.world_rotation_x: float = 0.0
-        self.world_rotation_y: float = 0.0
-        self.world_rotation_z: float = 0.0
-
-        if self.blob_name == CENTER_BLOB_NAME:
-            self.world_rotation_x = 90
-        else:
-            self.world_rotation_x = 45
-            change = random.random() * 90
-            self.world_rotation_x += change
-
-        # If rotation_pos coming from saved file, set world rotation values to that
-        if self.rotation_pos is not None:
-            self.world_rotation_x, self.world_rotation_y, self.world_rotation_z = (
-                self.rotation_pos
-            )
-
-        self.rotation_pos = (
-            self.world_rotation_x,
-            self.world_rotation_y,
-            self.world_rotation_z,
-        )
-
-        if self.rotation_speed is None:
-            self.rotation_speed = (random.random() * 29.00) + 1
-
         self.text_entity: urs.Entity = None
-
-        self.info_text: urs.Text = None
-
-        self.text_light: BlobAmbientLight = None
-
+        self.info_text: BlobText = None
         self.text: str = None
-
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
-
         self.percent_mass: int = round(
             (self.mass - bg_vars.min_mass) / (bg_vars.max_mass - bg_vars.min_mass) * 100
         )
-
         self.percent_radius: int = round(
             (
                 (self.scale_x - bg_vars.min_radius)
@@ -432,8 +449,7 @@ class Rotator(urs.Entity):
             )
             * 100
         )
-
-        self.is_moon = self.scale_x < bg_vars.min_radius
+        self.is_moon: bool = self.scale_x < bg_vars.min_radius
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
@@ -455,21 +471,23 @@ class Rotator(urs.Entity):
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
+        self.barycenter_blob: BlobCore = None
 
-        self.barycenter_blob: Rotator = None
+        for bit in range(1, len(BlobCore.bit_masks)):
+            self.hide(BlobCore.bit_masks[bit])
+            if self.blob_name == CENTER_BLOB_NAME:
+                self.rotator_model.hide(BlobCore.bit_masks[bit])
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
 
-        self.rotate((0, (random.random() * 360.00), 0))
-        orbital.ursina_blob.world_rotation = self.world_rotation
+        self.rotate = (0, 0, (blob_random.random() * 360.00))
         orbital.ursina_blob.rotation_pos = self.rotation_pos
-        orbital.rotation_pos = self.rotation_pos
 
         orbit_distance: float = (
-            random.random() * (self.scale_x * 10)
+            blob_random.random() * (self.scale_x * 10)
         ) + self.scale_x * 3
-        move: urs.Vec3 = urs.Vec3(self.left.normalized() * orbit_distance)
+        move: urs.Vec3 = urs.Vec3(self.my_right.normalized() * orbit_distance)
 
         orbital.ursina_blob.position = urs.Vec3(self.position + move)
         orbital.position = orbital.ursina_blob.position
@@ -484,7 +502,96 @@ class Rotator(urs.Entity):
 
         orbital.ursina_blob.barycenter_blob = self
 
-        return urs.Vec3(orbital.ursina_blob.forward.normalized() * vel)
+        return urs.Vec3(orbital.ursina_blob.my_forward.normalized() * vel)
+
+    def create_light(self: Self) -> None:
+        """
+        Creates a point light at the center of this blob. Used for
+        center blob only.
+        """
+
+        self.light = PointLight(f"{self.blob_name}_plight")
+        self.light.setShadowCaster(True, 8192, 8192)
+        self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
+        self.light.setColor((3, 3, 3, 1))
+
+        self.light_node = self.rotator_model.attachNewNode(self.light)
+        # self.light_node.reparentTo(urs.scene)  # type: ignore
+        self.light_node.reparentTo(self.rotator_model)  # type: ignore
+
+        self.light_node.setScale(urs.scene, bg_vars.min_radius)
+        self.light_bit_mask = 0b0001
+        self.light_node.node().setCameraMask(0b0001)
+        self.setLightOff(1)
+        self.rotator_model.setLightOff(1)
+        self.light_node.setLightOff(1)
+        BlobSurfaceUrsina.universe_node.setLightOff(1)
+        self.hide(0b0001)
+        self.rotator_model.hide(0b0001)
+        self.light_node.hide(0b0001)
+        BlobSurfaceUrsina.universe_node.hide(0b0001)
+
+    def create_ring_light(self: Self) -> None:
+        """
+        Creates a spotlight just for this blob, used to correct
+        poor shadowing on rings by the point light from center blob.
+        Thus only used on gas giants with rings.
+        """
+
+        self.clearLight(self.center_light)
+        self.rotator_model.clearLight(self.center_light)
+
+        self.light = Spotlight(f"{self.blob_name}_slight")
+        self.light.setLens(PerspectiveLens())
+        self.light.setShadowCaster(True, 8192, 8192)
+        self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
+        self.light.setColor((3, 3, 3, 1))
+
+        self.light_node = self.rotator_model.attachNewNode(self.light)
+        self.light_node.reparentTo(urs.scene)  # type: ignore
+
+        self.light_scale = bg_vars.center_blob_radius * 30
+
+        self.light_node.setScale(urs.scene, self.light_scale)
+        BlobCore.camera_mask_counter += 1
+        self.light_bit_mask = BlobCore.bit_masks[BlobCore.camera_mask_counter]
+        self.light_node.node().setCameraMask(self.light_bit_mask)
+
+        lens = self.light_node.node().getLens()
+        lens.setNearFar(
+            bg_vars.center_blob_radius / self.light_node.getSx(),
+            self.scale_x * 30,
+        )
+        lens.setFov(90)
+
+        # self.light_node.node().showFrustum()
+        self.update_ring_light()
+
+        self.rotator_model.setShaderAuto()
+        self.hide(0b0001)
+        self.rotator_model.hide(0b0001)
+        self.light_node.hide(0b0001)
+        self.rotator_model.setLight(self.light_node)
+        self.rotator_model.show(self.light_bit_mask)
+
+        self.hide(self.light_bit_mask)
+        self.light_node.hide(self.light_bit_mask)
+
+    def update_ring_light(self: Self) -> None:
+        """
+        Updates the position of the spotlight created in create_ring_light(), and
+        ensures the light is pointing at this blob.
+        """
+        dx = self.center_light.getX(urs.scene) - self.rotator_model.getX(urs.scene)
+        dy = self.center_light.getY(urs.scene) - self.rotator_model.getY(urs.scene)
+        dz = self.center_light.getZ(urs.scene) - self.rotator_model.getZ(urs.scene)
+        direction = urs.Vec3(dx, dy, dz).normalized()
+
+        distance = self.scale_x * 30
+
+        pos = self.rotator_model.getPos(urs.scene) + urs.Vec3(direction * distance)
+        self.light_node.setPos(urs.scene, pos)
+        self.light_node.lookAt(self.rotator_model, self.world_up)
 
     def create_trail(self: Self) -> None:
         """
@@ -498,6 +605,8 @@ class Rotator(urs.Entity):
             color=self.trail_color,
             barycenter_blob=self.barycenter_blob,
             is_moon=self.is_moon,
+            unlit=True,
+            shader=shd.unlit_shader,
         )
 
     def create_text_overlay(self: Self) -> None:
@@ -507,40 +616,35 @@ class Rotator(urs.Entity):
         """
 
         if self.text_entity is None:
-            self.text_entity = urs.Entity(scale=self.scale)  # type: ignore
+            self.text_entity = BlobRotator(
+                scale=self.scale,  # type: ignore
+                unlit=True,
+                shader=shd.unlit_shader,
+            )
+
+            for bit in range(1, len(BlobCore.bit_masks)):
+                self.text_entity.hide(BlobCore.bit_masks[bit])
 
             self.text = self.short_overlay_text()
 
             if self.text_on and self.text_full_details:
                 self.text = self.full_overlay_text()
 
-            self.info_text = urs.Text(
-                self.text,
+            self.info_text = BlobText(
+                text=self.text,
                 parent=self.text_entity,
                 font=DISPLAY_FONT,
                 size=(STAT_FONT_SIZE * 0.1),
                 # resolution=(100 * (STAT_FONT_SIZE * 0.1)),
-                origin=(0, -0.5),
+                origin=(0, 0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
                 color=urs.color.rgb32(255, 255, 255),
-                shader=shd.lit_with_shadows_shader,
                 enabled=False,
             )
-            self.text_light = BlobAmbientLight(
-                parent=self.info_text,
-                light_name=self.blob_name,
-                entity_set_light=self.info_text,
-                position=(0, 0, -1),
-                shadows=True,
-                shadow_map_resolution=(4096, 4096),
-                max_distance=2,
-                attenuation=(0, 0, 1),
-                color=(2.5, 2.5, 2.5, 2),
-            )
+
         self.text_entity.enabled = True
         self.info_text.enabled = True
-        self.text_light.enabled = True
         self.update_text_background()
 
     def update_text_background(self: Self) -> None:
@@ -560,8 +664,7 @@ class Rotator(urs.Entity):
                     BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
                 ),
             )
-            self.info_text._background.z = 0.5
-            self.info_text.setShaderAuto()
+            self.info_text._background.y = 0.5
 
     def destroy_text_overlay(self: Self) -> None:
         """
@@ -569,9 +672,6 @@ class Rotator(urs.Entity):
         on_click()
         """
         if self.text_entity is not None:
-            self.text_light.destroy()
-            urs.destroy(self.text_light)
-            self.text_light = None
             self.info_text.enabled = False
             urs.destroy(self.info_text)
             self.info_text = None
@@ -588,6 +688,8 @@ class Rotator(urs.Entity):
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
 
+        super().update()
+
         if self.text_entity is not None and self.info_text.enabled:
 
             self.text = self.short_overlay_text()
@@ -603,16 +705,10 @@ class Rotator(urs.Entity):
             d = math.sqrt(dx**2 + dy**2 + dz**2)
 
             self.text_entity.scale = self.text_scale * d
-            self.text_entity.position += self.text_entity.up * (
+            self.text_entity.position += self.text_entity.my_up * (
                 (self.world_scale_x * self.text_position) / d
             )
             self.info_text.text = self.text
-
-        if not FPS.paused:
-
-            degrees = self.rotation_speed * ((FPS.dt * bg_vars.timescale) / HOURS)
-
-            self.rotate((0, degrees, 0))
 
         if not self.trail_ready:
             from .blob_moon_trail_registry_ursina import (
@@ -620,6 +716,9 @@ class Rotator(urs.Entity):
             )
 
             self.trail_ready = moon_registry.is_ready()
+
+        if self.blob_name != CENTER_BLOB_NAME and self.light is not None:
+            self.update_ring_light()
 
     def on_click(self: Self) -> None:
         """
@@ -686,17 +785,18 @@ class Rotator(urs.Entity):
 
         if not self.blob_name == CENTER_BLOB_NAME and not self.is_moon and key == "y":
 
-            if self.scale == self.radius:  # type: ignore
-                self.scale = self.radius * 30
+            if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
+                self.scale = urs.Vec3(self.radius * 30)
+
             else:
-                self.scale = self.radius
+                self.scale = urs.Vec3(self.radius)
 
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
-            if self.scale == self.radius:
-                self.scale = self.radius * 5
+            if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
+                self.scale = urs.Vec3(self.radius * 5)
             else:
-                self.scale = self.radius
+                self.scale = urs.Vec3(self.radius)
 
     def on_disable(self: Self) -> None:
         """
@@ -722,6 +822,23 @@ class Rotator(urs.Entity):
             moon_registry.remove_planet(self)
 
         self.destroy_text_overlay()
+
+        if self.light is not None and self.blob_name != CENTER_BLOB_NAME:
+            self.clearLight()
+            self.light_node.removeNode()
+            del self.light
+            del self.light_node
+        else:
+            if self.light is not None:
+                self.light_node.removeNode()
+                del self.light
+                del self.light_node
+
+        if self.blob_name != CENTER_BLOB_NAME:
+            if self.center_light is not None:
+                self.clearLight()
+
+        super().on_destroy()
 
         self.enabled = False
 
@@ -787,8 +904,9 @@ class BlobSurfaceUrsina:
         "trail_color",
         "universe",
         "texture",
-        "rotation_speed",
-        "rotation_pos",
+        "ring_texture",
+        "_rotation_speed",
+        "_rotation_pos",
         "ursina_center_blob_light",
         "ursina_blob",
     )
@@ -796,7 +914,8 @@ class BlobSurfaceUrsina:
     center_blob_x: ClassVar[float] = 0
     center_blob_y: ClassVar[float] = 0
     center_blob_z: ClassVar[float] = 0
-    center_blob: Rotator = None
+    center_blob: BlobCore = None
+    universe_node: NodePath = None
 
     def __init__(
         self: Self,
@@ -806,6 +925,7 @@ class BlobSurfaceUrsina:
         color: Tuple[int, int, int],
         universe: BlobUniverse,
         texture: str = None,
+        ring_texture: str = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[float, float, float] = None,
     ):
@@ -816,13 +936,16 @@ class BlobSurfaceUrsina:
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.texture: str = texture
-        self.rotation_speed: float = None
-        self.rotation_pos: Tuple[float, float, float] = None
+        self.ring_texture: str = ring_texture
+        self._rotation_speed: float = None
+        self._rotation_pos: Tuple[float, float, float] = None
         self.position: Tuple[float, float, float] = (0, 0, 0)
-
         self.trail_color: urs.Color = urs.color.rgb32(25, 100, 150)
+        self.ursina_blob: BlobCore = None
 
-        urs_color = urs.color.rgb32(self.color[0], self.color[1], self.color[2])
+        BlobSurfaceUrsina.universe_node = self.universe.universe
+
+        urs_color = urs.color.rgba32(self.color[0], self.color[1], self.color[2], 255)
 
         if bg_vars.textures_3d:
 
@@ -833,16 +956,17 @@ class BlobSurfaceUrsina:
                 ) / 2
 
                 if self.radius >= (halfway_max_halfway):
-                    self.texture = BLOB_TEXTURES_GAS[
-                        random.randint(1, len(BLOB_TEXTURES_GAS) - 1)
-                    ]
+                    i: int = blob_random.randint(1, len(BLOB_TEXTURES_GAS) - 1)
+                    self.texture = BLOB_TEXTURES_GAS[i]
+                    if (blob_random.random() * 100) > 50:
+                        self.ring_texture = BLOB_TEXTURES_RINGS[i]
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
-                        random.randint(1, len(BLOB_TEXTURES_ROCKY) - 1)
+                        blob_random.randint(1, len(BLOB_TEXTURES_ROCKY) - 1)
                     ]
                 else:
                     self.texture = BLOB_TEXTURES_MOON[
-                        random.randint(1, len(BLOB_TEXTURES_MOON) - 1)
+                        blob_random.randint(1, len(BLOB_TEXTURES_MOON) - 1)
                     ]
 
         if rotation_speed is not None:
@@ -850,15 +974,13 @@ class BlobSurfaceUrsina:
         if rotation_pos is not None:
             self.rotation_pos = rotation_pos
 
-        self.ursina_center_blob_light: BlobPointLight = None
-        self.ursina_blob: Rotator = None
-
         if color == CENTER_BLOB_COLOR:
 
-            urs_color = urs.color.rgb32(255, 255, 255)
+            urs_color = urs.color.rgb(1, 1, 1)
 
             enabled: bool = not bg_vars.black_hole_mode
-            self.texture = "textures/space/solar_system_scope/8k_sun.jpg"
+            self.texture = "suns/sun03.png"
+            self.ring_texture = ""
 
             if not enabled:
                 urs_color = urs.color.rgba(0, 0, 0, 0)
@@ -868,59 +990,78 @@ class BlobSurfaceUrsina:
                     CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2]
                 )
                 texture = None
-            self.ursina_blob = Rotator(
+            self.ursina_blob = BlobCore(
                 blob_name=self.name,
                 position=(0, 0, 0),
-                model="local_uvsphere",
-                scale=(self.radius, self.radius, self.radius),
+                scale=urs.Vec3(self.radius, self.radius, self.radius),
+                radius=self.radius,
                 mass=self.mass,
-                texture=self.texture,
+                blob_material=SunMaterial().getMaterial(),
+                texture_name=self.texture,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
-                texture_scale=(1, 1),
-                collider="mesh",
                 color=urs_color,
                 trail_color=self.trail_color,
-                shader=shd.lit_with_shadows_shader,
+                collider="sphere",
                 enabled=enabled,
             )
-            self.ursina_center_blob_light = BlobPointLight(
-                # parent=self.ursina_blob,
-                shadows=True,
-                scale=(self.radius, self.radius, self.radius),
-                position=(0, 0, 0),
-                shadow_map_resolution=(2048, 2048),
-                max_distance=bg_vars.universe_size * 1000,
-                attenuation=(1, 0, 0),
-                color=urs.color.rgba(10, 10, 10, 10),
-            )
+            self.ursina_blob.create_light()
             BlobSurfaceUrsina.center_blob = self.ursina_blob
+
         else:
 
             if not bg_vars.textures_3d:
                 self.texture = None
             else:
-                urs_color = urs.color.rgb32(255, 255, 255)
+                urs_color = urs.color.rgba32(255, 255, 255, 255)
 
-            self.ursina_blob = Rotator(
+            self.ursina_blob = BlobCore(
                 blob_name=self.name,
                 position=(0, 0, 0),
-                model="local_uvsphere",
-                scale=(self.radius, self.radius, self.radius),
+                scale=urs.Vec3(self.radius, self.radius, self.radius),
+                radius=self.radius,
                 mass=self.mass,
-                texture=self.texture,
+                blob_material=PlanetMaterial().getMaterial(),
+                texture_name=self.texture,
+                ring_texture=self.ring_texture,
+                center_light=BlobSurfaceUrsina.center_blob.light_node,
                 color=urs_color,
                 trail_color=self.trail_color,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
-                texture_scale=(1, 1),
-                collider="mesh",
-                shader=shd.lit_with_shadows_shader,
+                collider="sphere",
             )
-            self.ursina_blob.setShaderAuto()
 
-        self.rotation_speed = self.ursina_blob.rotation_speed
-        self.rotation_pos = self.ursina_blob.rotation_pos
+            if self.ring_texture is not None:
+                self.ursina_blob.create_ring_light()
+
+    @property
+    def rotation_pos(self: Self) -> Tuple[float, float, float]:
+        """
+        For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
+        """
+        if self.ursina_blob is not None:
+            self._rotation_pos = self.ursina_blob.rotation_pos
+        return self._rotation_pos
+
+    @rotation_pos.setter
+    def rotation_pos(self: Self, rotation: Tuple[float, float, float]) -> None:
+        """
+        Sets the rotation_pos attribute
+        """
+        self._rotation_pos = rotation
+
+    @property
+    def rotation_speed(self: Self) -> float:
+        """For 3d rendering, the speed (degrees per frame) at which the blob will spin"""
+        if self.ursina_blob is not None:
+            self._rotation_speed = self.ursina_blob.rotation_speed
+        return self._rotation_speed
+
+    @rotation_speed.setter
+    def rotation_speed(self: Self, rotation_speed: float) -> None:
+        """Sets the rotation_speed attribute"""
+        self._rotation_speed = rotation_speed
 
     def set_orbital_pos_vel(
         self: Self, orbital: BlobSurface
@@ -962,20 +1103,9 @@ class BlobSurfaceUrsina:
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
         """
-        if lighting:
-            # self.universe.center_blob_light_on(self.ursina_blob)
-            if not self.ursina_center_blob_light.enabled:
-                self.ursina_center_blob_light.enabled = True
-                # self.ursina_center_blob.position = urs.Vec3(pos)
-        else:
-            # self.universe.center_blob_light_off()
-            if self.ursina_center_blob_light.enabled:
-                self.ursina_center_blob_light.enabled = False
-        # print(f"center blob light: {self.ursina_center_blob.world_position}")
-
         self.position = pos
-        self.ursina_center_blob_light.position = urs.Vec3(pos)
         self.ursina_blob.position = urs.Vec3(pos)
+        self.ursina_blob.light_node.setPos(urs.scene, urs.Vec3(pos))
 
     def on_destroy(self: Self) -> None:
         """Called when getting rid of this instance, so it can clean up"""
@@ -983,12 +1113,6 @@ class BlobSurfaceUrsina:
 
     def destroy(self: Self) -> None:
         """Called when getting rid of this instance, so it can clean up"""
-
-        if self.ursina_center_blob_light is not None:
-            # self.ursina_center_blob.color = (0, 0, 0, 0)
-            self.ursina_center_blob_light.destroy()
-            urs.destroy(self.ursina_center_blob_light)
-            self.ursina_center_blob_light = None
 
         if BlobSurfaceUrsina.center_blob is not None:
             BlobSurfaceUrsina.center_blob = None

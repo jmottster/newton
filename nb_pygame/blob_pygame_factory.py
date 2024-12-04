@@ -51,7 +51,7 @@ class BlobPygameFactory:
     reset(self: Self) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, ring_texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface
 
     get_blob_universe() -> BlobUniverse
@@ -142,6 +142,7 @@ class BlobPygameFactory:
         mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
+        ring_texture: str = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
     ) -> BlobSurface:
@@ -155,6 +156,7 @@ class BlobPygameFactory:
                 color,
                 self.get_blob_universe(),
                 texture,
+                ring_texture,
                 rotation_speed,
                 rotation_pos,
             ),

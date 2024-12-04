@@ -42,9 +42,26 @@ class BlobPluginFactory(Protocol):
     reset(self: Self) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, ring_texture: str = None, rotation_speed : float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
+
+    loading_screen_start(max_count: int, bar_message: str = "loading blobs . . . ") -> None
+        Method for staring a loading screen with max_count (reaching means done)
+        and message (describe what is being done)
+
+    loading_screen_add_count(increment: int = 1) -> None
+        Must call loading_screen_start() first. This will add increment amount
+        to display bar (which displays % toward max_count)
+
+    loading_screen_is_at_max() -> bool
+        Returns True if count has reached max_count via calls to
+        loading_screen_add_count()
+
+    loading_screen_end(screen_update: bool = True) -> None
+        Call this to close out the current loading screen. You must call this
+        if you want to the laoding screen to go away, or before starting a new
+        one.
 
     get_blob_universe() -> BlobUniverse
         Returns a the single instance of a Universe object, intended to be the area that is drawn on.
@@ -85,12 +102,44 @@ class BlobPluginFactory(Protocol):
         mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
+        ring_texture: str = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
     ) -> BlobSurface:
         """
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
+        """
+        pass
+
+    def loading_screen_start(
+        self: Self, max_count: int, bar_message: str = "loading blobs . . . "
+    ) -> None:
+        """
+        Method for staring a loading screen with max_count (reaching means done)
+        and message (describe what is being done)
+        """
+        pass
+
+    def loading_screen_add_count(self: Self, increment: int = 1) -> None:
+        """
+        Must call loading_screen_start() first. This will add increment amount
+        to display bar (which displays % toward max_count)
+        """
+        pass
+
+    def loading_screen_is_at_max(self: Self) -> bool:
+        """
+        Returns True if count has reached max_count via calls to
+        loading_screen_add_count()
+        """
+        pass
+
+    def loading_screen_end(self: Self, screen_update: bool = True) -> None:
+        """
+        Call this to close out the current loading screen. You must call this
+        if you want to the laoding screen to go away, or before starting a new
+        one.
         """
         pass
 

@@ -9,10 +9,11 @@ by Jason Mott, copyright 2024
 from typing import Any, Dict, Tuple, Self
 import numpy as np
 import numpy.typing as npt
-import math, random
+import math
 
 from .globals import *
-from newtons_blobs import BlobGlobalVars as bg_vars
+from .blob_global_vars import BlobGlobalVars as bg_vars
+from .blob_random import blob_random
 from .blob_plugin_factory import BlobPluginFactory
 from .massive_blob import MassiveBlob
 from .blob_physics import BlobPhysics as bp
@@ -172,6 +173,7 @@ class BlobPlotter:
                     blob_pref["mass"],
                     tuple(blob_pref["color"]),  # type: ignore
                     blob_pref.get("texture"),  # Might not exist
+                    blob_pref.get("ring_texture"),  # Might not exist
                     blob_pref.get("rotation_speed"),  # Might not exist
                     blob_pref.get("rotation_pos"),  # Might not exist
                 ),
@@ -194,7 +196,7 @@ class BlobPlotter:
 
         self.blob_factory.reset()
         self.display.update()
-        for blob in self.blobs:
+        for blob in np.flip(self.blobs):
             blob.destroy()
             self.display.update()
 
@@ -259,17 +261,17 @@ class BlobPlotter:
         # Create orbiting blobs without position or velocity
         for i in range(1, NUM_BLOBS):
             # Set up some random values for this blob
-            color: int = round(random.random() * (len(COLORS) - 1))
+            color: int = round(blob_random.random() * (len(COLORS) - 1))
             radius: float = 0.0
             mass: float = 0.0
 
             if i > ((NUM_BLOBS - 1) * bg_vars.blob_moon_percent):
 
                 moon = False
-                if random.randint(1, 10) > 4:
+                if blob_random.randint(1, 10) > 4:
                     radius = round(
                         (
-                            random.random()
+                            blob_random.random()
                             * (radius_halfway_min_halfway - bg_vars.min_radius)
                         )
                         + bg_vars.min_radius,
@@ -277,13 +279,14 @@ class BlobPlotter:
                     )
 
                     mass = (
-                        random.random() * (mass_halfway_min_halfway - bg_vars.min_mass)
+                        blob_random.random()
+                        * (mass_halfway_min_halfway - bg_vars.min_mass)
                         + bg_vars.min_mass
                     )
                 else:
                     radius = round(
                         (
-                            random.random()
+                            blob_random.random()
                             * (bg_vars.max_radius - radius_halfway_max_halfway)
                         )
                         + radius_halfway_max_halfway,
@@ -291,13 +294,14 @@ class BlobPlotter:
                     )
 
                     mass = (
-                        random.random() * (bg_vars.max_mass - mass_halfway_max_halfway)
+                        blob_random.random()
+                        * (bg_vars.max_mass - mass_halfway_max_halfway)
                     ) + mass_halfway_max_halfway
             else:
                 moon = True
                 radius = round(
                     (
-                        random.random()
+                        blob_random.random()
                         * (bg_vars.max_moon_radius - bg_vars.min_moon_radius)
                     )
                     + bg_vars.min_moon_radius,
@@ -306,12 +310,12 @@ class BlobPlotter:
 
                 if radius > moon_radius_min_max_halfway:
                     mass = (
-                        random.random()
+                        blob_random.random()
                         * (bg_vars.max_moon_mass - moon_mass_min_max_halfway)
                     ) + moon_mass_min_max_halfway
                 else:
                     mass = (
-                        random.random()
+                        blob_random.random()
                         * (moon_mass_min_max_halfway - bg_vars.min_moon_mass)
                     ) + bg_vars.min_moon_mass
 
@@ -334,6 +338,9 @@ class BlobPlotter:
             else:
                 planets.append(self.blobs[i])
 
+        self.blob_factory.loading_screen_start(
+            len(self.blobs) - 1, "plotting blobs . . . "
+        )
         if self.square_grid:
             self.plot_square_grid(planets)
         else:
@@ -341,6 +348,7 @@ class BlobPlotter:
 
         if len(moons) > 0:
             self.plot_moons(moons, planets)
+        self.blob_factory.loading_screen_end(True)
 
     def plot_moons(
         self: Self, moons: list[MassiveBlob], planets: list[MassiveBlob]
@@ -348,7 +356,7 @@ class BlobPlotter:
 
         for i in range(0, len(moons)):
 
-            planet: MassiveBlob = planets[random.randint(0, len(planets) - 1)]
+            planet: MassiveBlob = planets[blob_random.randint(0, len(planets) - 1)]
 
             planet.add_orbital(moons[i])
             moons[i].update_pos_vel(
@@ -359,6 +367,7 @@ class BlobPlotter:
                 planet.vy + moons[i].vy,
                 planet.vz + moons[i].vz,
             )
+            self.blob_factory.loading_screen_add_count()
 
     def draw_blobs(self: Self) -> None:
         """
@@ -604,6 +613,7 @@ class BlobPlotter:
                     y -= blob_partition
 
             self.add_pos_vel(planets[i], x, y, z)
+            self.blob_factory.loading_screen_add_count()
 
     def plot_circular_grid(self: Self, planets: list[MassiveBlob]) -> None:
         """Iterates through blobs and plots them in a circular grid configuration around the center blob"""
@@ -675,7 +685,7 @@ class BlobPlotter:
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
 
             if stagger_radius:
-                plot_radius += AU + (random.random() * plot_radius_partition)
+                plot_radius += AU + (blob_random.random() * plot_radius_partition)
 
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0
@@ -692,13 +702,14 @@ class BlobPlotter:
                 if blobs_left > 0 and ((math.pi * 2) / pi_inc) > blobs_left:
                     pi_inc = (math.pi * 2) / blobs_left
 
-                plot_phi_offset = random.random() * (math.pi * 2)
+                plot_phi_offset = blob_random.random() * (math.pi * 2)
 
             else:
                 plot_phi += pi_inc
                 plot_phi_offset += pi_inc
 
             self.add_pos_vel(planets[i], x, y, z)
+            self.blob_factory.loading_screen_add_count()
 
     def add_z_axis(self: Self, blob: MassiveBlob) -> None:
         """Adds the given blob to the z_axis dict according to it z position"""
@@ -724,8 +735,8 @@ class BlobPlotter:
         velocity = math.sqrt(G * bg_vars.center_blob_mass / d)
 
         if not self.start_perfect_orbit:
-            for _ in range(1, random.randint(1, 2)):
-                velocity *= random.randint(0, 1) + (random.random())
+            for _ in range(1, blob_random.randint(1, 2)):
+                velocity *= blob_random.randint(0, 1) + (blob_random.random())
 
         theta = math.acos(dz / d)
         phi = math.atan2(dy, dx)

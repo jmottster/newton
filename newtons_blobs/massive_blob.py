@@ -174,6 +174,8 @@ class MassiveBlob:
         data["color"] = self.blob_surface.color
         if getattr(self.blob_surface, "texture"):
             data["texture"] = self.blob_surface.texture
+        if getattr(self.blob_surface, "ring_texture"):
+            data["ring_texture"] = self.blob_surface.ring_texture
         if getattr(self.blob_surface, "rotation_speed"):
             data["rotation_speed"] = self.blob_surface.rotation_speed
         if getattr(self.blob_surface, "rotation_pos"):

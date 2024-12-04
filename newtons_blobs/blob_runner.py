@@ -171,9 +171,9 @@ class BlobRunner:
 
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats
-            if not self.show_stats:
-                self.message = None
-                self.message_counter = 0
+            # if not self.show_stats:
+            #     self.message = None
+            #     self.message_counter = 0
 
         def start_over() -> None:
             self.elapsed_time = 0
@@ -314,28 +314,25 @@ class BlobRunner:
 
         self.display.draw_universe(self.universe)
 
-        if self.show_stats:
-            self.draw_stats(self.message)
-            if self.message_counter > 0:
-                self.message_counter -= 1
-            else:
-                self.message = None
-                self.message_counter = 0
-
-            self.display_elapsed_time()
+        self.draw_stats(self.message)
+        if self.message_counter > 0:
+            self.message_counter -= 1
+        else:
+            self.message = None
+            self.message_counter = 0
 
         if CLOCK_FPS:
             self.display.fps_render(
-                (20, self.display.get_height() - 20),
+                (20, 20),
             )
-
-        self.display.update()
 
         self.display.fps_clock_tick(FRAME_RATE)
 
         if not self.paused:
             self.blob_plotter.update_blobs(self.display.fps_get_dt())
             self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
+
+        self.display.update()
 
     def draw_stats(self: Self, message: str = None) -> None:
         """
@@ -350,49 +347,52 @@ class BlobRunner:
                     (self.display.get_width() / 2),
                     (self.display.get_height() / 2),
                 ),
-                (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_y),
+                (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_z),
             )
 
-        # Top left, showing sun mass
-        self.display.blit_text(
-            f"Sun mass: {self.blob_plotter.blobs[0].mass}",
-            (
-                20,
-                20,
-            ),
-            (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP),
-        )
-
-        # Top right, showing number of orbiting blobs
-        self.display.blit_text(
-            f"Orbiting blobs: {self.blob_plotter.blobs.size - 1}",
-            (
-                self.display.get_width() - 20,
-                20,
-            ),
-            (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_TOP),
-        )
-
-        # Bottom left, showing number of blobs swallowed by the sun
-        self.display.blit_text(
-            f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swallowed}",
-            (
-                20,
-                self.display.get_height() - 20,
-            ),
-            (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM),
-        )
-
-        if bg_vars.center_blob_escape:
-            # Bottom right, showing number of blobs escaped the sun
+        if self.show_stats:
+            # Top left, showing sun mass
             self.display.blit_text(
-                f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
+                f"Sun mass: {self.blob_plotter.blobs[0].mass}",
+                (
+                    20,
+                    self.display.get_height() - 20,
+                ),
+                (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP),
+            )
+
+            # Top right, showing number of orbiting blobs
+            self.display.blit_text(
+                f"Orbiting blobs: {self.blob_plotter.blobs.size - 1}",
                 (
                     self.display.get_width() - 20,
                     self.display.get_height() - 20,
                 ),
-                (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
+                (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_TOP),
             )
+
+            # Bottom left, showing number of blobs swallowed by the sun
+            self.display.blit_text(
+                f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swallowed}",
+                (
+                    20,
+                    20,
+                ),
+                (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM),
+            )
+
+            if bg_vars.center_blob_escape:
+                # Bottom right, showing number of blobs escaped the sun
+                self.display.blit_text(
+                    f"Blobs escaped Sun: {self.blob_plotter.blobs_escaped}",
+                    (
+                        self.display.get_width() - 20,
+                        20,
+                    ),
+                    (BlobDisplay.TEXT_RIGHT, BlobDisplay.TEXT_BOTTOM),
+                )
+
+            self.display_elapsed_time()
 
     def get_elapsed_time_in(self: Self, divisor: float) -> float:
         """
@@ -409,6 +409,6 @@ class BlobRunner:
             text = "Paused"
         self.display.blit_text(
             f"Years elapsed: {self.get_elapsed_time_in(YEARS)} {text}",
-            (20, 20),
+            (20, self.display.get_height() - 20),
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP_PLUS),
         )

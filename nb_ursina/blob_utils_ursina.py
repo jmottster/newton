@@ -9,11 +9,22 @@ by Jason Mott, copyright 2024
 from typing import ClassVar, Self, Tuple
 from collections import deque
 
-from panda3d.core import ClockObject  # type: ignore
 import ursina as urs  # type: ignore
+import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs.resources import resource_path
+
+from .fps import FPS
+from .ursina_fix import BlobText
+
+
+__author__ = "Jason Mott"
+__copyright__ = "Copyright 2024"
+__license__ = "GPL 3.0"
+__version__ = VERSION
+__maintainer__ = "Jason Mott"
+__email__ = "github@jasonmott.com"
+__status__ = "In Progress"
 
 
 class FontUtils:
@@ -25,7 +36,7 @@ class FontUtils:
     get_text_parent() -> urs.Entity
         Get the shared parent Entity which is the display field
 
-    position_text(x: float, y: float, text_entity: urs.Text) -> None
+    position_text(x: float, y: float, text_entity: BlobText) -> None
         Apply standard fixes to x/y positioning for text
 
     """
@@ -37,69 +48,51 @@ class FontUtils:
         """Get the shared parent Entity which is the display field"""
         if FontUtils.font_overlay is None:
             FontUtils.font_overlay = urs.Entity(
-                parent=urs.camera.ui, x=-0.9, y=-0.5, scale=1, eternal=True
+                parent=urs.camera.ui,
+                x=0,
+                # y=0,
+                z=0,
+                scale=1,
+                eternal=True,
+                unlit=True,
+                shader=shd.unlit_shader,
             )
         return FontUtils.font_overlay
 
     @staticmethod
-    def position_text(x: float, y: float, text_entity: urs.Text) -> None:
+    def position_text(x: float, z: float, text_entity: BlobText) -> None:
         """Apply standard fixes to x/y positioning for text"""
-        aspect_ratio = urs.window.aspect_ratio
+
+        width_ratio = urs.window.size[0] / urs.window.size[1]
+        height_ratio = 1  # urs.window.size[1] / urs.window.size[0]
         height = urs.window.size[1]
         if urs.window.fullscreen:
-            aspect_ratio = (
-                urs.window.main_monitor.width / urs.window.main_monitor.height
-            )
+            width_ratio = urs.window.main_monitor.width / urs.window.main_monitor.height
             height = urs.window.main_monitor.height
-        x = (x * aspect_ratio) / urs.window.size[0]
-        y = 1 - (y / height)
+        x = (x * width_ratio) / urs.window.size[0]
+        z = (z * height_ratio) / height
 
-        text_entity.position = (x, y)
+        x -= width_ratio / 2
+        z -= height_ratio / 2
+
+        text_entity.position = (x, 0, z)
 
 
-class FPS:
+class FPSDisplay:
     """
-    An encapsulation of the fps clock, with display output functionality added
+    A class used to display the current FPS onscreen
 
     Methods
     -------
-    render(x: float, y: float) -> None
-        Renders the fps to the display object at x,y coordinates
+    render(x: float, z: float) -> None
+        Renders the fps to the display object at x,z coordinates
     """
 
-    paused: bool = False
-    dt: float = 0.0
-
     def __init__(self: Self):
-        class Clock:
-            def __init__(self: Self):
-                self.frame_rate: float = float(FRAME_RATE)
-                self.globalClock = ClockObject.getGlobalClock()
-                self.globalClock.setMode(ClockObject.MLimited)
-                self.globalClock.setFrameRate(self.frame_rate + 10)
-                if CLOCK_FPS:
-                    self.globalClock.setAverageFrameRateInterval(4)
-                else:
-                    self.globalClock.setAverageFrameRateInterval(0)
-                self.dt: float = 1 / self.frame_rate  # self.globalClock.getDt()
-                FPS.dt = self.dt
 
-            def tick(self: Self, time: float):
-                if time != self.frame_rate:
-                    self.frame_rate = time
-                    self.globalClock.setFrameRate(time)
-
-                # self.dt = self.globalClock.getDt()
-                # FPS.dt = self.dt
-
-            def getAverageFrameRate(self: Self):
-                return self.globalClock.getAverageFrameRate()
-
-        self.clock: Clock = Clock()
         self.font = DISPLAY_FONT
         self.font_size = STAT_FONT_SIZE / 100
-
-        self.text = urs.Text(
+        self.text = BlobText(
             font=self.font,
             size=self.font_size,
             resolution=100 * self.font_size,
@@ -107,16 +100,16 @@ class FPS:
             scale=0.1,
             color=urs.color.rgb32(255, 255, 255),
             enabled=False,
-            origin=(-0.5, -0.5),
+            origin=(-0.5, 0, -0.5),
             eternal=True,
         )
 
-    def render(self: Self, x: float, y: float) -> None:
+    def render(self: Self, fps: FPS, x: float, z: float) -> None:
         """Renders the fps to the display object at x,y coordinates"""
 
-        self.text.text = f"FPS {round(self.clock.getAverageFrameRate(),2)}"
+        self.text.text = f"FPS {round(fps.clock.getAverageFrameRate(),2)}"
 
-        FontUtils.position_text(x, y - (self.text.height * 100), self.text)
+        FontUtils.position_text(x, z + (self.text.height * 100), self.text)
 
         self.text.create_background(
             self.text.size * 0.3,
@@ -167,16 +160,24 @@ class TempMessage(urs.Entity):
 
     """
 
+    default_counter_value: int = 30
+
     def __init__(self: Self, **kwargs):
         kwargs["eternal"] = True
 
         self.text: str = kwargs["text"]
-        self.pos: urs.Vec2 = kwargs["pos"]
-        self.counter: int = 30
+        self.pos: urs.Vec3 = kwargs["pos"]
+        self.counter: int = TempMessage.default_counter_value
+        self.counter_reset: int = TempMessage.default_counter_value
         if kwargs.get("counter") is not None:
             self.counter = kwargs["counter"]
+            self.counter_reset = kwargs["counter"]
 
         super().__init__()
+
+        self.shader = shd.unlit_shader
+        self.unlit = True
+
         for key in (
             "model",
             "origin",
@@ -195,7 +196,7 @@ class TempMessage(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.temp_text: urs.Text = urs.Text(
+        self.temp_text: BlobText = BlobText(
             font=DISPLAY_FONT,
             size=(STAT_FONT_SIZE / 100),
             resolution=100 * (STAT_FONT_SIZE / 100),
@@ -203,15 +204,15 @@ class TempMessage(urs.Entity):
             scale=0.1,
             color=urs.color.rgb32(255, 255, 255),
             enabled=True,
-            origin=(0, 0),
+            origin=(0, 0, 0),
             eternal=True,
         )
 
-        self.position = urs.Vec2(0, 0)
+        self.position = urs.Vec3(0, 0, 0)
 
         self.set_text(self.text, self.pos)
 
-    def set_text(self: Self, text: str, pos: urs.Vec2) -> None:
+    def set_text(self: Self, text: str, pos: urs.Vec3) -> None:
         """Set the text to be displayed, and its position"""
         self.temp_text.text = text
         self.update_text_pos(pos)
@@ -227,15 +228,17 @@ class TempMessage(urs.Entity):
         """Returns the text set as the display text"""
         return self.temp_text.text
 
-    def update_text_pos(self: Self, pos: urs.Vec2) -> None:
+    def update_text_pos(self: Self, pos: urs.Vec3) -> None:
         """Updates the position the text will be displayed at"""
         self.pos = pos
 
-        FontUtils.position_text(self.pos[0], self.pos[1], self.temp_text)
+        self.temp_text.position = pos
+
+        FontUtils.position_text(self.pos[0], self.pos[2], self.temp_text)
 
     def reset_counter(self: Self) -> None:
         """Reset the counter back to its starting point"""
-        self.counter = 30
+        self.counter = self.counter_reset
         self.temp_text.enabled = True
         self.enabled = True
 
@@ -297,16 +300,20 @@ class StatText(urs.Entity):
     TEXT_TOP_PLUS: ClassVar[int] = 4
     TEXT_BOTTOM: ClassVar[int] = 5
     TEXT_CENTER_x: ClassVar[int] = 6
-    TEXT_CENTER_y: ClassVar[int] = 7
+    TEXT_CENTER_z: ClassVar[int] = 7
 
     def __init__(self: Self, **kwargs):
         kwargs["eternal"] = True
 
         self.text: str = kwargs["text"]
-        self.pos: urs.Vec2 = kwargs["pos"]
+        self.pos: urs.Vec3 = kwargs["pos"]
         self.orientation: Tuple[int, int] = kwargs["orientation"]
 
         super().__init__()
+
+        self.shader = shd.unlit_shader
+        self.unlit = True
+
         for key in (
             "model",
             "origin",
@@ -325,7 +332,7 @@ class StatText(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        self.stat_text = urs.Text(
+        self.stat_text = BlobText(
             font=DISPLAY_FONT,
             size=(STAT_FONT_SIZE / 100),
             resolution=100 * (STAT_FONT_SIZE / 100),
@@ -333,16 +340,17 @@ class StatText(urs.Entity):
             scale=0.1,
             color=urs.color.rgb32(255, 255, 255),
             enabled=True,
-            origin=(-0.5, -0.5),
+            origin=(-0.5, 0, -0.5),
             eternal=True,
         )
 
         self.set_text(self.text, self.pos, self.orientation)
 
     def set_text(
-        self: Self, text: str, pos: urs.Vec2, orientation: Tuple[int, int]
+        self: Self, text: str, pos: urs.Vec3, orientation: Tuple[int, int]
     ) -> None:
         """Sets the text, position, and orientation to be displayed"""
+
         self.stat_text.text = text
         self.update_text_pos(pos, orientation)
         self.stat_text.create_background(
@@ -358,7 +366,7 @@ class StatText(urs.Entity):
         return self.stat_text.text
 
     def update_text_pos(
-        self: Self, pos: urs.Vec2, orientation: Tuple[int, int]
+        self: Self, pos: urs.Vec3, orientation: Tuple[int, int]
     ) -> None:
         """Updates the position and orientation of the displayed text"""
 
@@ -366,19 +374,19 @@ class StatText(urs.Entity):
         self.orientation = orientation
 
         if self.orientation[0] == StatText.TEXT_RIGHT:
-            self.stat_text.origin = (0.5, self.stat_text.origin[1])
+            self.stat_text.origin = (0.5, 0, self.stat_text.origin[1])
         elif self.orientation[0] == StatText.TEXT_CENTER_x:
-            self.stat_text.origin = (0, self.stat_text.origin[1])
+            self.stat_text.origin = (0, 0, self.stat_text.origin[1])
 
         if self.orientation[1] == StatText.TEXT_TOP:
-            self.stat_text.origin = (self.stat_text.origin[0], 0.5)
-        elif self.orientation[1] == StatText.TEXT_CENTER_y:
-            self.stat_text.origin = (self.stat_text.origin[0], 0)
+            self.stat_text.origin = (self.stat_text.origin[0], 0, 0.5)
+        elif self.orientation[1] == StatText.TEXT_CENTER_z:
+            self.stat_text.origin = (self.stat_text.origin[0], 0, 0)
         elif self.orientation[1] == StatText.TEXT_TOP_PLUS:
-            self.stat_text.origin = (self.stat_text.origin[0], 0.5)
-            self.pos = (self.pos[0], self.pos[1] + (self.stat_text.height * 100))
+            self.stat_text.origin = (self.stat_text.origin[0], 0, 0.5)
+            self.pos = (self.pos[0], 0, self.pos[2] - (self.stat_text.height * 100))
 
-        FontUtils.position_text(self.pos[0], self.pos[1], self.stat_text)
+        FontUtils.position_text(self.pos[0], self.pos[2], self.stat_text)
 
     def on_disable(self: Self) -> None:
         """Called when enabled is set to False"""
@@ -411,6 +419,10 @@ class EventQueue(urs.Entity):
 
     def __init__(self: Self, **kwargs):
         super().__init__()
+
+        self.shader = shd.unlit_shader
+        self.unlit = True
+
         for key in (
             "model",
             "origin",

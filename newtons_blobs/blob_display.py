@@ -102,7 +102,7 @@ class BlobDisplay(Protocol):
     TEXT_TOP_PLUS: ClassVar[int] = 4
     TEXT_BOTTOM: ClassVar[int] = 5
     TEXT_CENTER_x: ClassVar[int] = 6
-    TEXT_CENTER_y: ClassVar[int] = 7
+    TEXT_CENTER_z: ClassVar[int] = 7
 
     size_w: float
     size_h: float

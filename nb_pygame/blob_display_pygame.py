@@ -282,7 +282,7 @@ class BlobDisplayPygame:
 
         if orientation[1] == BlobDisplay.TEXT_BOTTOM:
             offset_y = -text_surface.get_height()
-        elif orientation[1] == BlobDisplay.TEXT_CENTER_y:
+        elif orientation[1] == BlobDisplay.TEXT_CENTER_z:
             offset_y = -text_surface.get_height() / 2
         elif orientation[1] == BlobDisplay.TEXT_TOP_PLUS:
             offset_y = text_surface.get_height()

@@ -7,11 +7,11 @@ a graphics/drawing library to this simulator using Ursina
 by Jason Mott, copyright 2024
 """
 
-import random
 from typing import Any, Dict, Tuple, Self, cast
 
 import numpy.typing as npt
 import ursina as urs  # type: ignore
+import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
@@ -19,6 +19,7 @@ from newtons_blobs import MassiveBlob
 from newtons_blobs import BlobSurface
 from newtons_blobs import BlobDisplay
 from newtons_blobs import BlobUniverse
+from newtons_blobs import blob_random
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
@@ -26,9 +27,10 @@ from .blob_first_person_surface import FirstPersonSurface
 from .blob_moon_trail_registry_ursina import (
     BlobMoonTrailRegistryUrsina as moon_registry,
 )
-from .blob_surface_ursina import BlobSurfaceUrsina
+from .blob_surface_ursina import BlobCore, BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
-from .blob_utils_ursina import FPS
+from .fps import FPS
+from .ursina_fix import BlobText
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -59,9 +61,26 @@ class BlobUrsinaFactory:
     reset(num_blobs: int = NUM_BLOBS) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, ring_texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
+
+    loading_screen_start(max_count: int, bar_message: str = "loading blobs . . . ") -> None
+        Method for staring a loading screen with max_count (reaching means done)
+        and message (describe what is being done)
+
+    loading_screen_add_count(increment: int = 1) -> None
+        Must call loading_screen_start() first. This will add increment amount
+        to display bar (which displays % toward max_count)
+
+    loading_screen_is_at_max() -> bool
+        Returns True if count has reached max_count via calls to
+        loading_screen_add_count()
+
+    loading_screen_end(screen_update: bool = True) -> None
+        Call this to close out the current loading screen. You must call this
+        if you want to the loading screen to go away, or before starting a new
+        one.
 
     get_blob_universe() -> BlobUniverse
         Returns a single instance of a Universe object, intended to be the area that is drawn on.
@@ -78,6 +97,7 @@ class BlobUrsinaFactory:
     def __init__(self: Self):
 
         bg_vars.set_au_scale_factor(5700000)
+        # bg_vars.set_au_scale_factor(100000)
         bg_vars.set_universe_scale(100)
         bg_vars.set_center_blob_scale(20)
         bg_vars.set_scale_center_blob_mass_with_size(True)
@@ -87,8 +107,8 @@ class BlobUrsinaFactory:
         bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
-        bg_vars.set_first_person_scale(bg_vars.max_radius * 2.5)
-        bg_vars.set_background_scale(bg_vars.first_person_scale * 10000)
+        bg_vars.set_first_person_scale(bg_vars.max_radius * 2)
+        bg_vars.set_background_scale(bg_vars.universe_size / 2)
         bg_vars.set_timescale(DAYS * 2)
         bg_vars.set_orig_timescale(DAYS * 2)
         bg_vars.set_timescale_inc(HOURS * 6)
@@ -103,10 +123,10 @@ class BlobUrsinaFactory:
 
         bg_vars.print_info()
 
-        self.start_distance = bg_vars.au_scale_factor * 14
+        self.start_distance = bg_vars.au_scale_factor * 15
 
-        urs.Text.default_font = DISPLAY_FONT
-        # urs.Text.size = 0.5
+        BlobText.default_font = DISPLAY_FONT
+        # BlobText.size = 0.5
 
         self.urs_display: BlobDisplayUrsina = BlobDisplayUrsina(
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
@@ -143,25 +163,21 @@ class BlobUrsinaFactory:
             urs.Vec3(self.urs_universe.get_center_blob_start_pos()) * bg_vars.scale_down
         )
 
-        self.setup_start_pos(self.default_start_pos)
+        self.loading_screen: BlobLoadingScreenUrsina = None
 
-        self.loading_screen: BlobLoadingScreenUrsina = BlobLoadingScreenUrsina(
-            max_value=NUM_BLOBS
-        )
-
-        self.loading_screen.enabled = True
+        self.loading_screen_start(NUM_BLOBS)
 
         self.urs_display.update()
 
     def setup_start_pos(self: Self, start_pos: urs.Vec3) -> None:
         """Configures the starting position of the first person viewer"""
 
-        temp_ent = urs.Entity(position=start_pos)
+        temp_ent = urs.Entity(position=start_pos, shader=shd.unlit_shader, unlit=True)
 
         start_pos = start_pos + urs.Vec3(
-            random.randint(-10, 10),
-            random.randint(-10, 10),
-            random.randint(-10, 10),
+            blob_random.randint(-10, 10),
+            blob_random.randint(-10, 10),
+            blob_random.randint(-10, 10),
         ).normalized() * (self.start_distance)
 
         self.urs_display.first_person_surface.draw(start_pos)
@@ -241,11 +257,6 @@ class BlobUrsinaFactory:
     def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
 
-        if self.loading_screen is not None:
-            self.loading_screen.enabled = False
-            urs.destroy(self.loading_screen)
-            self.loading_screen = None
-
         moon_registry.reset()
 
         self.urs_display.first_person_surface.first_person_viewer.stop_following()
@@ -254,13 +265,13 @@ class BlobUrsinaFactory:
             self.urs_display.first_person_surface.first_person_viewer
         )
 
-        self.loading_screen = BlobLoadingScreenUrsina(max_value=num_blobs)
+        self.urs_display.clear_stats()
 
-        self.loading_screen.enabled = True
+        self.loading_screen_start(num_blobs)
+
+        BlobCore.camera_mask_counter = 0
 
         self.urs_display.update()
-
-        # self.setup_start_pos(self.default_start_pos)
 
     def new_blob_surface(
         self: Self,
@@ -269,6 +280,7 @@ class BlobUrsinaFactory:
         mass: float,
         color: Tuple[int, int, int],
         texture: str = None,
+        ring_texture: str = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
     ) -> BlobSurface:
@@ -283,10 +295,10 @@ class BlobUrsinaFactory:
             color,
             self.get_blob_universe(),
             texture,
+            ring_texture,
             rotation_speed,
             rotation_pos,
         )
-        self.loading_screen.add_to_bar(1)
 
         if name != CENTER_BLOB_NAME:
             if radius < bg_vars.min_radius:
@@ -294,19 +306,66 @@ class BlobUrsinaFactory:
             else:
                 moon_registry.add_planet(new_blob.ursina_blob)
 
-        if self.loading_screen.bar_at_max() and self.loading_screen.enabled:
+        self.loading_screen_add_count()
+
+        if self.loading_screen_is_at_max():
             moon_registry.purge_none_elements()
             self.setup_start_pos(self.default_start_pos)
-            self.loading_screen.enabled = False
-            urs.destroy(self.loading_screen)
-            self.loading_screen = None
-
-        self.urs_display.update()
+            self.loading_screen_end(False)
 
         return cast(
             BlobSurface,
             new_blob,
         )
+
+    def loading_screen_start(
+        self: Self, max_count: int, bar_message: str = "loading blobs . . . "
+    ) -> None:
+        """
+        Method for staring a loading screen with max_count (reaching means done)
+        and message (describe what is being done)
+        """
+        if self.loading_screen is not None:
+            self.loading_screen.enabled = False
+            urs.destroy(self.loading_screen)
+            self.loading_screen = None
+
+        self.loading_screen = BlobLoadingScreenUrsina(
+            max_value=max_count, bar_message=bar_message
+        )
+
+        self.loading_screen.enabled = True
+
+        self.urs_display.update()
+
+    def loading_screen_add_count(self: Self, increment: int = 1) -> None:
+        """
+        Must call loading_screen_start() first. This will add increment amount
+        to display bar (which displays % toward max_count)
+        """
+        if self.loading_screen is not None:
+            self.loading_screen.add_to_bar(increment)
+            self.urs_display.update()
+
+    def loading_screen_is_at_max(self: Self) -> bool:
+        """
+        Returns True if count has reached max_count via calls to
+        loading_screen_add_count()
+        """
+        return self.loading_screen.bar_at_max()
+
+    def loading_screen_end(self: Self, screen_update: bool = True) -> None:
+        """
+        Call this to close out the current loading screen. You must call this
+        if you want to the laoding screen to go away, or before starting a new
+        one.
+        """
+        if self.loading_screen is not None and self.loading_screen.enabled:
+            self.loading_screen.enabled = False
+            urs.destroy(self.loading_screen)
+            self.loading_screen = None
+            if screen_update:
+                self.urs_display.update()
 
     def get_blob_universe(self: Self) -> BlobUniverse:
         """

@@ -13,13 +13,14 @@ import numpy as np
 import numpy.typing as npt
 
 import ursina as urs  # type: ignore
-from ursina.ursinastuff import _destroy
+from ursina.ursinastuff import _destroy  # type: ignore
+import ursina.shaders as shd  # type: ignore
 
 
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 
-from .blob_surface_ursina import Rotator
+from .blob_surface_ursina import BlobCore
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -141,8 +142,8 @@ class MoonWatcher(urs.Entity):
         self.num_planets: int = int((NUM_BLOBS - 1) - self.num_moons)
         self.planet_index_offset: int = self.num_moons + 1
 
-        self.planets: npt.NDArray = np.empty([self.num_planets], dtype=Rotator)
-        self.moons: npt.NDArray = np.empty([self.num_moons], dtype=Rotator)
+        self.planets: npt.NDArray = np.empty([self.num_planets], dtype=BlobCore)
+        self.moons: npt.NDArray = np.empty([self.num_moons], dtype=BlobCore)
 
         self.first_person_viewer: urs.Entity = None
 
@@ -155,19 +156,19 @@ class MoonWatcher(urs.Entity):
         """Sets the Entity that represents the position of the player"""
         self.first_person_viewer = first_person_viewer
 
-    def add_planet(self: Self, planet: Rotator) -> None:
+    def add_planet(self: Self, planet: BlobCore) -> None:
         """Adds a blob to the internal planet blob array"""
         self.planets[int(planet.blob_name) - self.planet_index_offset] = planet
 
-    def add_moon(self: Self, moon: Rotator) -> None:
+    def add_moon(self: Self, moon: BlobCore) -> None:
         """Adds a blob to the internal moon blob array"""
         self.moons[int(moon.blob_name) - 1] = moon
 
-    def remove_planet(self: Self, planet: Rotator) -> None:
+    def remove_planet(self: Self, planet: BlobCore) -> None:
         """Removes a blob from the internal planet blob array"""
         self.planets = np.delete(self.planets, np.where(self.planets == planet)[0])
 
-    def remove_moon(self: Self, moon: Rotator) -> None:
+    def remove_moon(self: Self, moon: BlobCore) -> None:
         """Removes a blob from the internal moon blob array"""
         self.moons = np.delete(self.moons, np.where(self.moons == moon)[0])
 
@@ -325,7 +326,7 @@ class BlobMoonTrailRegistryUrsina:
     def get_moon_watch_instance(cls) -> MoonWatcher:
         """Called by other methods, will create singleton instance if it doesn't already exist"""
         if cls.moon_watcher is None:
-            cls.moon_watcher = MoonWatcher()
+            cls.moon_watcher = MoonWatcher(shader=shd.unlit_shader, unlit=True)
         return cls.moon_watcher
 
     @classmethod
@@ -334,22 +335,22 @@ class BlobMoonTrailRegistryUrsina:
         cls.get_moon_watch_instance().set_first_person_viewer(first_person_viewer)
 
     @classmethod
-    def add_planet(cls, planet: Rotator) -> None:
+    def add_planet(cls, planet: BlobCore) -> None:
         """Adds a blob to the internal planet blob array"""
         cls.get_moon_watch_instance().add_planet(planet)
 
     @classmethod
-    def add_moon(cls, moon: Rotator) -> None:
+    def add_moon(cls, moon: BlobCore) -> None:
         """Adds a blob to the internal moon blob array"""
         cls.get_moon_watch_instance().add_moon(moon)
 
     @classmethod
-    def remove_planet(cls, planet: Rotator) -> None:
+    def remove_planet(cls, planet: BlobCore) -> None:
         """Removes a blob from the internal planet blob array"""
         cls.get_moon_watch_instance().remove_planet(planet)
 
     @classmethod
-    def remove_moon(cls, moon: Rotator) -> None:
+    def remove_moon(cls, moon: BlobCore) -> None:
         """Removes a blob from the internal moon blob array"""
         cls.get_moon_watch_instance().remove_moon(moon)
 

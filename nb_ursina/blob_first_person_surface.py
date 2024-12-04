@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 from typing import Tuple, Self, cast
 
 import ursina as urs  # type: ignore
-
+import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
@@ -85,9 +85,11 @@ class FirstPersonSurface:
         self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
             scale=bg_vars.first_person_scale,
             universe=self.universe,
-            start_z=radius,
+            start_y=radius,
             eternal=True,
             mass=bg_vars.min_mass,
+            unlit=True,
+            shader=shd.unlit_shader,
         )
         self.radius = radius
         self.color = color

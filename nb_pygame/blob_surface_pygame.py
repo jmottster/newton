@@ -48,6 +48,8 @@ class BlobSurfacePygame:
         object representing the universe space to draw blobs onto
     texture : str = None
         Not used, this is a 2d implementation
+    ring_texture : str = None
+        Not used, this is a 2d implementation
     rotation_speed : float = None
         Not used, this is a 2d implementation
     rotation_pos : Tuple[float, float, float] = None
@@ -124,6 +126,7 @@ class BlobSurfacePygame:
 
     __slots__ = (
         "texture",
+        "ring_texture",
         "rotation_speed",
         "rotation_pos",
         "py_universe",
@@ -166,11 +169,13 @@ class BlobSurfacePygame:
         color: Tuple[int, int, int],
         universe: BlobUniverse,
         texture: str = None,
+        ring_texture: str = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[float, float, float] = None,
     ):
 
         self.texture: str = texture
+        self.ring_texture: str = ring_texture
         self.rotation_speed: float = rotation_speed
         self.rotation_pos: Tuple[float, float, float] = rotation_pos
 

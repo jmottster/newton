@@ -9,7 +9,7 @@ by Jason Mott, copyright 2024
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.9"
+__version__ = "0.0.8"
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"

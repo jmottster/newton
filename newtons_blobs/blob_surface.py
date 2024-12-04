@@ -38,6 +38,8 @@ class BlobSurface(Protocol):
         The universe instance the blobs will be drawn on
     texture : str = None
         For 3d rendering, this is optional (implement as texture = None in __init__)
+    ring_texture : str = None
+        For 3d rendering, this is optional (implement as ring_texture = None in __init__)
     rotation_speed : float = None
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
     rotation_pos : Tuple[int, int, int] = None
@@ -75,6 +77,7 @@ class BlobSurface(Protocol):
     color: Tuple[int, int, int]
     universe: BlobUniverse
     texture: str = None
+    ring_texture: str = None
     rotation_speed: float = None
     rotation_pos: Tuple[float, float, float] = None
     position: Tuple[float, float, float]

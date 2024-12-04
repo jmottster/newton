@@ -9,6 +9,8 @@ by Jason Mott, copyright 2024
 from pathlib import Path
 from typing import Any, Callable, ClassVar, Dict, Tuple, Self, cast
 
+from panda3d.core import loadPrcFileData  # type: ignore
+
 from direct.showbase import DirectObject  # type: ignore
 import ursina as urs  # type: ignore
 
@@ -19,6 +21,7 @@ from newtons_blobs import BlobDisplay
 
 from .blob_utils_ursina import *
 from .blob_first_person_surface import FirstPersonSurface
+from .fps import FPS
 
 
 __author__ = "Jason Mott"
@@ -75,7 +78,6 @@ class WindowHandler(DirectObject.DirectObject):
             for _, item in self.display.text_entity_cache.items():
                 item.enabled = False
                 urs.destroy(item)
-
             self.display.text_entity_cache.clear()
             if pos_lock:
                 self.display.first_person_surface.first_person_viewer.pos_unlock()
@@ -102,6 +104,9 @@ class BlobDisplayUrsina:
     load_keyboard_events() -> Dict[int, Callable[[], None]]
         Creates and populates a dict that holds function references for keyboard events (also creates the functions),
         returns the dict
+
+    clear_stats() -> None
+        Clears the cache that holds stat entities
 
     get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for display, mostly for use
@@ -193,6 +198,27 @@ class BlobDisplayUrsina:
             cog_menu=False,
         )
 
+        loadPrcFileData("", "coordinate-system z-up-right")
+
+        urs.camera.ui = urs.Entity(
+            eternal=True,
+            name="ui",
+            scale=(urs.camera.ui_size * 0.5, 1, urs.camera.ui_size * 0.5),
+            add_to_scene_entities=False,
+        )
+        urs.camera.overlay = urs.Entity(
+            parent=urs.camera.ui,
+            model="quad",
+            scale=99,
+            color=urs.color.clear,
+            eternal=True,
+            y=-99,
+            add_to_scene_entities=False,
+        )
+
+        urs.camera.set_up()
+        urs.camera.fov = 90
+
         urs.window.color = urs.color.rgb32(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
         )
@@ -224,7 +250,8 @@ class BlobDisplayUrsina:
 
         self.fps: FPS = FPS()
 
-        self.text_entity_cache: Dict[str, urs.Text] = {}
+        self.fps_display: FPSDisplay = None
+        self.text_entity_cache: Dict[str, BlobText] = {}
 
         self.key_ints: Dict[str, int] = self.load_key_ints()
 
@@ -265,14 +292,8 @@ class BlobDisplayUrsina:
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats
 
-            for _, item in self.text_entity_cache.items():
-                item.enabled = self.show_stats
-                if not self.show_stats:
-                    item.enabled = False
-                    urs.destroy(item)
-
             if not self.show_stats:
-                self.text_entity_cache.clear()
+                self.clear_stats()
 
         def toggle_entity_follow() -> None:
             if self.paused:
@@ -293,6 +314,13 @@ class BlobDisplayUrsina:
         keyboard_events[self.get_key_code("right mouse down")] = toggle_entity_follow
 
         return keyboard_events
+
+    def clear_stats(self: Self) -> None:
+        """Clears the cache that holds stat entities"""
+        for _, item in self.text_entity_cache.items():
+            item.enabled = False
+            urs.destroy(item)
+        self.text_entity_cache.clear()
 
     def get_framework(self: Self) -> Any:
         """
@@ -362,7 +390,10 @@ class BlobDisplayUrsina:
 
     def fps_render(self: Self, pos: Tuple[float, float]) -> None:
         """Will print the current achieved rate on the screen"""
-        self.fps.render(pos[0], pos[1])
+
+        if self.fps_display is None:
+            self.fps_display = FPSDisplay()
+        self.fps_display.render(self.fps, pos[0], pos[1])
 
     def set_mode(self: Self, size: Tuple[float, float], mode: int) -> None:
         """Sets the screen size and window mode (BlobDisplay.FULLSCREEN or BlobDisplay.RESIZABLE)"""
@@ -416,17 +447,19 @@ class BlobDisplayUrsina:
         text_entity.reset_counter()
 
     def blit_text(
-        self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]
+        self: Self, text: str, in_pos: Tuple[float, float], orientation: Tuple[int, int]
     ) -> None:
         """
-        Print the proved text to the screen a the provided coordinates. orientation helps to give hints
+        Print the provided text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
         """
 
-        if orientation == (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_y):
+        pos: urs.Vec3 = urs.Vec3(in_pos[0], 0, in_pos[1])
+
+        if orientation == (BlobDisplay.TEXT_CENTER_x, BlobDisplay.TEXT_CENTER_z):
             self.temp_message(
-                text, pos, f"{BlobDisplay.TEXT_CENTER_x}{BlobDisplay.TEXT_CENTER_y}"
+                text, pos, f"{BlobDisplay.TEXT_CENTER_x}{BlobDisplay.TEXT_CENTER_z}"
             )
             return
 
