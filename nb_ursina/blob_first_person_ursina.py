@@ -112,7 +112,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
-        self.base_dir: Path = Path(urs.application.asset_folder)
+        self.base_dir: Path = urs.application.asset_folder
 
         super().__init__()
 

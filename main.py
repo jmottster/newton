@@ -2,11 +2,12 @@
 #
 # nuitka-project: --company-name="Jason Mott"
 # nuitka-project: --product-name="Newton's Blobs"
-# nuitka-project: --product-version=0.0.6
+# nuitka-project: --product-version=0.0.8
 # nuitka-project: --file-version=0.0.1
 # nuitka-project: --file-description="A simulator of Newton's laws of physics, using space scale objects"
 # nuitka-project: --copyright="GPL-3.0 license"
 # nuitka-project: --include-data-dir=./nb_ursina/models=nb_ursina/models
+# nuitka-project: --include-data-dir=./nb_ursina/models/models_compressed=ursina/models_compressed
 # nuitka-project: --include-data-dir=./nb_ursina/textures=nb_ursina/textures
 # nuitka-project: --include-data-dir=./newtons_blobs/font=newtons_blobs/font
 # nuitka-project: --include-data-dir=./newtons_blobs/img=newtons_blobs/img

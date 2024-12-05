@@ -123,7 +123,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
 
         self.point: urs.Entity = urs.Entity(
             parent=self,
-            model=BlobCircle(24, mode="point", thickness=0.6),
+            model=BlobCircle(24, mode="point", thickness=1.1),
             color=urs.color.rgb32(20, 92, 158),
             scale=2,
             texture="circle",
@@ -131,7 +131,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
         )
         self.point2: urs.Entity = urs.Entity(
             parent=self,
-            model=BlobCircle(12, mode="point", thickness=0.6),
+            model=BlobCircle(12, mode="point", thickness=1.1),
             color=urs.color.rgb32(20, 92, 158),
             scale=1,
             texture="circle",

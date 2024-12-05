@@ -29,7 +29,7 @@ def createBlobQuad(
     aspect: float = 1,
     scale: Tuple[float, float, float] = (1, 1, 1),
     mode: str = "ngon",
-    thickness: int = 1,
+    thickness: float = 1,
 ):
     """Creates or gets from cache an instance of BlobQuad. The use of a cache is the reason to use this"""
 
@@ -79,7 +79,7 @@ class BlobQuad(urs.Mesh):
         aspect: float = 1,
         scale: Tuple[float, float, float] = (1, 1, 1),
         mode: str = "ngon",
-        thickness: int = 1,
+        thickness: float = 1,
     ):
         if not BlobQuad.corner_maker:
             BlobQuad.corner_maker = urs.Entity(

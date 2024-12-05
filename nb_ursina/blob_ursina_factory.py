@@ -10,6 +10,9 @@ by Jason Mott, copyright 2024
 from typing import Any, Dict, Tuple, Self, cast
 
 import numpy.typing as npt
+
+from panda3d.core import AntialiasAttrib  # type: ignore
+
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
@@ -366,6 +369,8 @@ class BlobUrsinaFactory:
             self.loading_screen = None
             if screen_update:
                 self.urs_display.update()
+
+        urs.scene.setAntialias(AntialiasAttrib.MMultisample)
 
     def get_blob_universe(self: Self) -> BlobUniverse:
         """

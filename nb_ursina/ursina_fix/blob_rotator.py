@@ -8,7 +8,6 @@ by Jason Mott, copyright 2024
 
 from pathlib import Path
 from typing import Self, Tuple
-import time
 
 from panda3d.core import Vec3 as PanVec3  # type: ignore
 
@@ -17,7 +16,6 @@ from panda3d.core import (  # type: ignore
     TextureStage,
     TransparencyAttrib,
     Material,
-    AntialiasAttrib,
 )  # type: ignore
 
 import ursina as urs  # type: ignore
@@ -197,7 +195,7 @@ class BlobRotator(urs.Entity):
         self.rotator_model: NodePath = None
         self.planet_ring: NodePath = None
         self.blob_material: Material = kwargs.get("blob_material")
-        self.base_dir: Path = Path(urs.application.asset_folder)
+        self.base_dir: Path = urs.application.asset_folder
         self.default_color: urs.Color = urs.color.rgba32(1, 1, 1, 1)
         self._radius: float = None
         self.blob_name: str = kwargs.get("name")
@@ -459,7 +457,7 @@ class BlobRotator(urs.Entity):
                 ),
                 2,
             )
-            self.planet_ring.setAntialias(AntialiasAttrib.M_multisample)
+            # self.planet_ring.setAntialias(AntialiasAttrib.M_multisample)
             # self.planet_ring.setColor((1, 1, 1, 0.6))
 
     def update(self: Self) -> None:

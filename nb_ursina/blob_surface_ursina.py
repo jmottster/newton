@@ -956,17 +956,17 @@ class BlobSurfaceUrsina:
                 ) / 2
 
                 if self.radius >= (halfway_max_halfway):
-                    i: int = blob_random.randint(1, len(BLOB_TEXTURES_GAS) - 1)
+                    i: int = blob_random.randint(0, len(BLOB_TEXTURES_GAS) - 1)
                     self.texture = BLOB_TEXTURES_GAS[i]
                     if (blob_random.random() * 100) > 50:
                         self.ring_texture = BLOB_TEXTURES_RINGS[i]
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
-                        blob_random.randint(1, len(BLOB_TEXTURES_ROCKY) - 1)
+                        blob_random.randint(0, len(BLOB_TEXTURES_ROCKY) - 1)
                     ]
                 else:
                     self.texture = BLOB_TEXTURES_MOON[
-                        blob_random.randint(1, len(BLOB_TEXTURES_MOON) - 1)
+                        blob_random.randint(0, len(BLOB_TEXTURES_MOON) - 1)
                     ]
 
         if rotation_speed is not None:
