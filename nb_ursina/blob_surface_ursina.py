@@ -519,7 +519,7 @@ class BlobCore(BlobRotator):
         # self.light_node.reparentTo(urs.scene)  # type: ignore
         self.light_node.reparentTo(self.rotator_model)  # type: ignore
 
-        self.light_node.setScale(urs.scene, bg_vars.min_radius)
+        self.light_node.setScale(urs.scene, bg_vars.center_blob_radius)
         self.light_bit_mask = 0b0001
         self.light_node.node().setCameraMask(0b0001)
         self.setLightOff(1)
