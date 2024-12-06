@@ -47,7 +47,7 @@ M_MASS = 7.342 * 10**22  # Mass of the Moon
 MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar system)
 
 
-LOW_VRAM=True
+LOW_VRAM=False
 TRUE_3D = True
 BLOB_MOON_PERCENT = 0.75  # Percentage of blobs that are moons (if true_3d)
 if not TRUE_3D:
