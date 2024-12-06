@@ -187,7 +187,8 @@ class BlobDisplayUrsina:
             )
         )
 
-        loadPrcFileData("", "fullscreen #t")
+        # Uncomment only if you're having trouble starting in fullscreen (virtual machine issue)
+        # loadPrcFileData("", "fullscreen #t")
         loadPrcFileData("", "framebuffer-multisample 1")
         loadPrcFileData("", "multisamples 4")
 
