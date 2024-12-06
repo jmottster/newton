@@ -98,8 +98,6 @@ class BlobUniverseUrsina:
             model=model,
             scale=scale,
             texture=texture,
-            # color=urs.color.rgba(0.5,0.5,0.5,1),
-            # texture_scale=(1, 1),
             rotation_x=90,
             unlit=True,
             shader=shd.unlit_shader,
