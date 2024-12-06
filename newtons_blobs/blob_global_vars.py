@@ -51,10 +51,13 @@ class BlobGlobalVars:
 
     BlobGlobalVars.center_blob_mass: ClassVar[float] -  Starting mass (in kg) of the center blob, subject to change
     BlobGlobalVars.org_center_blob_mass: ClassVar[float] -  Original starting mass (in kg) of the center blob. doesn't change
+    BlobGlobalVars.center_blob_shadow_resolution: ClassVar[int] - The resolution for center blob shadow casting
+    
 
     BlobGlobalVars.min_radius: ClassVar[float] - minimum radius (in pixels) that a blob can be
     BlobGlobalVars.max_radius: ClassVar[float] - maximum radius (in pixels) that a blob can be
-
+    BlobGlobalVars.blob_shadow_resolution: ClassVar[int] - The resolution for blob shadow casting (blob's with rings only)
+    
     BlobGlobalVars.min_moon_radius: ClassVar[float] - minimum radius (in pixels) that a moon blob can be
     BlobGlobalVars.max_moon_radius: ClassVar[float] - maximum radius (in pixels) that a moon blob can be
 
@@ -132,6 +135,12 @@ class BlobGlobalVars:
     BlobGlobalVars.set_black_hole_mode(black_hole_mode: bool) -> None
         Class method to set whether or not center blob is invisible and mass will not scale
 
+    BlobGlobalVars.set_center_blob_shadow_resolution(center_blob_shadow_resolution: int) -> None
+        Class method to set the shadow resolution for the center blob
+
+    BlobGlobalVars.set_blob_shadow_resolution(blob_shadow_resolution: int) -> None
+        Class method to set the shadow resolution for blob's with rings
+
     BlobGlobalVars.set_scale_blob_mass_with_size(scale_blob_mass_with_size: bool) -> None
         Class method to set whether or not to scale the mass in proportion to radius scaling
 
@@ -202,9 +211,12 @@ class BlobGlobalVars:
 
     center_blob_mass: ClassVar[float] = CENTER_BLOB_MASS
     org_center_blob_mass: ClassVar[float] = center_blob_mass
+    center_blob_shadow_resolution: ClassVar[int] = CENTER_BBLOB_SHADOW_RESOLUTION
 
     min_radius: ClassVar[float] = MIN_RADIUS
     max_radius: ClassVar[float] = MAX_RADIUS
+    blob_shadow_resolution: ClassVar[int] = BLOB_SHADOW_RESOLUTION
+
     min_moon_radius: ClassVar[float] = MIN_MOON_RADIUS
     max_moon_radius: ClassVar[float] = MAX_MOON_RADIUS
 
@@ -367,6 +379,16 @@ class BlobGlobalVars:
     def set_scale_blob_mass_with_size(cls, scale_blob_mass_with_size: bool) -> None:
         """Class method to set whether or not to scale the mass in proportion to radius scaling"""
         cls.scale_blob_mass_with_size = scale_blob_mass_with_size
+
+    @classmethod
+    def set_center_blob_shadow_resolution(cls, center_blob_shadow_resolution: int) -> None:
+        """ Class method to set the shadow resolution for the center blob """
+        cls.center_blob_shadow_resolution = center_blob_shadow_resolution
+
+    @classmethod
+    def set_blob_shadow_resolution(cls, blob_shadow_resolution: int) -> None:
+        """ Class method to set the shadow resolution for blob's with rings """
+        cls.blob_shadow_resolution = blob_shadow_resolution
 
     @classmethod
     def set_first_person_scale(cls, first_person_scale: float) -> None:

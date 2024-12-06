@@ -511,7 +511,8 @@ class BlobCore(BlobRotator):
         """
 
         self.light = PointLight(f"{self.blob_name}_plight")
-        self.light.setShadowCaster(True, 8192, 8192)
+        # self.light.setShadowCaster(True, 8192, 8192)
+        self.light.setShadowCaster(True, bg_vars.center_blob_shadow_resolution, bg_vars.center_blob_shadow_resolution)
         self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
         self.light.setColor((3, 3, 3, 1))
 
@@ -543,7 +544,8 @@ class BlobCore(BlobRotator):
 
         self.light = Spotlight(f"{self.blob_name}_slight")
         self.light.setLens(PerspectiveLens())
-        self.light.setShadowCaster(True, 8192, 8192)
+        # self.light.setShadowCaster(True, 8192, 8192)
+        self.light.setShadowCaster(True, bg_vars.blob_shadow_resolution, bg_vars.blob_shadow_resolution)
         self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
         self.light.setColor((3, 3, 3, 1))
 
