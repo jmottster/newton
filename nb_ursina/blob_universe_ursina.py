@@ -83,21 +83,26 @@ class BlobUniverseUrsina:
         urs.destroy(self.universe, 0)
         self.universe = None
 
-        texture: str = "textures/backgrounds/multi_nebulae_2.png"
+
+        if LOW_VRAM:
+            texture: str = "textures/backgrounds/multi_nebulae_2-small.png"
+        else:
+            texture: str = "textures/backgrounds/multi_nebulae_2.png"
 
         model: str = "background_sphere"
         if not bg_vars.textures_3d:
             model = None
             texture = None
         self.universe = urs.Entity(
-            unlit=True,
-            shader=shd.unlit_shader,
             position=(0, 0, 0),
             model=model,
             scale=scale,
             texture=texture,
-            texture_scale=(1, 1),
+            # color=urs.color.rgba(0.5,0.5,0.5,1),
+            # texture_scale=(1, 1),
             rotation_x=90,
+            unlit=True,
+            shader=shd.unlit_shader,
         )
 
         self.universe.setAttrib(

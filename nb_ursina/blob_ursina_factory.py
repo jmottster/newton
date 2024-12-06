@@ -105,8 +105,9 @@ class BlobUrsinaFactory:
         bg_vars.set_center_blob_scale(20)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
-        bg_vars.set_center_blob_shadow_resolution(2048)
-        bg_vars.set_blob_shadow_resolution(4096)
+        if LOW_VRAM:
+            bg_vars.set_center_blob_shadow_resolution(2048)
+            bg_vars.set_blob_shadow_resolution(4096)
         bg_vars.set_blob_scale(20)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(0.5)

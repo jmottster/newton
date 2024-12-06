@@ -187,6 +187,10 @@ class BlobDisplayUrsina:
             )
         )
 
+        loadPrcFileData("", "fullscreen #t")
+        loadPrcFileData("", "framebuffer-multisample 1")
+        loadPrcFileData("", "multisamples 4")
+
         self.app: urs.Ursina = urs.Ursina(
             title=WINDOW_TITLE,
             icon=WINDOW_ICON,
