@@ -311,6 +311,8 @@ class BlobCore(BlobRotator):
     **kwargs
         Specific to this class:
         rotation_speed: float, rotation_pos: Tuple[float, float, float]
+    barycenter_blob: BlobCore
+        The blob that this blob orbits, if it's not the center blob
 
     Methods
     -------
@@ -471,12 +473,30 @@ class BlobCore(BlobRotator):
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
-        self.barycenter_blob: BlobCore = None
+        self._barycenter_blob: BlobCore = None
 
-        for bit in range(1, len(BlobCore.bit_masks)):
-            self.hide(BlobCore.bit_masks[bit])
-            if self.blob_name == CENTER_BLOB_NAME:
-                self.rotator_model.hide(BlobCore.bit_masks[bit])
+        if not self.is_moon:
+            for bit in range(1, len(BlobCore.bit_masks)):
+                self.hide(BlobCore.bit_masks[bit])
+                if self.blob_name == CENTER_BLOB_NAME:
+                    self.rotator_model.hide(BlobCore.bit_masks[bit])
+
+    @property
+    def barycenter_blob(self: Self) -> "BlobCore":
+        """The blob that this blob orbits, if it's not the center blob"""
+        return getattr(self, "_barycenter_blob", None)
+
+    @barycenter_blob.setter
+    def barycenter_blob(self: Self, barycenter_blob: "BlobCore") -> None:
+        """Sets the blob that this blob orbits, if it's not the center blob"""
+        self._barycenter_blob = barycenter_blob
+
+        if (
+            self._barycenter_blob is not None
+            and self._barycenter_blob.ring_texture is not None
+        ):
+            self.rotator_model.setLightOff(self.center_light)
+            self.rotator_model.setLight(self.barycenter_blob.light_node)
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
@@ -512,7 +532,11 @@ class BlobCore(BlobRotator):
 
         self.light = PointLight(f"{self.blob_name}_plight")
         # self.light.setShadowCaster(True, 8192, 8192)
-        self.light.setShadowCaster(True, bg_vars.center_blob_shadow_resolution, bg_vars.center_blob_shadow_resolution)
+        self.light.setShadowCaster(
+            True,
+            bg_vars.center_blob_shadow_resolution,
+            bg_vars.center_blob_shadow_resolution,
+        )
         self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
         self.light.setColor((3, 3, 3, 1))
 
@@ -545,7 +569,9 @@ class BlobCore(BlobRotator):
         self.light = Spotlight(f"{self.blob_name}_slight")
         self.light.setLens(PerspectiveLens())
         # self.light.setShadowCaster(True, 8192, 8192)
-        self.light.setShadowCaster(True, bg_vars.blob_shadow_resolution, bg_vars.blob_shadow_resolution)
+        self.light.setShadowCaster(
+            True, bg_vars.blob_shadow_resolution, bg_vars.blob_shadow_resolution
+        )
         self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
         self.light.setColor((3, 3, 3, 1))
 

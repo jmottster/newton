@@ -446,8 +446,9 @@ class BlobRotator(urs.Entity):
 
             self.planet_ring.reparentTo(self.rotator_model)
             # self.planet_ring.setTwoSided(True)
+            scale: float = (blob_random.random() * 0.3) + 0.4
             self.planet_ring.setDepthOffset(-4)
-            self.planet_ring.setScale((0.6, 0.6, 0.6))
+            self.planet_ring.setScale((scale, scale, scale))
             self.planet_ring.setTransparency(TransparencyAttrib.M_dual)
             self.planet_ring.setMaterial(PlanetMaterial().getMaterial(), 1)
             self.planet_ring.setTexture(

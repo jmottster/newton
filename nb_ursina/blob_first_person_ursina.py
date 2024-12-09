@@ -187,21 +187,21 @@ class BlobFirstPersonUrsina(urs.Entity):
         )
         urs.scene.setLight(self.ambient_light_node)
 
-        self.speed: float = bg_vars.au_scale_factor / 4
-        self.orig_speed: float = self.speed
+        self.orig_speed: float = bg_vars.au_scale_factor / 4
         self.min_speed: float = self.orig_speed * 0.05
         self.max_speed: float = self.orig_speed * 5
 
         self.orig_speed = (self.min_speed + self.max_speed) / 2
-        self.speed = self.orig_speed
+        self.speed: float = self.orig_speed
+        self.speed_inc: float = self.max_speed / 50
 
-        self.roll_speed: float = 75
-        self.orig_roll_speed: float = self.roll_speed
-        self.min_roll_speed: float = 10
+        # self.orig_roll_speed: float = self.roll_speed
+        self.min_roll_speed: float = 20
         self.max_roll_speed: float = 90
 
-        self.orig_roll_speed = (self.min_roll_speed + self.max_roll_speed) / 2
-        self.roll_speed = self.orig_roll_speed
+        self.orig_roll_speed: float = (self.min_roll_speed + self.max_roll_speed) / 2
+        self.roll_speed: float = self.orig_roll_speed
+        self.roll_speed_inc: float = self.max_roll_speed / 50
 
         self.direction: urs.Vec3 = None
         self.position: urs.Vec3 = urs.Vec3(PanVec3.forward() * self.start_y)
@@ -239,10 +239,6 @@ class BlobFirstPersonUrsina(urs.Entity):
                 del kwargs[key]
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-        self.speed_inc: float = self.orig_speed * 0.05
-
-        self.roll_speed_inc: float = self.max_roll_speed * 0.05
 
         self.setup_stage: bool = True
 
@@ -287,7 +283,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         ):
             self.gimbal_ring = urs.Entity(
                 parent=self.gimbal,
-                scale=urs.Vec3(0.6, 0.6, 0.6),
+                scale=self.follow_entity.planet_ring.getScale(),
                 color=self.gimbal.color,
                 texture=self.follow_entity.ring_texture,
                 unlit=True,
