@@ -60,7 +60,10 @@ class WindowHandler(DirectObject.DirectObject):
         See  direct.showbase.DirectObject from Panda3D API). This will adjust FOV if the window has changed size.
         """
 
-        if urs.window.size[0] != self.last_size[0]:
+        if (
+            urs.window.size[0] != self.last_size[0]
+            or urs.window.size[1] != self.last_size[1]
+        ):
             pos_lock = urs.mouse.locked
 
             if pos_lock:
