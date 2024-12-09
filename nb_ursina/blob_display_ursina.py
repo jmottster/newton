@@ -54,7 +54,7 @@ class WindowHandler(DirectObject.DirectObject):
         self.orig_fov: float = 90.0
         urs.camera.fov = self.orig_fov
 
-    def possible_resize(self: Self, arg: str) -> None:
+    def possible_resize(self: Self, arg: Any) -> None:
         """
         Implementation of event call back (set up in __init__ via self.accept("window-event", self.possible_resize)
         See  direct.showbase.DirectObject from Panda3D API). This will adjust FOV if the window has changed size.
@@ -78,12 +78,25 @@ class WindowHandler(DirectObject.DirectObject):
                 self.display.height = urs.window.size[1]
 
             self.last_size = urs.window.size
+
             for _, item in self.display.text_entity_cache.items():
                 item.enabled = False
                 urs.destroy(item)
             self.display.text_entity_cache.clear()
             if pos_lock:
                 self.display.first_person_surface.first_person_viewer.pos_unlock()
+
+        if not urs.window.fullscreen:
+            urs.window.windowed_size = arg.getProperties().getSize()
+            urs.window.windowed_position = arg.getProperties().getOrigin()
+            urs.window.setOrigin(arg.getProperties().getOrigin())
+            urs.window.setSize(arg.getProperties().getSize())
+            try:
+                urs.camera.set_shader_input(
+                    "window_size", arg.getProperties().getSize()
+                )
+            except:
+                pass  # not initialized yet
 
 
 class BlobDisplayUrsina:
