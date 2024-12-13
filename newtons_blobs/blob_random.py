@@ -36,13 +36,13 @@ class blob_random:
 
     """
 
-    np_random = np.random.default_rng()
+    np_random = np.random.default_rng(secrets.randbits(1024))
 
     @staticmethod
     def random() -> float:
         """Returns a random float in the half-open interval 0.0 - 1.0"""
 
-        blob_random.np_random = np.random.default_rng(secrets.randbits(128))
+        blob_random.np_random = np.random.default_rng(secrets.randbits(1024))
 
         # blob_random.np_random = np.random.default_rng(
         #     round(blob_random.np_random.random() * 20000000000000)
@@ -53,7 +53,7 @@ class blob_random:
     def randint(a: int, b: int) -> int:
         """Returns a random integer from a low (inclusive) to b high (inclusive)"""
 
-        blob_random.np_random = np.random.default_rng(secrets.randbits(128))
+        blob_random.np_random = np.random.default_rng(secrets.randbits(1024))
 
         # blob_random.np_random = np.random.default_rng(
         #     round(blob_random.np_random.random() * 20000000000000)
