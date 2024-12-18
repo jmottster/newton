@@ -23,6 +23,7 @@ from newtons_blobs import BlobGlobalVars as bg_vars
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_utils_ursina import TempMessage
+from .fps import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -195,7 +196,6 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.speed: float = self.orig_speed
         self.speed_inc: float = self.max_speed / 50
 
-        # self.orig_roll_speed: float = self.roll_speed
         self.min_roll_speed: float = 20
         self.max_roll_speed: float = 90
 
@@ -218,7 +218,6 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.mouse_scroll_down: int = 0
 
         self.follow_entity: urs.Entity = None
-        self.follow_entity_last_pos: urs.Vec3 = None
 
         self.hud = True
 
@@ -267,8 +266,10 @@ class BlobFirstPersonUrsina(urs.Entity):
 
     def start_following(self: Self, follow_entity: urs.Entity) -> None:
         """Point gimbal arrow to follow_entity rather than center blob"""
+
         self.follow_entity = follow_entity
-        self.follow_entity_last_pos = self.follow_entity.position
+        self.follow_entity.follower_entity = self
+
         if (
             hasattr(self.follow_entity, "texture_name")
             and self.follow_entity.texture_name is not None
@@ -298,8 +299,11 @@ class BlobFirstPersonUrsina(urs.Entity):
         Point gimbal arrow to the center blob, rather than the assigned entity
         from start_following()
         """
-        self.follow_entity = None
-        self.follow_entity_last_pos = None
+
+        if self.follow_entity is not None:
+            self.follow_entity.follower_entity = None
+            self.follow_entity = None
+
         self.gimbal.texture = self.gimbal_texture
         if self.gimbal_ring is not None:
             self.gimbal_ring.disable()
@@ -341,18 +345,12 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             self.rotate(
                 urs.Vec3(0, 0, (urs.held_keys["z"] - urs.held_keys["c"]))
-                * urs.time.dt
+                * FPS.dt
                 * self.roll_speed
             )
 
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
-
-            if self.follow_entity is not None:
-                self.position += (
-                    self.follow_entity.position - self.follow_entity_last_pos
-                )
-                self.follow_entity_last_pos = self.follow_entity.position
 
             self.direction = urs.Vec3(
                 self.my_forward * (urs.held_keys["w"] - urs.held_keys["s"])
@@ -360,19 +358,15 @@ class BlobFirstPersonUrsina(urs.Entity):
                 + self.my_up * (urs.held_keys["e"] - urs.held_keys["x"])
             ).normalized()
 
-            self.velocity = self.direction * urs.time.dt * self.speed
+            self.velocity = self.direction * FPS.dt * self.speed
 
             self.position += self.velocity
 
-        if self.follow_entity is not None:
-            self.gimbal_look_at.world_position = self.gimbal.world_position
-            self.gimbal_look_at.world_rotation = self.world_rotation
+        self.gimbal_look_at.world_position = self.gimbal.world_position
 
+        if self.follow_entity is not None:
             self.gimbal_look_at.look_at(self.follow_entity, up=self.my_up)
         elif BlobSurfaceUrsina.center_blob is not None:
-            self.gimbal_look_at.world_position = self.gimbal.world_position
-            self.gimbal_look_at.world_rotation = self.world_rotation
-
             self.gimbal_look_at.look_at(BlobSurfaceUrsina.center_blob, up=self.my_up)
 
         self.gimbal.world_rotation = self.gimbal_look_at.world_rotation

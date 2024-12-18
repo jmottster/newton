@@ -107,6 +107,7 @@ class BlobRunner:
         self.fullscreen_save_h: float = self.display.get_windowed_height()
 
         # Display text for option changes
+        self.timescale_str: str = self.get_timescale_str()
         self.toggle_start_square_t: str = f"Toggled starting formation to square"
         self.toggle_start_circular_t: str = f"Toggled starting formation to circular"
         self.toggle_start_perfect_orbit_t: str = (
@@ -151,6 +152,17 @@ class BlobRunner:
 
         self.fullscreen = not self.fullscreen
         self.keyboard_events[self.display.get_key_code("f")]()
+
+    def get_timescale_str(self: Self) -> str:
+        return_str = f"{int(bg_vars.timescale/DAYS)} days:"
+
+        return_str += f"{int( ( (bg_vars.timescale) - (DAYS * int(bg_vars.timescale/DAYS))       ) /HOURS)}h:"
+
+        return_str += f"{int( ( (bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS))     ) /MINUTES)}m:"
+
+        return_str += f"{int( ( (bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES)) ) )}s/sec"
+
+        return return_str
 
     def load_keyboard_events(self: Self) -> Dict[int, Callable[[], None]]:
         """
@@ -233,23 +245,14 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
-        def get_timescale_str() -> str:
-            return_str = f"Timescale is now {int(bg_vars.timescale/DAYS)} days and "
-
-            return_str += f"{int( ( (bg_vars.timescale) - (DAYS * int(bg_vars.timescale/DAYS))       ) /HOURS)}h:"
-
-            return_str += f"{int( ( (bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS))     ) /MINUTES)}m:"
-
-            return_str += f"{int( ( (bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES)) ) )}s per second"
-
-            return return_str
-
         def time_faster() -> None:
             if bg_vars.timescale < (bg_vars.timescale_inc):
                 bg_vars.set_timescale(bg_vars.timescale_inc)
             else:
                 bg_vars.set_timescale(bg_vars.timescale + (bg_vars.timescale_inc))
-            self.message = get_timescale_str()
+
+            self.timescale_str = self.get_timescale_str()
+            self.message = f"Timescale is now {self.timescale_str}"
             self.message_counter = 60 * 2
 
         def time_slower() -> None:
@@ -257,7 +260,8 @@ class BlobRunner:
                 bg_vars.set_timescale(bg_vars.timescale_inc)
             else:
                 bg_vars.set_timescale(bg_vars.timescale - (bg_vars.timescale_inc))
-            self.message = get_timescale_str()
+            self.timescale_str = self.get_timescale_str()
+            self.message = f"Timescale is now {self.timescale_str}"
             self.message_counter = 60 * 2
 
         keyboard_events[self.display.get_key_code("escape")] = quit_game
@@ -408,7 +412,7 @@ class BlobRunner:
         if self.paused:
             text = "Paused"
         self.display.blit_text(
-            f"Years elapsed: {self.get_elapsed_time_in(YEARS)} {text}",
+            f"Years elapsed: {self.get_elapsed_time_in(YEARS)} {text}\nTimescale: {self.timescale_str}",
             (20, self.display.get_height() - 20),
             (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_TOP_PLUS),
         )

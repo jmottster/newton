@@ -83,6 +83,7 @@ class FirstPersonSurface:
     ):
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
+            name="first_person_viewer",
             scale=bg_vars.first_person_scale,
             universe=self.universe,
             start_y=radius,

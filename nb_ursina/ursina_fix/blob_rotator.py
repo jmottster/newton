@@ -141,6 +141,12 @@ class BlobRotator(urs.Entity):
         The x,y,z axis rotation positions in degrees relative to urs.scene
         Setting this is relative to current self position
 
+    follower_entity: urs.Entity
+        Setting ths makes the Entity use this BlobRotator as its inertial frame of
+        reference. I.e., its position will be updated in such a way that this BlobRotator
+        will maintain the same relative distance/position, still allowing it to move
+        independently relative to this BlobRotator
+
     world_up: PanVec3
         The up direction relative to urs.scene
 
@@ -206,6 +212,9 @@ class BlobRotator(urs.Entity):
         self.ring_texture: str = kwargs.get("ring_texture")
         self.center_light: NodePath = kwargs.get("center_light")
 
+        self._follower_entity: urs.Entity = None
+        self.follower_entity_last_pos: urs.Vec3 = None
+
         for key in (
             "model",
             "texture",
@@ -242,8 +251,16 @@ class BlobRotator(urs.Entity):
         """Sets the position of this blob relative to urs.scene"""
         self._pos = urs.Vec3(pos)
         self.world_position = self._pos
+
         if self.rotator_model is not None:
             self.rotator_model.setPos(urs.scene, self._pos)
+            if self.follower_entity is not None:
+                follow_pos: urs.Vec3 = urs.Vec3(
+                    self._pos - self.follower_entity_last_pos
+                )
+                self.follower_entity_last_pos = self._pos
+
+                self.follower_entity.position += follow_pos
 
     @property
     def scale(self: Self) -> urs.Vec3:
@@ -352,6 +369,26 @@ class BlobRotator(urs.Entity):
             z, x, y = self.getHpr(urs.scene)
 
         self.rotation_pos = (x, y, z)
+
+    @property
+    def follower_entity(self: Self) -> urs.Entity:
+        """Get this follower_entity property"""
+        return self._follower_entity
+
+    @follower_entity.setter
+    def follower_entity(self: Self, follower_entity: urs.Entity) -> None:
+        """
+        Setting ths makes the Entity use this BlobRotator as its inertial frame of
+        reference. I.e., its position will be updated in such a way that this BlobRotator
+        will maintain the same relative distance/position, still allowing it to move
+        independently relative to this BlobRotator
+        """
+        self._follower_entity = follower_entity
+
+        if follower_entity is None:
+            self.follower_entity_last_pos = None
+        else:
+            self.follower_entity_last_pos = self.position
 
     @property
     def world_up(self) -> PanVec3:

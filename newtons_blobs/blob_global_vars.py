@@ -52,12 +52,12 @@ class BlobGlobalVars:
     BlobGlobalVars.center_blob_mass: ClassVar[float] -  Starting mass (in kg) of the center blob, subject to change
     BlobGlobalVars.org_center_blob_mass: ClassVar[float] -  Original starting mass (in kg) of the center blob. doesn't change
     BlobGlobalVars.center_blob_shadow_resolution: ClassVar[int] - The resolution for center blob shadow casting
-    
+
 
     BlobGlobalVars.min_radius: ClassVar[float] - minimum radius (in pixels) that a blob can be
     BlobGlobalVars.max_radius: ClassVar[float] - maximum radius (in pixels) that a blob can be
     BlobGlobalVars.blob_shadow_resolution: ClassVar[int] - The resolution for blob shadow casting (blob's with rings only)
-    
+
     BlobGlobalVars.min_moon_radius: ClassVar[float] - minimum radius (in pixels) that a moon blob can be
     BlobGlobalVars.max_moon_radius: ClassVar[float] - maximum radius (in pixels) that a moon blob can be
 
@@ -211,7 +211,7 @@ class BlobGlobalVars:
 
     center_blob_mass: ClassVar[float] = CENTER_BLOB_MASS
     org_center_blob_mass: ClassVar[float] = center_blob_mass
-    center_blob_shadow_resolution: ClassVar[int] = CENTER_BBLOB_SHADOW_RESOLUTION
+    center_blob_shadow_resolution: ClassVar[int] = CENTER_BLOB_SHADOW_RESOLUTION
 
     min_radius: ClassVar[float] = MIN_RADIUS
     max_radius: ClassVar[float] = MAX_RADIUS
@@ -381,13 +381,15 @@ class BlobGlobalVars:
         cls.scale_blob_mass_with_size = scale_blob_mass_with_size
 
     @classmethod
-    def set_center_blob_shadow_resolution(cls, center_blob_shadow_resolution: int) -> None:
-        """ Class method to set the shadow resolution for the center blob """
+    def set_center_blob_shadow_resolution(
+        cls, center_blob_shadow_resolution: int
+    ) -> None:
+        """Class method to set the shadow resolution for the center blob"""
         cls.center_blob_shadow_resolution = center_blob_shadow_resolution
 
     @classmethod
     def set_blob_shadow_resolution(cls, blob_shadow_resolution: int) -> None:
-        """ Class method to set the shadow resolution for blob's with rings """
+        """Class method to set the shadow resolution for blob's with rings"""
         cls.blob_shadow_resolution = blob_shadow_resolution
 
     @classmethod
