@@ -1011,7 +1011,7 @@ class BlobSurfaceUrsina:
         if color == CENTER_BLOB_COLOR:
 
             enabled: bool = not bg_vars.black_hole_mode
-            glow_map_name: str = "suns/sun03_glow_map.png"
+            glow_map_name: str = "glow_maps/sun03_glow_map.png"
 
             urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
             self.texture = "suns/sun03.png"
