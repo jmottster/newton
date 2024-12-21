@@ -22,4 +22,6 @@ from .blob_prog_bar import BlobProgBar
 from .blob_button import BlobButton
 from .blob_quad import createBlobQuad
 from .blob_circle import BlobCircle
-from .blob_rotator import BlobRotator, SunMaterial, PlanetMaterial
+from .blob_rotator import BlobRotator
+from .blob_materials import SunMaterial, PlanetMaterial
+from .blob_node_path_factory import BlobNodePathFactory

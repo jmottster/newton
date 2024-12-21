@@ -6,16 +6,17 @@ Package init file
 by Jason Mott, copyright 2024
 """
 
+from .globals import *
+
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
-__version__ = "0.0.5"
+__version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-from .globals import *
 from .blob_global_vars import BlobGlobalVars
 from .resources import (
     resource_path,

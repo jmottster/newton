@@ -6,16 +6,18 @@ Class to represent an object that holds and controls a drawing area for the univ
 by Jason Mott, copyright 2024
 """
 
+from pathlib import Path
 from typing import Any, Tuple, Self
 
-from panda3d.core import CullFaceAttrib  # type: ignore
+from panda3d.core import BitMask32, Shader, TransparencyAttrib  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
-from newtons_blobs import resource_path
+
+from .ursina_fix import PlanetMaterial
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -68,6 +70,7 @@ class BlobUniverseUrsina:
 
     size_w: float
     size_h: float
+    bit_masks: list = [0b0001, 0b0010, 0b0100, 0b1000, 0b10000, 0b100000]
 
     def __init__(self: Self, size_w: float, size_h: float):
 
@@ -75,37 +78,58 @@ class BlobUniverseUrsina:
         self.height = size_h
 
         self.universe: urs.Entity = None
+        self.base_dir: Path = urs.application.asset_folder
         self.set_universe_entity(bg_vars.background_scale)
 
     def set_universe_entity(self: Self, scale: float) -> None:
         """Creates the Entity that renders the dome of the background image (stars)"""
 
-        urs.destroy(self.universe, 0)
-        self.universe = None
+        if self.universe is not None:
+            self.universe.removeNode()
+            self.universe = None
 
+        texture: str = "backgrounds/multi_nebulae_2.png"
+        glow_map: str = "glow_maps/background_no_glow_map.png"
 
         if LOW_VRAM:
-            texture: str = "textures/backgrounds/multi_nebulae_2-small.png"
-        else:
-            texture: str = "textures/backgrounds/multi_nebulae_2.png"
+            texture = "backgrounds/multi_nebulae_2-small.png"
+            glow_map = "glow_maps/background_no_glow_map-small.png"
 
-        model: str = "background_sphere"
         if not bg_vars.textures_3d:
-            model = None
             texture = None
-        self.universe = urs.Entity(
-            position=(0, 0, 0),
-            model=model,
-            scale=scale,
-            texture=texture,
-            rotation_x=90,
-            unlit=True,
-            shader=shd.unlit_shader,
-        )
+            glow_map = None
 
-        self.universe.setAttrib(
-            CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise)
+        self.universe = urs.application.base.loader.loadModel(
+            self.base_dir.joinpath("models").joinpath("background_sphere.obj")
         )
+        self.universe.reparentTo(urs.scene)
+        self.universe.setTransparency(TransparencyAttrib.M_none)
+        self.universe.setPos(urs.scene, (0, 0, 0))
+
+        self.universe.setColorScaleOff()
+        self.universe.setColorScale((1, 1, 1, 1))
+        self.universe.setScale(urs.scene, scale)
+
+        if texture is not None:
+            self.universe.setTexture(
+                PlanetMaterial.texture_stage_glow,
+                urs.application.base.loader.loadTexture(
+                    self.base_dir.joinpath("textures").joinpath(glow_map)
+                ),
+            )
+            self.universe.setTexture(
+                PlanetMaterial.texture_stage,
+                urs.application.base.loader.loadTexture(
+                    self.base_dir.joinpath("textures").joinpath(texture)
+                ),
+            )
+            self.universe.setShaderAuto(
+                BitMask32.allOn() & ~BitMask32.bit(Shader.bit_AutoShaderShadow)
+            )
+
+        self.universe.setLightOff(True)
+        for bit in range(0, len(BlobUniverseUrsina.bit_masks)):
+            self.universe.hide(BlobUniverseUrsina.bit_masks[bit])
 
     def get_framework(self: Self) -> Any:
         """

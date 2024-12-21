@@ -8,9 +8,10 @@ by Jason Mott, copyright 2024
 """
 
 from pathlib import Path
-from typing import Callable, Self
+from typing import Self
 
 from panda3d.core import Vec3 as PanVec3  # type: ignore
+from panda3d.core import Vec4 as PanVec4  # type: ignore
 from panda3d.core import AmbientLight as PandaAmbientLight  # type: ignore
 from panda3d.core import NodePath  # type: ignore
 
@@ -24,6 +25,7 @@ from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_utils_ursina import TempMessage
 from .fps import FPS
+from .ursina_fix import PlanetMaterial, BlobNodePathFactory
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -114,6 +116,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.mass: float = None
         self.universe: BlobUniverseUrsina = kwargs["universe"]
         self.base_dir: Path = urs.application.asset_folder
+        self.node_factory: BlobNodePathFactory = BlobNodePathFactory()
 
         super().__init__()
 
@@ -123,32 +126,25 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.ui.collider = "sphere"
         urs.camera.ui.position = (0, 0, 0)
 
-        color: urs.Color = urs.color.rgba(1, 1, 1, 0.59)
-        self.gimbal_texture: str = "textures/suns/sun03.png"
+        self.gimbal_color: PanVec4 = PanVec4(1.1, 1.1, 1.1, 0.59)
+        self.gimbal_texture: str = "suns/sun03.png"
+        self.gimbal_glow_map: str = "glow_maps/no_glow_map.png"
         if not bg_vars.textures_3d:
-            color = urs.color.rgba32(
+            self.gimbal_color = urs.color.rgba32(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
             )
             self.gimbal_texture = None
-        self.gimbal: urs.Entity = urs.Entity(
-            parent=self,
-            color=color,
-            position=(PanVec3.up() * -0.05),
-            scale=(
-                0.008,
-                0.008,
-                0.008,
-            ),
-            texture=self.gimbal_texture,
-            # texture_scale=(1, 1),
-            unlit=True,
-            shader=shd.unlit_shader,
-            eternal=kwargs["eternal"],
-        )
 
-        self.gimbal.model = urs.application.base.loader.loadModel(
-            self.base_dir.joinpath("models").joinpath("blend_uvsphere.obj")
+        self.gimbal: NodePath = self.node_factory.create_node_path(
+            "blend_uvsphere.obj",
+            urs.scene,
+            PanVec3(0.008, 0.008, 0.008) * self.temp_scale,
+            self.gimbal_texture,
+            self.gimbal_glow_map,
+            self.gimbal_color,
         )
+        self.gimbal.setLightOff(True)
+        self.gimbal.hide(0b0001)
 
         self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
@@ -160,18 +156,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
         )
-
         self.gimbal_arrow.setHpr(self.gimbal_arrow, (90, 0, 0))
 
         self.gimbal_ring: urs.Entity = None
-
-        self.gimbal_look_at: urs.Entity = urs.Entity(
-            scale=urs.Vec3(self.temp_scale * 0.005),
-            world_position=self.gimbal.world_position,
-            eternal=kwargs["eternal"],
-            unlit=True,
-            shader=shd.unlit_shader,
-        )
 
         self.ambient_light: PandaAmbientLight = PandaAmbientLight(
             f"ambient_light_universe"
@@ -274,9 +261,20 @@ class BlobFirstPersonUrsina(urs.Entity):
             hasattr(self.follow_entity, "texture_name")
             and self.follow_entity.texture_name is not None
         ):
-            self.gimbal.texture = self.follow_entity.texture_name
+
+            self.node_factory.set_texture(
+                self.gimbal,
+                self.follow_entity.texture_name,
+                self.follow_entity.glow_map_name,
+            )
+
         else:
-            self.gimbal.texture = self.gimbal_texture
+
+            self.node_factory.set_texture(
+                self.gimbal,
+                self.gimbal_texture,
+                self.gimbal_glow_map,
+            )
 
         if (
             hasattr(self.follow_entity, "planet_ring")
@@ -285,7 +283,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.gimbal_ring = urs.Entity(
                 parent=self.gimbal,
                 scale=self.follow_entity.planet_ring.getScale(),
-                color=self.gimbal.color,
+                color=self.gimbal_color,
                 texture=self.follow_entity.ring_texture,
                 unlit=True,
                 shader=shd.unlit_shader,
@@ -304,11 +302,16 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.follow_entity.follower_entity = None
             self.follow_entity = None
 
-        self.gimbal.texture = self.gimbal_texture
-        if self.gimbal_ring is not None:
-            self.gimbal_ring.disable()
-            urs.destroy(self.gimbal_ring)
-            self.gimbal_ring = None
+            self.node_factory.set_texture(
+                self.gimbal,
+                self.gimbal_texture,
+                self.gimbal_glow_map,
+            )
+
+            if self.gimbal_ring is not None:
+                self.gimbal_ring.disable()
+                urs.destroy(self.gimbal_ring)
+                self.gimbal_ring = None
 
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
@@ -362,16 +365,20 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             self.position += self.velocity
 
-        self.gimbal_look_at.world_position = self.gimbal.world_position
+        self.gimbal.setPos(urs.scene, self.getPos(urs.scene))
+
+        self.gimbal.setPos(self, PanVec3(PanVec3.up() * -0.05))
 
         if self.follow_entity is not None:
-            self.gimbal_look_at.look_at(self.follow_entity, up=self.my_up)
+            self.gimbal.lookAt(
+                urs.scene, self.follow_entity.getPos(urs.scene), self.my_up
+            )
         elif BlobSurfaceUrsina.center_blob is not None:
-            self.gimbal_look_at.look_at(BlobSurfaceUrsina.center_blob, up=self.my_up)
+            self.gimbal.lookAt(
+                urs.scene, BlobSurfaceUrsina.center_blob.getPos(urs.scene), self.my_up
+            )
 
-        self.gimbal.world_rotation = self.gimbal_look_at.world_rotation
-
-        self.universe.universe.position = self.world_position
+        self.universe.universe.setPos(urs.scene, self.getPos(urs.scene))
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a keyboard event happens"""
@@ -400,11 +407,11 @@ class BlobFirstPersonUrsina(urs.Entity):
 
             if self.hud:
                 self.gimbal_arrow.enabled = True
-                self.gimbal.enabled = True
+                self.gimbal.unstash()
                 self.center_cursor.enabled = True
             else:
                 self.gimbal_arrow.enabled = False
-                self.gimbal.enabled = False
+                self.gimbal.stash()
                 self.center_cursor.enabled = False
 
         if key == "scroll up":
@@ -519,5 +526,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         """Called when this Entity is destroyed"""
 
         self.on_disable()
+
+        self.gimbal.removeNode()
+        del self.gimbal
 
         urs.scene.clearLight(self.ambient_light_node)

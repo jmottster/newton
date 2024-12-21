@@ -6,7 +6,6 @@ A class used to represent an object that draws a blob, with a distinction of the
 by Jason Mott, copyright 2024
 """
 
-from pathlib import Path
 import math
 from typing import ClassVar, Tuple, Self, cast
 from collections import deque
@@ -16,9 +15,9 @@ from panda3d.core import (  # type: ignore
     Spotlight,
     PerspectiveLens,
     NodePath,
+    BitMask32,
+    Shader,
 )  # type: ignore
-
-import builtins
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -394,10 +393,12 @@ class BlobCore(BlobRotator):
             rotation_pos=kwargs.get("rotation_pos"),
             position=kwargs.get("position"),
             texture_name=kwargs.get("texture_name"),
+            glow_map_name=kwargs.get("glow_map_name"),
             ring_texture=kwargs.get("ring_texture"),
             radius=kwargs.get("radius"),
             scale=kwargs.get("scale"),
             center_light=kwargs.get("center_light"),
+            color=kwargs.get("color"),
         )
 
         for key in (
@@ -414,9 +415,12 @@ class BlobCore(BlobRotator):
             "rotation_pos",
             "position",
             "texture_name",
+            "glow_map_name",
             "ring_texture",
             "radius",
             "scale",
+            "center_light",
+            "color",
         ):
             if key in kwargs:
                 del kwargs[key]
@@ -531,7 +535,6 @@ class BlobCore(BlobRotator):
         """
 
         self.light = PointLight(f"{self.blob_name}_plight")
-        # self.light.setShadowCaster(True, 8192, 8192)
         self.light.setShadowCaster(
             True,
             bg_vars.center_blob_shadow_resolution,
@@ -541,7 +544,6 @@ class BlobCore(BlobRotator):
         self.light.setColor((3, 3, 3, 1))
 
         self.light_node = self.rotator_model.attachNewNode(self.light)
-        # self.light_node.reparentTo(urs.scene)  # type: ignore
         self.light_node.reparentTo(self.rotator_model)  # type: ignore
 
         self.light_node.setScale(urs.scene, bg_vars.center_blob_radius)
@@ -568,7 +570,6 @@ class BlobCore(BlobRotator):
 
         self.light = Spotlight(f"{self.blob_name}_slight")
         self.light.setLens(PerspectiveLens())
-        # self.light.setShadowCaster(True, 8192, 8192)
         self.light.setShadowCaster(
             True, bg_vars.blob_shadow_resolution, bg_vars.blob_shadow_resolution
         )
@@ -595,7 +596,9 @@ class BlobCore(BlobRotator):
         # self.light_node.node().showFrustum()
         self.update_ring_light()
 
-        self.rotator_model.setShaderAuto()
+        self.rotator_model.setShaderAuto(
+            BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
+        )
         self.hide(0b0001)
         self.rotator_model.hide(0b0001)
         self.light_node.hide(0b0001)
@@ -646,6 +649,7 @@ class BlobCore(BlobRotator):
         if self.text_entity is None:
             self.text_entity = BlobRotator(
                 scale=self.scale,  # type: ignore
+                color=urs.color.rgba(0.5, 0.5, 0.5, 1),
                 unlit=True,
                 shader=shd.unlit_shader,
             )
@@ -667,7 +671,7 @@ class BlobCore(BlobRotator):
                 origin=(0, 0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
-                color=urs.color.rgb32(255, 255, 255),
+                color=urs.color.rgba(0.8, 0.8, 0.8, 1),
                 enabled=False,
             )
 
@@ -973,7 +977,9 @@ class BlobSurfaceUrsina:
 
         BlobSurfaceUrsina.universe_node = self.universe.universe
 
-        urs_color = urs.color.rgba32(self.color[0], self.color[1], self.color[2], 255)
+        urs_color: urs.Color = urs.color.rgba32(
+            self.color[0], self.color[1], self.color[2], 255
+        )
 
         if bg_vars.textures_3d:
 
@@ -1004,9 +1010,10 @@ class BlobSurfaceUrsina:
 
         if color == CENTER_BLOB_COLOR:
 
-            urs_color = urs.color.rgb(1, 1, 1)
-
             enabled: bool = not bg_vars.black_hole_mode
+            glow_map_name: str = "suns/sun03_glow_map.png"
+
+            urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
             self.texture = "suns/sun03.png"
             self.ring_texture = ""
 
@@ -1026,22 +1033,27 @@ class BlobSurfaceUrsina:
                 mass=self.mass,
                 blob_material=SunMaterial().getMaterial(),
                 texture_name=self.texture,
+                glow_map_name=glow_map_name,
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 color=urs_color,
                 trail_color=self.trail_color,
                 collider="sphere",
                 enabled=enabled,
+                unlit=True,
+                shader=shd.unlit_shader,
             )
             self.ursina_blob.create_light()
             BlobSurfaceUrsina.center_blob = self.ursina_blob
 
         else:
 
+            glow_map_name: str = "glow_maps/no_glow_map.png"
+
             if not bg_vars.textures_3d:
                 self.texture = None
             else:
-                urs_color = urs.color.rgba32(255, 255, 255, 255)
+                urs_color = urs.color.rgba(1, 1, 1, 1)
 
             self.ursina_blob = BlobCore(
                 blob_name=self.name,
@@ -1051,6 +1063,7 @@ class BlobSurfaceUrsina:
                 mass=self.mass,
                 blob_material=PlanetMaterial().getMaterial(),
                 texture_name=self.texture,
+                glow_map_name=glow_map_name,
                 ring_texture=self.ring_texture,
                 center_light=BlobSurfaceUrsina.center_blob.light_node,
                 color=urs_color,
@@ -1058,6 +1071,8 @@ class BlobSurfaceUrsina:
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 collider="sphere",
+                unlit=True,
+                shader=shd.unlit_shader,
             )
 
             if self.ring_texture is not None:

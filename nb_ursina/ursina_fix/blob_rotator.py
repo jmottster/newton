@@ -10,21 +10,24 @@ from pathlib import Path
 from typing import Self, Tuple
 
 from panda3d.core import Vec3 as PanVec3  # type: ignore
+from panda3d.core import Vec4 as PanVec4  # type: ignore
 
 from panda3d.core import (  # type: ignore
     NodePath,
-    TextureStage,
     TransparencyAttrib,
     Material,
+    Shader,
+    BitMask32,
 )  # type: ignore
 
 import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
-
 from newtons_blobs.blob_random import blob_random
-from nb_ursina.fps import FPS
 from newtons_blobs import BlobGlobalVars as bg_vars
+
+from nb_ursina.fps import FPS
+from .blob_materials import PlanetMaterial
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -33,74 +36,6 @@ __version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
-
-
-class PlanetMaterial:
-    """
-    A class that holds a Material instance tweaked for planet textures
-
-    Methods
-    -------
-    getMaterial(self: Self) -> Material
-        Returns the Material instance
-
-    """
-
-    _instance: "PlanetMaterial" = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(PlanetMaterial, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self: Self):
-        self.material: Material = Material("planet_material")
-        self.material.setShininess(99.999992)
-        # self.material.setRoughness(0.8)
-        self.material.setMetallic(0)
-        self.material.setBaseColor((1, 1, 1, 1))
-        self.material.setAmbient((1, 1, 1, 1))
-        self.material.setDiffuse((0.8, 0.8, 0.8, 1))
-        # self.material.setSpecular((0.5, 0.5, 0.5, 1))
-        self.material.setEmission((0, 0, 0, 0))
-        self.material.setRefractiveIndex(1)
-
-    def getMaterial(self: Self) -> Material:
-        return self.material
-
-
-class SunMaterial:
-    """
-     A class that holds a Material instance tweaked for sun textures
-
-    Methods
-    -------
-    getMaterial(self: Self) -> Material
-        Returns the Material instance
-
-    """
-
-    _instance: "SunMaterial" = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(SunMaterial, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self: Self):
-        self.material: Material = Material("sun_material")
-        self.material.setShininess(120)
-        # self.setRoughness(0.8)
-        self.material.setMetallic(0)
-        self.material.setBaseColor((1, 1, 1, 1))
-        self.material.setAmbient((1, 1, 1, 1))
-        self.material.setDiffuse((0.8, 0.8, 0.8, 1))
-        self.material.setSpecular((1, 1, 1, 1))
-        self.material.setEmission((1, 1, 1, 1))
-        self.material.setRefractiveIndex(1)
-
-    def getMaterial(self: Self) -> Material:
-        return self.material
 
 
 class BlobRotator(urs.Entity):
@@ -193,9 +128,6 @@ class BlobRotator(urs.Entity):
     #     "rotation_pos",
     # )
 
-    rotator_texture_stage: TextureStage = TextureStage("ts")
-    rotator_texture_stage.setMode(TextureStage.MModulate)
-
     def __init__(self: Self, **kwargs):
 
         self.rotator_model: NodePath = None
@@ -209,8 +141,10 @@ class BlobRotator(urs.Entity):
         self._rotation_pos: Tuple[float, float, float] = None
         self._pos: urs.Vec3 = None
         self.texture_name: str = kwargs.get("texture_name")
+        self.glow_map_name: str = kwargs.get("glow_map_name")
         self.ring_texture: str = kwargs.get("ring_texture")
         self.center_light: NodePath = kwargs.get("center_light")
+        self.color = kwargs.get("color")
 
         self._follower_entity: urs.Entity = None
         self.follower_entity_last_pos: urs.Vec3 = None
@@ -222,8 +156,11 @@ class BlobRotator(urs.Entity):
             "texture_offset",
             "name",
             "texture_name",
+            "glow_map_name",
             "ring_texture",
             "blob_material",
+            "center_light",
+            "color",
         ):
             if key in kwargs:
                 del kwargs[key]
@@ -441,17 +378,25 @@ class BlobRotator(urs.Entity):
                 self.scale = urs.Vec3(self.radius)
             if self.position is not None:
                 self.position = self.position
-            self.rotator_model.setTransparency(TransparencyAttrib.M_dual)
+            self.rotator_model.setTransparency(TransparencyAttrib.M_none)
             if self.color is not None:
-                self.rotator_model.setColor(self.color)
+                self.rotator_model.setColorScaleOff()
+                self.rotator_model.setColorScale(self.color)
             self.rotator_model.setMaterial(self.blob_material, 1)
+
             self.rotator_model.setTexture(
-                BlobRotator.rotator_texture_stage,
+                PlanetMaterial.texture_stage,
                 urs.application.base.loader.loadTexture(
                     self.base_dir.joinpath("textures").joinpath(self.texture_name)
                 ),
-                2,
             )
+            if self.glow_map_name is not None:
+                self.rotator_model.setTexture(
+                    PlanetMaterial.texture_stage_glow,
+                    urs.application.base.loader.loadTexture(
+                        self.base_dir.joinpath("textures").joinpath(self.glow_map_name)
+                    ),
+                )
             self.rotator_model.reparentTo(urs.scene)
 
             if self.ring_texture is not None:
@@ -460,7 +405,11 @@ class BlobRotator(urs.Entity):
             if self.blob_name != CENTER_BLOB_NAME and self.center_light is not None:
                 if self.ring_texture is None:
                     self.rotator_model.setLight(self.center_light)
-                    self.rotator_model.setShaderAuto()
+                    self.rotator_model.setShaderAuto(
+                        BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
+                    )
+            else:
+                self.rotator_model.setShaderAuto()
 
             if self.rotation_speed is None:
                 self.rotation_speed = (blob_random.random() * 29.00) + 1
@@ -482,21 +431,19 @@ class BlobRotator(urs.Entity):
             )
 
             self.planet_ring.reparentTo(self.rotator_model)
-            # self.planet_ring.setTwoSided(True)
             scale: float = (blob_random.random() * 0.3) + 0.4
             self.planet_ring.setDepthOffset(-4)
             self.planet_ring.setScale((scale, scale, scale))
             self.planet_ring.setTransparency(TransparencyAttrib.M_dual)
+            # if self.color is not None:
+            #     self.planet_ring.setColor(self.color)
             self.planet_ring.setMaterial(PlanetMaterial().getMaterial(), 1)
             self.planet_ring.setTexture(
-                BlobRotator.rotator_texture_stage,
+                PlanetMaterial.texture_stage,
                 urs.application.base.loader.loadTexture(
                     self.base_dir.joinpath("textures").joinpath(self.ring_texture)
                 ),
-                2,
             )
-            # self.planet_ring.setAntialias(AntialiasAttrib.M_multisample)
-            # self.planet_ring.setColor((1, 1, 1, 0.6))
 
     def update(self: Self) -> None:
         """Called by Ursina once per frame"""

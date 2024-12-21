@@ -373,8 +373,6 @@ class BlobUrsinaFactory:
             if screen_update:
                 self.urs_display.update()
 
-        urs.scene.setAntialias(AntialiasAttrib.MMultisample)
-
     def get_blob_universe(self: Self) -> BlobUniverse:
         """
         Returns a single instance of a Universe object, intended to be the area that is drawn on.

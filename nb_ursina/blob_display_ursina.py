@@ -7,15 +7,16 @@ by Jason Mott, copyright 2024
 """
 
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Dict, Tuple, Self, cast
+from typing import Any, Callable, ClassVar, Dict, Tuple, Self
 
 from panda3d.core import loadPrcFileData  # type: ignore
+
+from direct.filter.CommonFilters import CommonFilters
 
 from direct.showbase import DirectObject  # type: ignore
 import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs import resource_path
 from newtons_blobs import BlobUniverse
 from newtons_blobs import BlobDisplay
 
@@ -189,6 +190,8 @@ class BlobDisplayUrsina:
     FULLSCREEN: ClassVar[int] = 1
     RESIZABLE: ClassVar[int] = 2
 
+    filters: CommonFilters = None
+
     def __init__(self: Self, size_w: float, size_h: float):
 
         urs.application.asset_folder = Path(__file__).parent
@@ -205,8 +208,8 @@ class BlobDisplayUrsina:
 
         # Uncomment only if you're having trouble starting in fullscreen (virtual machine issue)
         # loadPrcFileData("", "fullscreen #t")
-        loadPrcFileData("", "framebuffer-multisample 1")
-        loadPrcFileData("", "multisamples 4")
+        # loadPrcFileData("", "framebuffer-multisample 1")
+        # loadPrcFileData("", "multisamples 4")
 
         self.app: urs.Ursina = urs.Ursina(
             title=WINDOW_TITLE,
@@ -242,6 +245,24 @@ class BlobDisplayUrsina:
 
         urs.window.color = urs.color.rgb32(
             BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
+        )
+
+        BlobDisplayUrsina.filters = CommonFilters(
+            urs.application.base.win, urs.application.base.cam
+        )
+
+        BlobDisplayUrsina.filters.setMSAA(4)
+
+        # BlobDisplayUrsina.filters.setHighDynamicRange()
+        # BlobDisplayUrsina.filters.setExposureAdjust(1.5)
+
+        BlobDisplayUrsina.filters.setBloom(
+            blend=(1, 1, 1, 1),
+            mintrigger=3.3,
+            maxtrigger=10,
+            size="large",
+            intensity=10,
+            desat=0,
         )
 
         self.first_person_surface: FirstPersonSurface = None  # set by BlobUrsinaFactory
@@ -500,12 +521,7 @@ class BlobDisplayUrsina:
 
     def draw_universe(self: Self, universe: BlobUniverse) -> None:
         """Draw the universe area inside the display area (note that universe may be larger than display)"""
-
-        if self.first_person_surface is not None:
-            universe_entity = cast(urs.Entity, universe.get_framework())
-            universe_entity.position = (
-                self.first_person_surface.first_person_viewer.world_position
-            )
+        pass
 
     def update(self: Self) -> None:
         """Draw the prepared frame to the screen/window"""
