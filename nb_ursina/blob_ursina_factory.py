@@ -154,6 +154,7 @@ class BlobUrsinaFactory:
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
             bg_vars.universe_size_h,
+            -1,
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
             bg_vars.min_mass,
@@ -165,7 +166,7 @@ class BlobUrsinaFactory:
             0,
         )
 
-        self.default_start_pos: urs.Vec3 = (
+        self.default_start_pos: urs.Vec3 = urs.Vec3(
             urs.Vec3(self.urs_universe.get_center_blob_start_pos()) * bg_vars.scale_down
         )
 
@@ -175,12 +176,12 @@ class BlobUrsinaFactory:
 
         self.urs_display.update()
 
-    def setup_start_pos(self: Self, start_pos: urs.Vec3) -> None:
+    def setup_start_pos(self: Self, center_pos: urs.Vec3) -> None:
         """Configures the starting position of the first person viewer"""
 
-        temp_ent = urs.Entity(position=start_pos, shader=shd.unlit_shader, unlit=True)
+        temp_ent = urs.Entity(position=center_pos, shader=shd.unlit_shader, unlit=True)
 
-        start_pos = start_pos + urs.Vec3(
+        start_pos = center_pos + urs.Vec3(
             blob_random.randint(-10, 10),
             blob_random.randint(-10, 10),
             blob_random.randint(-10, 10),
@@ -188,7 +189,9 @@ class BlobUrsinaFactory:
 
         self.urs_display.first_person_surface.draw(start_pos)
 
-        self.urs_display.first_person_surface.first_person_viewer.look_at(temp_ent)
+        self.urs_display.first_person_surface.first_person_viewer.lookAt(
+            temp_ent, self.urs_display.first_person_surface.first_person_viewer.my_up
+        )
         self.urs_display.first_person_surface.first_person_viewer.setup_lock()
 
         urs.destroy(temp_ent)
@@ -213,6 +216,7 @@ class BlobUrsinaFactory:
         )
         data["blob_scale"] = bg_vars.blob_scale
         data["scale_blob_mass_with_size"] = bg_vars.scale_blob_mass_with_size
+        data["background_texture"] = self.urs_universe.texture
 
     def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
@@ -237,7 +241,9 @@ class BlobUrsinaFactory:
         if data.get("scale_blob_mass_with_size") is not None:
             bg_vars.set_scale_blob_mass_with_size(data["scale_blob_mass_with_size"])
 
-        self.urs_universe.set_universe_entity(bg_vars.background_scale)
+        self.urs_universe.set_universe_entity(
+            bg_vars.background_scale, data.get("background_texture")
+        )
 
         self.setup_start_pos(
             urs.Vec3(
@@ -281,6 +287,7 @@ class BlobUrsinaFactory:
 
     def new_blob_surface(
         self: Self,
+        index: int,
         name: str,
         radius: float,
         mass: float,
@@ -295,6 +302,7 @@ class BlobUrsinaFactory:
         as implementation is not known at runtime
         """
         new_blob: BlobSurfaceUrsina = BlobSurfaceUrsina(
+            index,
             name,
             radius,
             mass,

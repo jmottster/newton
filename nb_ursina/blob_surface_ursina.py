@@ -388,6 +388,7 @@ class BlobCore(BlobRotator):
 
         super().__init__(
             blob_material=kwargs.get("blob_material"),
+            index=kwargs.get("index"),
             blob_name=kwargs.get("blob_name"),
             rotation_speed=kwargs.get("rotation_speed"),
             rotation_pos=kwargs.get("rotation_pos"),
@@ -410,6 +411,7 @@ class BlobCore(BlobRotator):
             "mass",
             "trail_color",
             "blob_material",
+            "index",
             "blob_name",
             "rotation_speed",
             "rotation_pos",
@@ -500,7 +502,12 @@ class BlobCore(BlobRotator):
             and self._barycenter_blob.ring_texture is not None
         ):
             self.rotator_model.setLightOff(self.center_light)
+            self.rotator_model.hide(0b0001)
+
             self.rotator_model.setLight(self.barycenter_blob.light_node)
+            self.rotator_model.show(
+                self.barycenter_blob.light_node.node().getCameraMask()
+            )
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
@@ -881,6 +888,8 @@ class BlobSurfaceUrsina:
 
     Attributes
     ----------
+    index: int
+        An order number in a group of blobs
     name: str
         A name for the instance
     radius : float
@@ -928,14 +937,15 @@ class BlobSurfaceUrsina:
     """
 
     __slots__ = (
-        "name",
+        "index",
+        "_name",
         "radius",
         "mass",
         "position",
         "color",
         "trail_color",
         "universe",
-        "texture",
+        "_texture",
         "ring_texture",
         "_rotation_speed",
         "_rotation_pos",
@@ -951,6 +961,7 @@ class BlobSurfaceUrsina:
 
     def __init__(
         self: Self,
+        index: int,
         name: str,
         radius: float,
         mass: float,
@@ -962,6 +973,10 @@ class BlobSurfaceUrsina:
         rotation_pos: Tuple[float, float, float] = None,
     ):
 
+        self._name: str = None
+        self._texture: str = None
+
+        self.index: int = index
         self.name: str = name
         self.radius: float = radius
         self.mass: float = mass
@@ -1011,10 +1026,10 @@ class BlobSurfaceUrsina:
         if color == CENTER_BLOB_COLOR:
 
             enabled: bool = not bg_vars.black_hole_mode
-            glow_map_name: str = "glow_maps/sun03_glow_map.png"
+            glow_map_name: str = "glow_maps/8k_sun-glow_map.jpg"
 
             urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
-            self.texture = "suns/sun03.png"
+            self.texture = "suns/8k_sun.jpg"
             self.ring_texture = ""
 
             if not enabled:
@@ -1026,6 +1041,7 @@ class BlobSurfaceUrsina:
                 )
                 texture = None
             self.ursina_blob = BlobCore(
+                index=self.index,
                 blob_name=self.name,
                 position=(0, 0, 0),
                 scale=urs.Vec3(self.radius, self.radius, self.radius),
@@ -1056,6 +1072,7 @@ class BlobSurfaceUrsina:
                 urs_color = urs.color.rgba(1, 1, 1, 1)
 
             self.ursina_blob = BlobCore(
+                index=self.index,
                 blob_name=self.name,
                 position=(0, 0, 0),
                 scale=urs.Vec3(self.radius, self.radius, self.radius),
@@ -1077,6 +1094,28 @@ class BlobSurfaceUrsina:
 
             if self.ring_texture is not None:
                 self.ursina_blob.create_ring_light()
+
+    @property
+    def name(self: Self) -> str:
+
+        if self.ursina_blob is not None:
+            self._name = self.ursina_blob.blob_name
+        return self._name
+
+    @name.setter
+    def name(self: Self, name: str) -> None:
+        self._name = name
+
+    @property
+    def texture(self: Self) -> str:
+        if self.ursina_blob is not None:
+            self._texture = self.ursina_blob.texture_name
+
+        return self._texture
+
+    @texture.setter
+    def texture(self: Self, texture: str) -> None:
+        self._texture = texture
 
     @property
     def rotation_pos(self: Self) -> Tuple[float, float, float]:

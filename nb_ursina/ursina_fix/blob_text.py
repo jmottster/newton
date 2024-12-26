@@ -146,7 +146,7 @@ class BlobText(urs.Entity):
         self._line_height: float = 1
         self._wordwrap: int = 0
         self._background: urs.Entity = None
-        self.use_tags: bool = True
+        self.use_tags: bool = False
         self.start_tag: str = start_tag
         self.end_tag: str = end_tag
         self.text_colors: Dict[str, urs.Color] = {"default": urs.color.text_color}
@@ -208,7 +208,6 @@ class BlobText(urs.Entity):
             return
 
         if not self.use_tags:
-
             self.create_text_section(text)
             self.align()
             return
@@ -459,7 +458,7 @@ class BlobText(urs.Entity):
         except:
             pass  # default font
 
-        if tag != "<>":
+        if self.use_tags and tag != "<>":
             tag = tag[1:-1]
 
             if tag.startswith("hsb("):  # set color based on numbers

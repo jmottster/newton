@@ -16,6 +16,7 @@ import ursina.shaders as shd  # type: ignore
 
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
+from newtons_blobs.blob_random import blob_random
 
 from .ursina_fix import PlanetMaterial
 
@@ -79,24 +80,34 @@ class BlobUniverseUrsina:
 
         self.universe: urs.Entity = None
         self.base_dir: Path = urs.application.asset_folder
+        self.texture: str = None
         self.set_universe_entity(bg_vars.background_scale)
 
-    def set_universe_entity(self: Self, scale: float) -> None:
+    def set_universe_entity(self: Self, scale: float, texture: str = None) -> None:
         """Creates the Entity that renders the dome of the background image (stars)"""
 
         if self.universe is not None:
             self.universe.removeNode()
             self.universe = None
 
-        texture: str = "backgrounds/multi_nebulae_2.png"
-        glow_map: str = "glow_maps/background_no_glow_map.png"
+        if texture is None:
 
+            self.texture = "backgrounds/multi_nebulae_2.png"
+            if (blob_random.random() * 100) < 50:
+                self.texture = "backgrounds/8k_stars_milky_way.jpeg"
+            if LOW_VRAM:
+                self.texture = "backgrounds/multi_nebulae_2-small.png"
+                if (blob_random.random() * 100) < 50:
+                    self.texture = "backgrounds/8k_stars_milky_way-small.jpeg"
+        else:
+            self.texture = texture
+
+        glow_map: str = "glow_maps/background_no_glow_map.png"
         if LOW_VRAM:
-            texture = "backgrounds/multi_nebulae_2-small.png"
             glow_map = "glow_maps/background_no_glow_map-small.png"
 
         if not bg_vars.textures_3d:
-            texture = None
+            self.texture = None
             glow_map = None
 
         self.universe = urs.application.base.loader.loadModel(
@@ -110,7 +121,7 @@ class BlobUniverseUrsina:
         self.universe.setColorScale((1, 1, 1, 1))
         self.universe.setScale(urs.scene, scale)
 
-        if texture is not None:
+        if self.texture is not None:
             self.universe.setTexture(
                 PlanetMaterial.texture_stage_glow,
                 urs.application.base.loader.loadTexture(
@@ -120,7 +131,7 @@ class BlobUniverseUrsina:
             self.universe.setTexture(
                 PlanetMaterial.texture_stage,
                 urs.application.base.loader.loadTexture(
-                    self.base_dir.joinpath("textures").joinpath(texture)
+                    self.base_dir.joinpath("textures").joinpath(self.texture)
                 ),
             )
             self.universe.setShaderAuto(
@@ -130,6 +141,11 @@ class BlobUniverseUrsina:
         self.universe.setLightOff(True)
         for bit in range(0, len(BlobUniverseUrsina.bit_masks)):
             self.universe.hide(BlobUniverseUrsina.bit_masks[bit])
+
+        if self.texture == "backgrounds/8k_stars_milky_way.jpeg":
+            self.universe.setHpr((0, 66, 0))
+        else:
+            self.universe.setHpr((0, 0, 90))
 
     def get_framework(self: Self) -> Any:
         """

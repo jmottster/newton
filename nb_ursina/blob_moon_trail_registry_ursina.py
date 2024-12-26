@@ -158,11 +158,11 @@ class MoonWatcher(urs.Entity):
 
     def add_planet(self: Self, planet: BlobCore) -> None:
         """Adds a blob to the internal planet blob array"""
-        self.planets[int(planet.blob_name) - self.planet_index_offset] = planet
+        self.planets[int(planet.index) - self.planet_index_offset] = planet
 
     def add_moon(self: Self, moon: BlobCore) -> None:
         """Adds a blob to the internal moon blob array"""
-        self.moons[int(moon.blob_name) - 1] = moon
+        self.moons[int(moon.index) - 1] = moon
 
     def remove_planet(self: Self, planet: BlobCore) -> None:
         """Removes a blob from the internal planet blob array"""

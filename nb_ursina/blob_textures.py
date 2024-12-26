@@ -151,7 +151,6 @@ BLOB_TEXTURES_MOON = [
     "moons/epsilon_02.jpg",
     "moons/epsilon_03.jpg",
     "moons/rock_17.png",
-    "moons/death_star.jpg",
     "moons/pluto.jpg",
     "moons/moon_01.png",
     "moons/moon_02.jpg",

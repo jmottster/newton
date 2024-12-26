@@ -136,7 +136,8 @@ class BlobRotator(urs.Entity):
         self.base_dir: Path = urs.application.asset_folder
         self.default_color: urs.Color = urs.color.rgba32(1, 1, 1, 1)
         self._radius: float = None
-        self.blob_name: str = kwargs.get("name")
+        self.index: int = kwargs.get("index")
+        self.blob_name: str = kwargs.get("blob_name")
         self._rotation_speed: float = None
         self._rotation_pos: Tuple[float, float, float] = None
         self._pos: urs.Vec3 = None
@@ -154,7 +155,8 @@ class BlobRotator(urs.Entity):
             "texture",
             "texture_scale",
             "texture_offset",
-            "name",
+            "index",
+            "blob_name",
             "texture_name",
             "glow_map_name",
             "ring_texture",
@@ -366,6 +368,10 @@ class BlobRotator(urs.Entity):
     def create_blob(self: Self, texture_name: str = None) -> None:
         """Creates the blob model"""
 
+        if self.index == 10:
+            self.create_special_blob()
+            return
+
         if texture_name is not None:
             self.texture_name = texture_name
 
@@ -435,8 +441,8 @@ class BlobRotator(urs.Entity):
             self.planet_ring.setDepthOffset(-4)
             self.planet_ring.setScale((scale, scale, scale))
             self.planet_ring.setTransparency(TransparencyAttrib.M_dual)
-            # if self.color is not None:
-            #     self.planet_ring.setColor(self.color)
+            if self.color is not None:
+                self.planet_ring.setColor(self.color)
             self.planet_ring.setMaterial(PlanetMaterial().getMaterial(), 1)
             self.planet_ring.setTexture(
                 PlanetMaterial.texture_stage,
@@ -444,6 +450,43 @@ class BlobRotator(urs.Entity):
                     self.base_dir.joinpath("textures").joinpath(self.ring_texture)
                 ),
             )
+
+    def create_special_blob(self: Self) -> None:
+        self.rotator_model = urs.application.base.loader.loadModel(
+            self.base_dir.joinpath("models").joinpath("death_star.glb")
+        )
+
+        mats = self.rotator_model.findAllMaterials()
+
+        self.radius = bg_vars.max_moon_radius
+        # self.scale = urs.Vec3(self.radius)
+        self.texture_name = "moons/death_star.jpg"
+        self.blob_name = "That's no moon!"
+
+        if self.radius is not None:
+            self.scale = urs.Vec3(self.radius)
+        if self.position is not None:
+            self.position = self.position
+        self.rotator_model.setTransparency(TransparencyAttrib.M_none)
+        self.rotator_model.setColorScaleOff()
+        self.rotator_model.setColorScale(PanVec4(1, 1, 1, 1))
+
+        self.rotator_model.reparentTo(urs.scene)
+        self.rotator_model.setLight(self.center_light)
+        self.rotator_model.setShaderAuto(
+            BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
+        )
+
+        mats = self.rotator_model.findAllMaterials()
+
+        for mat in mats:
+            if mat.getName() == "Death Star":
+                mat.setEmission(PanVec4(75, 75, 75, 2))
+
+        if self.rotation_speed is None:
+            self.rotation_speed = 2
+        else:
+            self.rotation_pos = self.rotation_pos
 
     def update(self: Self) -> None:
         """Called by Ursina once per frame"""

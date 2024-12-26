@@ -105,7 +105,7 @@ class SunMaterial:
             self.material.setAmbient((1, 1, 1, 1))
             self.material.setDiffuse((0.8, 0.8, 0.8, 1))
             self.material.setSpecular((1, 1, 1, 1))
-            self.material.setEmission((2, 2, 2, 1))
+            self.material.setEmission((3, 3, 3, 1))
             self.material.setRefractiveIndex(1)
             SunMaterial._initialized = True
 

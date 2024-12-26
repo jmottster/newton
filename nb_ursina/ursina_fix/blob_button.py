@@ -103,14 +103,19 @@ class BlobButton(urs.Entity):
         ):
             if key in kwargs:  # set the scale before model for correct corners
                 setattr(self, key, kwargs[key])
+                del kwargs[key]
 
         self.model: BlobQuad = None
+
+        self.aspect_ratio: float = self.scale_x / self.scale_z
 
         if model == None:
             if not BlobButton.default_model:
                 if self.scale_x != 0 and self.scale_z != 0:
                     self.model = createBlobQuad(
-                        aspect=self.scale_x / self.scale_z, radius=radius
+                        aspect=(self.scale_x / self.scale_z),
+                        scale=self.scale,
+                        radius=radius,
                     )
             else:
                 self.model = BlobButton.default_model
@@ -176,12 +181,13 @@ class BlobButton(urs.Entity):
             self.text_entity = BlobText(
                 text=value,
                 parent=self.model,
+                scale=self.text_size,
                 position=urs.Vec3(self.text_origin[0], -0.01, self.text_origin[2]),
                 origin=self.text_origin,
                 add_to_scene_entities=False,
             )
             self.text_entity.world_parent = self
-            self.text_entity.world_scale = urs.Vec3(20 * self.text_size)
+            self.text_entity.scale_x /= self.aspect_ratio
 
         else:
             self.text_entity.text = value
@@ -268,7 +274,8 @@ class BlobButton(urs.Entity):
         """Sets the size of the text to be displayed"""
         self._text_size = value
         if self.text_entity:
-            self.text_entity.world_scale = urs.Vec3(value * 20)
+            self.text_entity.scale = urs.Vec3(value)
+            self.text_entity.scale_x /= self.aspect_ratio
 
     @property
     def origin(self: Self) -> urs.Vec3:
@@ -290,57 +297,60 @@ class BlobButton(urs.Entity):
         ):  # update collider position by making a new one
             self.collider = "box"
 
-    def input(self: Self, key: str) -> None:
-        """Called by Ursina when there is an input event"""
-        if self.disabled or not self.model:
-            return
+    def on_destroy(self: Self) -> None:
+        urs.destroy(self.text_entity)
 
-        if key == "left mouse down":
-            if self.hovered:
-                self.model.setColorScale(self.pressed_color)
-                self.model.setScale(urs.Vec3(self.pressed_scale, 1, self.pressed_scale))
-                if self.pressed_sound:
-                    if isinstance(self.pressed_sound, urs.Audio):
-                        self.pressed_sound.play()
-                    elif isinstance(self.pressed_sound, str):
-                        urs.Audio(self.pressed_sound, auto_destroy=True)
+    # def input(self: Self, key: str) -> None:
+    #     """Called by Ursina when there is an input event"""
+    #     if self.disabled or not self.model:
+    #         return
 
-        if key == "left mouse up":
-            if self.hovered:
-                self.model.setColorScale(self.highlight_color)
-                self.model.setScale(
-                    urs.Vec3(self.highlight_scale, 1, self.highlight_scale)
-                )
-            else:
-                self.model.setColorScale(self.color)
-                self.model.setScale(urs.Vec3(1, 1, 1))
+    #     if key == "left mouse down":
+    #         if self.hovered:
+    #             self.model.setColorScale(self.pressed_color)
+    #             self.model.setScale(urs.Vec3(self.pressed_scale, 1, self.pressed_scale))
+    #             if self.pressed_sound:
+    #                 if isinstance(self.pressed_sound, urs.Audio):
+    #                     self.pressed_sound.play()
+    #                 elif isinstance(self.pressed_sound, str):
+    #                     urs.Audio(self.pressed_sound, auto_destroy=True)
 
-    def on_mouse_enter(self: Self) -> None:
-        """Called by Ursina when the mouse cursor is over the button"""
-        if not self.disabled and self.model:
-            self.model.setColorScale(self.highlight_color)
+    #     if key == "left mouse up":
+    #         if self.hovered:
+    #             self.model.setColorScale(self.highlight_color)
+    #             self.model.setScale(
+    #                 urs.Vec3(self.highlight_scale, 1, self.highlight_scale)
+    #             )
+    #         else:
+    #             self.model.setColorScale(self.color)
+    #             self.model.setScale(urs.Vec3(1, 1, 1))
 
-            if self.highlight_scale != 1:
-                self.model.setScale(
-                    urs.Vec3(self.highlight_scale, 1, self.highlight_scale)
-                )
+    # def on_mouse_enter(self: Self) -> None:
+    #     """Called by Ursina when the mouse cursor is over the button"""
+    #     if not self.disabled and self.model:
+    #         self.model.setColorScale(self.highlight_color)
 
-            if self.highlight_sound:
-                if isinstance(self.highlight_sound, urs.Audio):
-                    self.highlight_sound.play()
-                elif isinstance(self.highlight_sound, str):
-                    urs.Audio(self.highlight_sound, auto_destroy=True)
+    #         if self.highlight_scale != 1:
+    #             self.model.setScale(
+    #                 urs.Vec3(self.highlight_scale, 1, self.highlight_scale)
+    #             )
 
-        if hasattr(self, "tooltip") and self.tooltip:
-            self.tooltip.enabled = True
+    #         if self.highlight_sound:
+    #             if isinstance(self.highlight_sound, urs.Audio):
+    #                 self.highlight_sound.play()
+    #             elif isinstance(self.highlight_sound, str):
+    #                 urs.Audio(self.highlight_sound, auto_destroy=True)
 
-    def on_mouse_exit(self: Self) -> None:
-        """Called by Ursina when the mouse cursor leaves the button area"""
-        if not self.disabled and self.model:
-            self.model.setColorScale(self.color)
+    #     if hasattr(self, "tooltip") and self.tooltip:
+    #         self.tooltip.enabled = True
 
-            if not urs.mouse.left and self.highlight_scale != 1:
-                self.model.setScale(urs.Vec3(1, 1, 1))
+    # def on_mouse_exit(self: Self) -> None:
+    #     """Called by Ursina when the mouse cursor leaves the button area"""
+    #     if not self.disabled and self.model:
+    #         self.model.setColorScale(self.color)
 
-        if hasattr(self, "tooltip") and self.tooltip:
-            self.tooltip.enabled = False
+    #         if not urs.mouse.left and self.highlight_scale != 1:
+    #             self.model.setScale(urs.Vec3(1, 1, 1))
+
+    #     if hasattr(self, "tooltip") and self.tooltip:
+    #         self.tooltip.enabled = False

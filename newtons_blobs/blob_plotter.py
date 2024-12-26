@@ -166,8 +166,10 @@ class BlobPlotter:
         for blob_pref in data["blobs"]:
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
+                blob_pref["index"],
                 blob_pref["name"],
                 self.blob_factory.new_blob_surface(
+                    blob_pref["index"],
                     blob_pref["name"],
                     blob_pref["radius"] * bg_vars.au_scale_factor,
                     blob_pref["mass"],
@@ -322,8 +324,11 @@ class BlobPlotter:
             # Phew, let's instantiate this puppy . . .
             self.blobs[i] = MassiveBlob(
                 self.universe_size_h,
+                i,
                 str(i),
-                self.blob_factory.new_blob_surface(str(i), radius, mass, COLORS[color]),
+                self.blob_factory.new_blob_surface(
+                    i, str(i), radius, mass, COLORS[color]
+                ),
                 mass,
                 0,
                 0,
@@ -535,8 +540,10 @@ class BlobPlotter:
 
         self.blobs[0] = MassiveBlob(
             self.universe_size_h,
+            0,
             CENTER_BLOB_NAME,
             self.blob_factory.new_blob_surface(
+                0,
                 CENTER_BLOB_NAME,
                 bg_vars.center_blob_radius,
                 bg_vars.center_blob_mass,

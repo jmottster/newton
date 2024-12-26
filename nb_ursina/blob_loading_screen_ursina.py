@@ -110,12 +110,13 @@ class BlobLoadingScreenUrsina(urs.Entity):
         self.parent = urs.camera.ui
 
         self.prog_bar: BlobProgBar = BlobProgBar(
-            parent=urs.camera.ui,
+            parent=self,
             name="prog bar",
+            text_size=12,
             max_value=self.max_value,
             value=0,
             animation_duration=0,
-            position=(-0.25, 0, -0.25),
+            position=(0, 0, -1.75),
             bar_color=urs.color.rgb32(20, 92, 158),
             enabled=False,
             eternal=True,
@@ -267,12 +268,10 @@ class BlobLoadingScreenUrsina(urs.Entity):
     def on_enable(self: Self) -> None:
         """Called by Ursina when enabled=True is set"""
         self.prog_bar.enabled = True
-        self.enabled = True
 
     def on_disable(self: Self) -> None:
         """Called by Ursina when enabled=False is set"""
         self.prog_bar.enabled = False
-        self.enabled = False
 
     def on_destroy(self: Self) -> None:
         """Called by Ursina when destroying this instance"""

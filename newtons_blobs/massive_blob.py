@@ -32,6 +32,8 @@ class MassiveBlob:
     ----------
     universe_size : float
         the size of the universe in pixels (this size is cubed for full environment size)
+    index : int
+        An order number in a group of blobs
     name : str
         a string to identify the blob
     blob_surface : BlobSurface
@@ -89,6 +91,7 @@ class MassiveBlob:
     __slots__ = (
         "scaled_universe_size_half_z",
         "universe_size",
+        "index",
         "name",
         "blob_surface",
         "radius",
@@ -114,6 +117,7 @@ class MassiveBlob:
     def __init__(
         self: Self,
         universe_size: float,
+        index: int,
         name: str,
         blob_surface: BlobSurface,
         mass: float,
@@ -128,6 +132,7 @@ class MassiveBlob:
         self.scaled_universe_size_half_z: float = (universe_size * bg_vars.scale_up) / 2
         self.universe_size = universe_size
 
+        self.index: int = index
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
         self.radius: float = blob_surface.radius
@@ -169,7 +174,8 @@ class MassiveBlob:
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
-        data["name"] = self.name
+        data["index"] = self.index
+        data["name"] = self.blob_surface.name
         data["radius"] = self.orig_radius[2] / bg_vars.au_scale_factor
         data["color"] = self.blob_surface.color
         if getattr(self.blob_surface, "texture"):

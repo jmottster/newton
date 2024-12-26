@@ -107,11 +107,10 @@ class BlobQuad(urs.Mesh):
         _segments: int = segments
         _segments += 1
         if _segments > 1:
-            self.degrees = -(90 / _segments / 2)
+            self.degrees = -(90 / _segments)
             new_verts = list()
             BlobQuad.corner_maker.rotation_y = 0
             BlobQuad.corner_maker.position = urs.Vec3(0, 0, 0)
-            BlobQuad.corner_maker.rotation_y -= 90 / _segments / 2
             BlobQuad.corner_maker.setHpr((0, 0, self.degrees))
             BlobQuad.point_placer.position = urs.Vec3(-radius, 0, 0)
 

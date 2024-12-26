@@ -44,18 +44,19 @@ class BlobProgBar(BlobButton):
         self: Self,
         max_value: int = 100,
         value: int = None,
-        roundness: float = 0.25,
+        roundness: float = 0.125,
         animation_duration: float = 0.1,
         show_text: bool = True,
         text_size: float = 0.7,
-        origin: Tuple[float, float, float] = (-0.5, 0, 0.5),
+        origin: Tuple[float, float, float] = (0, 0, 0),
         **kwargs,
     ):
 
         super().__init__(
+            parent=kwargs.get("parent", urs.camera.ui),
             radius=roundness,
-            scale=(BlobText.size * 20, 1, BlobText.size),
-            position=(-0.45 * urs.window.aspect_ratio, 0, 0.45),
+            scale=(2, 1, 0.5),
+            position=(-1, 0, 0),
             text="hp / max hp",
             text_size=text_size,
             color=urs.color.black66,
@@ -64,21 +65,29 @@ class BlobProgBar(BlobButton):
             ignore=True,
         )
 
+        if kwargs.get("parent", None) is not None:
+            del kwargs["parent"]
+
         self.bar: urs.Entity = urs.Entity(
             name="prog bar bar",
             parent=self,
+            scale=(2, 1, 0.5),
             model=createBlobQuad(radius=roundness),
-            origin=origin,
+            origin=(-0.5, 0, 0),
             y=-0.005,
+            x=-self.scale_x / 2,
             color=urs.color.red.tint(-0.2),
             ignore=True,
         )
+
+        self.bar_origin = self.bar.origin
 
         self.max_value: int = max_value
         self.clamp: bool = True
         self.roundness: float = roundness
         self.animation_duration: float = animation_duration
-        self.show_text: bool = show_text
+        if not show_text:
+            self.show_text = False
         self._value: int = None
         self.value = self.max_value if value == None else value
 
@@ -114,18 +123,13 @@ class BlobProgBar(BlobButton):
 
         self._value = n
 
-        self.bar.animate_scale_x(
-            n / self.max_value,
-            duration=self.animation_duration,
-            curve=urs.curve.in_out_bounce,
-        )
-        self.text_entity.text = f"{n} / {self.max_value}"
+        self.bar.scale_x = self.scale_x * (n / self.max_value)
+        self.text = f"{n} / {self.max_value}"
 
-        if n / self.max_value >= self.scale_z / self.scale_x:
-            aspect_ratio = n / self.max_value * self.scale_x / self.scale_z
+        aspect_ratio = (self.bar.scale_x / self.bar.scale_z) * 2
+        if aspect_ratio >= 0.5:
             self.bar.model = createBlobQuad(radius=self.roundness, aspect=aspect_ratio)
-        else:
-            self.bar.model = "quad"
+
         self.bar.origin = self.bar.origin
 
     @property
@@ -148,13 +152,6 @@ class BlobProgBar(BlobButton):
         """Sets the color of the progress bar"""
         self.bar.color = value
 
-    def __setattr__(self: Self, name: str, value: Any) -> None:
-        """update rounded corners of background when scaling"""
-
-        if "scale" and hasattr(self, "model") and self.model:
-            self.model.aspect = self.world_scale_x / self.world_scale_z
-            self.model.generate()
-            if hasattr(self, "text_entity") and self.text_entity:
-                self.text_entity.world_scale = 25 * self.text_size
-
-        super().__setattr__(name, value)
+    def on_destroy(self: Self) -> None:
+        urs.destroy(self.bar)
+        super().on_destroy()

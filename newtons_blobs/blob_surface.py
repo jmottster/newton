@@ -26,6 +26,8 @@ class BlobSurface(Protocol):
 
     Attributes
     ----------
+    index: int
+        An order number in a group of blobs
     name: str
         A name for the instance
     radius : float
@@ -71,6 +73,7 @@ class BlobSurface(Protocol):
         Call to get rid of this instance, so it can clean up
     """
 
+    index: int
     name: str
     radius: float
     mass: float
