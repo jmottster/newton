@@ -114,7 +114,7 @@ class BlobUrsinaFactory:
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
         bg_vars.set_first_person_scale(bg_vars.max_radius * 2)
-        bg_vars.set_background_scale(bg_vars.universe_size / 2)
+        bg_vars.set_background_scale(bg_vars.universe_size)
         bg_vars.set_timescale(DAYS * 2)
         bg_vars.set_orig_timescale(DAYS * 2)
         bg_vars.set_timescale_inc(HOURS * 6)
@@ -186,6 +186,8 @@ class BlobUrsinaFactory:
             blob_random.randint(-10, 10),
             blob_random.randint(-10, 10),
         ).normalized() * (self.start_distance)
+
+        # start_pos = center_pos + urs.Vec3((0, -self.start_distance, 0))
 
         self.urs_display.first_person_surface.draw(start_pos)
 

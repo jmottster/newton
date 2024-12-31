@@ -456,8 +456,6 @@ class BlobRotator(urs.Entity):
             self.base_dir.joinpath("models").joinpath("death_star.glb")
         )
 
-        mats = self.rotator_model.findAllMaterials()
-
         self.radius = bg_vars.max_moon_radius
         # self.scale = urs.Vec3(self.radius)
         self.texture_name = "moons/death_star.jpg"
@@ -477,9 +475,7 @@ class BlobRotator(urs.Entity):
             BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
         )
 
-        mats = self.rotator_model.findAllMaterials()
-
-        for mat in mats:
+        for mat in self.rotator_model.findAllMaterials():
             if mat.getName() == "Death Star":
                 mat.setEmission(PanVec4(75, 75, 75, 2))
 

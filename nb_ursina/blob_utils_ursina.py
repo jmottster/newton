@@ -308,6 +308,7 @@ class StatText(urs.Entity):
         self.text: str = kwargs["text"]
         self.pos: urs.Vec3 = kwargs["pos"]
         self.orientation: Tuple[int, int] = kwargs["orientation"]
+        self.text_size: float = STAT_FONT_SIZE / 100
 
         super().__init__()
 
@@ -332,10 +333,13 @@ class StatText(urs.Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        if self.orientation[1] == StatText.TEXT_TOP_PLUS:
+            self.text_size *= 0.75
+
         self.stat_text = BlobText(
             font=DISPLAY_FONT,
-            size=(STAT_FONT_SIZE / 100),
-            resolution=100 * (STAT_FONT_SIZE / 100),
+            size=self.text_size,
+            resolution=100 * self.text_size,
             parent=FontUtils.get_text_parent(),
             scale=0.1,
             color=urs.color.rgb32(255, 255, 255),

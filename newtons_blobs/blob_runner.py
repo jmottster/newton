@@ -154,13 +154,45 @@ class BlobRunner:
         self.keyboard_events[self.display.get_key_code("f")]()
 
     def get_timescale_str(self: Self) -> str:
-        return_str = f"{int(bg_vars.timescale/DAYS)} days:"
 
-        return_str += f"{int( ( (bg_vars.timescale) - (DAYS * int(bg_vars.timescale/DAYS))       ) /HOURS)}h:"
+        days: int = int(bg_vars.timescale / DAYS)
+        hours: int = int(
+            ((bg_vars.timescale) - (DAYS * int(bg_vars.timescale / DAYS))) / HOURS
+        )
+        minutes: int = int(
+            ((bg_vars.timescale) - (HOURS * int(bg_vars.timescale / HOURS))) / MINUTES
+        )
+        seconds: int = int(
+            ((bg_vars.timescale) - (MINUTES * int(bg_vars.timescale / MINUTES)))
+        )
 
-        return_str += f"{int( ( (bg_vars.timescale) - (HOURS * int(bg_vars.timescale/HOURS))     ) /MINUTES)}m:"
+        return_str: str = ""
 
-        return_str += f"{int( ( (bg_vars.timescale) - (MINUTES * int(bg_vars.timescale/MINUTES)) ) )}s/sec"
+        if days > 0:
+            return_str += f"{days} days"
+
+        if hours > 0:
+            if return_str != "":
+                return_str += "-"
+            return_str += f"{hours}h"
+        elif (minutes + seconds) > 0:
+            if return_str != "":
+                return_str += "-0h"
+
+        if minutes > 0:
+            if return_str != "":
+                return_str += "-"
+            return_str += f"{minutes}m"
+        elif seconds > 0:
+            if return_str != "":
+                return_str += "-0m"
+
+        if seconds > 0:
+            if return_str != "":
+                return_str += "-"
+            return_str += f"{seconds}s"
+
+        return_str += "/sec"
 
         return return_str
 

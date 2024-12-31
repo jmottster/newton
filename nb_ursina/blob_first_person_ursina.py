@@ -239,9 +239,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.center_cursor.setHpr(urs.scene, (0, 0, 45))
 
         lens = urs.camera.lens
-        universe = bg_vars.universe_size / 2
-        lens.setFar(universe / bg_vars.first_person_scale)
-        lens.setFilmSize(urs.window.size[0], urs.window.size[1])
+        if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
+            lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
 
     def setup_lock(self: Self) -> None:
         """

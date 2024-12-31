@@ -319,6 +319,11 @@ class BlobMoonTrailRegistryUrsina:
         Will delete the singleton instance of MoonWatcher, which will create a new one
         when any other method is subsequently called
         """
+
+        for e in urs.scene.entities:
+            if hasattr(e, "trail") and e.trail is not None:
+                if hasattr(e, "input") and callable(e.input):
+                    e.input("t")
         _destroy(cls.moon_watcher, True)
         cls.moon_watcher = None
 

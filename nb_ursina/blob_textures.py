@@ -157,3 +157,24 @@ BLOB_TEXTURES_MOON = [
     "moons/moon_03.jpg",
     "moons/moon_04.jpg",
 ]
+
+BLOB_BACKGROUND_LARGE = [
+    "backgrounds/8k_stars_milky_way.jpeg",
+    "backgrounds/starmap_2020_8k_gal.png",
+    "backgrounds/multi_nebulae_2.png",
+    "backgrounds/night_sky_02.jpg",
+]
+
+BLOB_BACKGROUND_SMALL = [
+    "backgrounds/8k_stars_milky_way-small.jpeg",
+    "backgrounds/starmap_2020_8k_gal-small.png",
+    "backgrounds/multi_nebulae_2-small.png",
+    "backgrounds/night_sky_02-small.jpg",
+]
+
+BLOB_BACKGROUND_ROTATION = [
+    (0, 0, 40),
+    (0, 0, 40),
+    (0, 0, 90),
+    (0, 0, 0),
+]

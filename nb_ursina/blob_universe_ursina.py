@@ -18,6 +18,12 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs.blob_random import blob_random
 
+from .blob_textures import (
+    BLOB_BACKGROUND_LARGE,
+    BLOB_BACKGROUND_SMALL,
+    BLOB_BACKGROUND_ROTATION,
+)
+
 from .ursina_fix import PlanetMaterial
 
 __author__ = "Jason Mott"
@@ -90,17 +96,26 @@ class BlobUniverseUrsina:
             self.universe.removeNode()
             self.universe = None
 
-        if texture is None:
+        texture_index: int = None
 
-            self.texture = "backgrounds/multi_nebulae_2.png"
-            if (blob_random.random() * 100) < 50:
-                self.texture = "backgrounds/8k_stars_milky_way.jpeg"
+        if texture is None:
+            texture_index = blob_random.randint(0, len(BLOB_BACKGROUND_LARGE) - 1)
+            # texture_index = 3
             if LOW_VRAM:
-                self.texture = "backgrounds/multi_nebulae_2-small.png"
-                if (blob_random.random() * 100) < 50:
-                    self.texture = "backgrounds/8k_stars_milky_way-small.jpeg"
+                self.texture = BLOB_BACKGROUND_SMALL[texture_index]
+            else:
+                self.texture = BLOB_BACKGROUND_LARGE[texture_index]
+
         else:
             self.texture = texture
+
+            try:
+                if LOW_VRAM:
+                    texture_index = BLOB_BACKGROUND_SMALL.index(texture)
+                else:
+                    texture_index = BLOB_BACKGROUND_LARGE.index(texture)
+            except:
+                texture_index = None
 
         glow_map: str = "glow_maps/background_no_glow_map.png"
         if LOW_VRAM:
@@ -113,6 +128,7 @@ class BlobUniverseUrsina:
         self.universe = urs.application.base.loader.loadModel(
             self.base_dir.joinpath("models").joinpath("background_sphere.obj")
         )
+
         self.universe.reparentTo(urs.scene)
         self.universe.setTransparency(TransparencyAttrib.M_none)
         self.universe.setPos(urs.scene, (0, 0, 0))
@@ -142,10 +158,8 @@ class BlobUniverseUrsina:
         for bit in range(0, len(BlobUniverseUrsina.bit_masks)):
             self.universe.hide(BlobUniverseUrsina.bit_masks[bit])
 
-        if self.texture == "backgrounds/8k_stars_milky_way.jpeg":
-            self.universe.setHpr((0, 66, 0))
-        else:
-            self.universe.setHpr((0, 0, 90))
+        if texture_index is not None:
+            self.universe.setHpr(BLOB_BACKGROUND_ROTATION[texture_index])
 
     def get_framework(self: Self) -> Any:
         """
