@@ -227,7 +227,7 @@ class BlobDisplayUrsina:
         urs.camera.ui = urs.Entity(
             eternal=True,
             name="ui",
-            scale=(urs.camera.ui_size * 0.5, 1, urs.camera.ui_size * 0.5),
+            scale=(urs.camera.ui_size * 0.5, 0.5, urs.camera.ui_size * 0.5),
             add_to_scene_entities=False,
         )
         urs.camera.overlay = urs.Entity(
@@ -253,8 +253,8 @@ class BlobDisplayUrsina:
 
         BlobDisplayUrsina.filters.setMSAA(4)
 
-        # BlobDisplayUrsina.filters.setHighDynamicRange()
-        # BlobDisplayUrsina.filters.setExposureAdjust(1.5)
+        BlobDisplayUrsina.filters.setHighDynamicRange()
+        BlobDisplayUrsina.filters.setExposureAdjust(0.8)
 
         BlobDisplayUrsina.filters.setBloom(
             blend=(1, 1, 1, 1),

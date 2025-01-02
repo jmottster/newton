@@ -379,6 +379,7 @@ class BlobPlotter:
         Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
         """
+        self.blob_factory.grid_check(self.proximity_grid)
         self.proximity_grid = np.empty(
             [
                 int(bg_vars.grid_key_upper_bound),

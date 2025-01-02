@@ -10,6 +10,7 @@ by Jason Mott, copyright 2024
 from typing import Any, Dict, Tuple, Self, cast
 
 import numpy.typing as npt
+import math
 
 from panda3d.core import AntialiasAttrib  # type: ignore
 
@@ -181,11 +182,14 @@ class BlobUrsinaFactory:
 
         temp_ent = urs.Entity(position=center_pos, shader=shd.unlit_shader, unlit=True)
 
-        start_pos = center_pos + urs.Vec3(
-            blob_random.randint(-10, 10),
-            blob_random.randint(-10, 10),
-            blob_random.randint(-10, 10),
-        ).normalized() * (self.start_distance)
+        start_pos = center_pos + (
+            urs.Vec3(
+                blob_random.randint(-10, 10),
+                blob_random.randint(-10, 10),
+                blob_random.randint(-10, 10),
+            ).normalized()
+            * self.start_distance
+        )
 
         # start_pos = center_pos + urs.Vec3((0, -self.start_distance, 0))
 
@@ -401,4 +405,48 @@ class BlobUrsinaFactory:
         """
         Gives the graphics layer a chance to traverse the proximity grid for collision detection, etc.
         """
-        pass
+        gk: Tuple[int, int, int] = self.first_person_blob.grid_key(
+            self.first_person_blob.blob_surface.position
+        )
+        pg: npt.NDArray = proximity_grid
+        blobs: npt.NDArray = None
+
+        pos1: urs.Vec3 = urs.Vec3(self.first_person_blob.blob_surface.position)
+        pos2: urs.Vec3 = None
+        diff: urs.Vec3 = None
+        touching: float = 0.0
+        d: float = 0.0
+        colliding: bool = False
+
+        for z_i_offset in range(-1, 2):
+            z = gk[2] + z_i_offset
+            for x_i_offset in range(-1, 2):
+                x = gk[0] + x_i_offset
+                for y_i_offset in range(-1, 2):
+                    y = gk[1] + y_i_offset
+                    # Skip the corners of the cube, worth risking the occasional miss for the performance boost
+                    if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
+                        continue
+                    # do the thing here
+                    blobs = pg[x][y][z]
+                    if blobs is not None:
+
+                        for blob in blobs:
+                            pos2 = urs.Vec3(blob.blob_surface.position)
+                            touching = (
+                                blob.blob_surface.ursina_blob.scale_x
+                                + self.first_person_blob.blob_surface.radius
+                            )
+                            diff = urs.Vec3(pos1 - pos2)
+                            d = math.sqrt(diff[0] ** 2 + diff[1] ** 2 + diff[2] ** 2)
+                            if d <= touching:
+                                touching += 0.01
+                                diff = urs.Vec3(diff.normalized() * (touching - d))
+                                self.first_person_blob.blob_surface.first_person_viewer.position += (
+                                    diff
+                                )
+                                colliding = True
+                                pos1 = urs.Vec3(
+                                    self.first_person_blob.blob_surface.position
+                                )
+        self.first_person_blob.blob_surface.first_person_viewer.colliding = colliding

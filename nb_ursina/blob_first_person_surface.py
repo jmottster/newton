@@ -92,8 +92,19 @@ class FirstPersonSurface:
             unlit=True,
             shader=shd.unlit_shader,
         )
-        self.radius = radius
-        self.color = color
+        self._radius: float = radius
+        self.color: Tuple[int, int, int] = color
+
+    @property
+    def position(self: Self) -> Tuple[float, float, float]:
+        return tuple(self.first_person_viewer.position)
+
+    @property
+    def radius(self: Self) -> float:
+        if self.first_person_viewer is not None:
+            return self.first_person_viewer.radius
+        else:
+            return self._radius
 
     def get_position(self: Self) -> urs.Vec3:
         """returns the x,y,z position of this blob"""

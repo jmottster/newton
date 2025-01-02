@@ -939,9 +939,9 @@ class BlobSurfaceUrsina:
     __slots__ = (
         "index",
         "_name",
-        "radius",
+        "_radius",
         "mass",
-        "position",
+        "_position",
         "color",
         "trail_color",
         "universe",
@@ -978,7 +978,8 @@ class BlobSurfaceUrsina:
 
         self.index: int = index
         self.name: str = name
-        self.radius: float = radius
+        self._radius: float = None
+        self.radius = radius
         self.mass: float = mass
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
@@ -986,7 +987,7 @@ class BlobSurfaceUrsina:
         self.ring_texture: str = ring_texture
         self._rotation_speed: float = None
         self._rotation_pos: Tuple[float, float, float] = None
-        self.position: Tuple[float, float, float] = (0, 0, 0)
+        self._position: Tuple[float, float, float] = (0, 0, 0)
         self.trail_color: urs.Color = urs.color.rgb32(25, 100, 150)
         self.ursina_blob: BlobCore = None
 
@@ -998,7 +999,7 @@ class BlobSurfaceUrsina:
 
         if bg_vars.textures_3d:
 
-            if self.texture is None:
+            if index != 0 and self.texture is None:
 
                 halfway_max_halfway: float = (
                     ((bg_vars.min_radius + bg_vars.max_radius) / 2) + bg_vars.max_radius
@@ -1007,8 +1008,9 @@ class BlobSurfaceUrsina:
                 if self.radius >= (halfway_max_halfway):
                     i: int = blob_random.randint(0, len(BLOB_TEXTURES_GAS) - 1)
                     self.texture = BLOB_TEXTURES_GAS[i]
-                    if (blob_random.random() * 100) > 50:
+                    if (blob_random.random() * 100) > 0:
                         self.ring_texture = BLOB_TEXTURES_RINGS[i]
+                        # self.name = self.ring_texture
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
                         blob_random.randint(0, len(BLOB_TEXTURES_ROCKY) - 1)
@@ -1118,6 +1120,30 @@ class BlobSurfaceUrsina:
         self._texture = texture
 
     @property
+    def radius(self: Self) -> float:
+        if self.ursina_blob is not None:
+            return self.ursina_blob.radius
+        else:
+            return self._radius
+
+    @radius.setter
+    def radius(self: Self, radius: float) -> None:
+        self._radius = radius
+
+    @property
+    def position(self: Self) -> Tuple[float, float, float]:
+        if self.ursina_blob is not None:
+            return tuple(self.ursina_blob.position)
+        else:
+            return self._position
+
+    @position.setter
+    def position(self: Self, position: Tuple[float, float, float]) -> None:
+        self._position = position
+        if self.ursina_blob is not None:
+            self.ursina_blob.position = urs.Vec3(self._position)
+
+    @property
     def rotation_pos(self: Self) -> Tuple[float, float, float]:
         """
         For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
@@ -1176,7 +1202,6 @@ class BlobSurfaceUrsina:
         """
 
         self.position = pos
-        self.ursina_blob.position = urs.Vec3(pos)
 
     def draw_as_center_blob(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True
@@ -1186,7 +1211,6 @@ class BlobSurfaceUrsina:
         send (pos,False) to turn off glowing effect
         """
         self.position = pos
-        self.ursina_blob.position = urs.Vec3(pos)
         self.ursina_blob.light_node.setPos(urs.scene, urs.Vec3(pos))
 
     def on_destroy(self: Self) -> None:

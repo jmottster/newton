@@ -31,7 +31,8 @@ class BlobCircle(urs.Mesh):
         resolution: int = 16,
         radius: float = 0.5,
         mode: str = "ngon",
-        **kwargs
+        thickness: float = 1,
+        **kwargs,
     ):
         origin: urs.Entity = urs.Entity()
         point: urs.Entity = urs.Entity(parent=origin)
@@ -49,4 +50,6 @@ class BlobCircle(urs.Mesh):
             self.vertices.append(self.vertices[0])
 
         urs.destroy(origin)
-        super().__init__(vertices=self.vertices, mode=mode, **kwargs)
+        super().__init__(
+            vertices=self.vertices, mode=mode, thickness=thickness, **kwargs
+        )

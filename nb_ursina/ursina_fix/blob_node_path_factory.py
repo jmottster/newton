@@ -61,7 +61,7 @@ class BlobNodePathFactory:
         self: Self,
         model: str,
         parent: NodePath,
-        scale: PanVec3,
+        scale: PanVec3 = None,
         texture: str = None,
         glow_map: str = None,
         color: PanVec4 = None,
@@ -72,10 +72,12 @@ class BlobNodePathFactory:
         )
         node_path.reparentTo(parent)
         node_path.setTransparency(TransparencyAttrib.M_dual)
-        node_path.setScale(parent, scale)
+        if scale is not None:
+            node_path.setScale(parent, scale)
         if color is not None:
             node_path.setColorScaleOff()
             node_path.setColorScale(color)
+
         if glow_map is not None:
             node_path.setTexture(
                 PlanetMaterial.texture_stage_glow,

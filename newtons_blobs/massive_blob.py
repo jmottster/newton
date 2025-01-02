@@ -194,11 +194,21 @@ class MassiveBlob:
         data["vy"] = self.vy
         data["vz"] = self.vz
 
-    def grid_key(self: Self) -> Tuple[int, int, int]:
+    def grid_key(
+        self: Self, alt_pos: Tuple[float, float, float] = None
+    ) -> Tuple[int, int, int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
-        x = int((self.x * bg_vars.scale_down) / bg_vars.grid_cell_size)
-        y = int((self.y * bg_vars.scale_down) / bg_vars.grid_cell_size)
-        z = int((self.z * bg_vars.scale_down) / bg_vars.grid_cell_size)
+
+        if alt_pos is None:
+            alt_pos = (
+                self.x * bg_vars.scale_down,
+                self.y * bg_vars.scale_down,
+                self.z * bg_vars.scale_down,
+            )
+
+        x = int(alt_pos[0] / bg_vars.grid_cell_size)
+        y = int(alt_pos[1] / bg_vars.grid_cell_size)
+        z = int(alt_pos[2] / bg_vars.grid_cell_size)
 
         # if x <= 0:
         #     x = 1

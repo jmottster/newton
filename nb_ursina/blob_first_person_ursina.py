@@ -14,6 +14,7 @@ from panda3d.core import Vec3 as PanVec3  # type: ignore
 from panda3d.core import Vec4 as PanVec4  # type: ignore
 from panda3d.core import AmbientLight as PandaAmbientLight  # type: ignore
 from panda3d.core import NodePath  # type: ignore
+from panda3d.core import TransparencyAttrib  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -110,7 +111,7 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.temp_scale: float = kwargs["scale"]
         self.start_y: float = kwargs["start_y"]
-        self.flashlight_color: urs.Vec3 = urs.color.rgba(0.35, 0.35, 0.35, 0.35)
+        self.flashlight_color: urs.Vec3 = urs.color.rgba(0.25, 0.25, 0.25, 0.25)
         if not bg_vars.textures_3d:
             self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
         self.mass: float = None
@@ -121,14 +122,30 @@ class BlobFirstPersonUrsina(urs.Entity):
         super().__init__()
 
         urs.camera.parent = self
-        urs.camera.position = PanVec3.forward() * -0.25
         urs.camera.rotation = (0, 0, 0)
+        urs.camera.position = urs.Vec3(0, 0, 0)
+        lens = urs.camera.lens
+        lens.setNear(0.05)
+        if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
+            lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
+        self.radius: float = lens.getNear() * bg_vars.first_person_scale  # + 0.01
+
         urs.camera.ui.collider = "sphere"
         urs.camera.ui.position = (0, 0, 0)
 
+        self.center_cursor: urs.Entity = urs.Entity(
+            parent=urs.camera.ui,
+            model="pan_quad",
+            color=urs.color.rgb32(179, 0, 27),
+            scale=urs.Vec3(0.01, 0.01, 0.01),
+            eternal=kwargs["eternal"],
+            shader=shd.unlit_shader,
+        )
+        self.center_cursor.setHpr(urs.scene, (0, 0, 45))
+
         self.gimbal_color: PanVec4 = PanVec4(1.1, 1.1, 1.1, 0.59)
-        self.gimbal_texture: str = "suns/sun03.png"
-        self.gimbal_glow_map: str = "glow_maps/no_glow_map.png"
+        self.gimbal_texture: str = "suns/8k_sun.jpg"
+        self.gimbal_glow_map: str = "glow_maps/8k_sun-glow_map.jpg"
         if not bg_vars.textures_3d:
             self.gimbal_color = urs.color.rgba32(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
@@ -136,15 +153,19 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.gimbal_texture = None
 
         self.gimbal: NodePath = self.node_factory.create_node_path(
-            "blend_uvsphere.obj",
-            urs.scene,
-            PanVec3(0.008, 0.008, 0.008) * self.temp_scale,
-            self.gimbal_texture,
-            self.gimbal_glow_map,
-            self.gimbal_color,
+            model="blend_uvsphere.obj",
+            parent=urs.scene,
+            scale=PanVec3(0.03, 0.03, 0.03) * self.temp_scale,
+            texture=self.gimbal_texture,
+            glow_map=self.gimbal_glow_map,
+            color=self.gimbal_color,
         )
+        self.gimbal.setDepthTest(False)
         self.gimbal.setLightOff(True)
-        self.gimbal.hide(0b0001)
+        for bit in range(0, len(BlobUniverseUrsina.bit_masks)):
+            self.gimbal.hide(BlobUniverseUrsina.bit_masks[bit])
+        self.gimbal_offset: float = PanVec3.forward() * 1
+        self.gimbal_offset += PanVec3(PanVec3.down() * 0.2)
 
         self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
@@ -183,7 +204,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.speed: float = self.orig_speed
         self.speed_inc: float = self.max_speed / 50
 
-        self.min_roll_speed: float = 20
+        self.min_roll_speed: float = 35
         self.max_roll_speed: float = 90
 
         self.orig_roll_speed: float = (self.min_roll_speed + self.max_roll_speed) / 2
@@ -191,9 +212,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.roll_speed_inc: float = self.max_roll_speed / 50
 
         self.direction: urs.Vec3 = None
-        self.position: urs.Vec3 = urs.Vec3(PanVec3.forward() * self.start_y)
+        self._position: urs.Vec3 = urs.Vec3(0, 0, 0)
         self.velocity: urs.Vec3 = urs.Vec3(0, 0, 0)
-        self.world_position: urs.Vec3 = urs.Vec3(PanVec3.forward() * self.start_y)
         self.local_disabled: bool = False
         self.flashlight_on: bool = True
         self.temp_message: TempMessage = None
@@ -205,8 +225,10 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.mouse_scroll_down: int = 0
 
         self.follow_entity: urs.Entity = None
-
         self.hud = True
+
+        self._colliding: bool = False
+        self.collide_counter: int = 0
 
         for key in (
             "model",
@@ -228,19 +250,56 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.setup_stage: bool = True
 
-        self.center_cursor: urs.Entity = urs.Entity(
-            parent=self,
-            model="pan_quad",
-            color=urs.color.rgb32(179, 0, 27),
-            scale=urs.Vec3(0.003, 0.003, 0.003),
-            eternal=kwargs["eternal"],
-            shader=shd.unlit_shader,
-        )
-        self.center_cursor.setHpr(urs.scene, (0, 0, 45))
+    @property
+    def position(self: Self) -> urs.Vec3:
+        return self._position
 
-        lens = urs.camera.lens
-        if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
-            lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
+    @position.setter
+    def position(self: Self, position: urs.Vec3) -> None:
+        self._position = position
+        self.setPos(urs.scene, position)
+
+        if self.gimbal is not None:
+
+            self.gimbal.setPos(self, self.gimbal_offset)
+
+            if self.follow_entity is not None:
+                self.gimbal.lookAt(
+                    urs.scene, self.follow_entity.getPos(urs.scene), self.my_up
+                )
+            elif BlobSurfaceUrsina.center_blob is not None:
+                self.gimbal.lookAt(
+                    urs.scene,
+                    BlobSurfaceUrsina.center_blob.getPos(urs.scene),
+                    self.my_up,
+                )
+
+        if self.universe is not None:
+            self.universe.universe.setPos(self, (0, 0, 0))
+
+    @property
+    def colliding(self: Self) -> bool:
+        return self._colliding
+
+    @colliding.setter
+    def colliding(self: Self, colliding: bool) -> None:
+        self._colliding = colliding
+
+        if colliding:
+            if self.collide_counter > 8:
+
+                if (
+                    urs.held_keys["w"] == 0
+                    and urs.held_keys["s"] == 0
+                    and urs.held_keys["a"] == 0
+                    and urs.held_keys["d"] == 0
+                ):
+                    self._colliding = False
+                    self.collide_counter -= 1
+            else:
+                self.collide_counter += 1
+        else:
+            self.collide_counter = 0
 
     def setup_lock(self: Self) -> None:
         """
@@ -290,6 +349,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.gimbal_ring.model = urs.application.base.loader.loadModel(
                 self.base_dir.joinpath("models").joinpath("rings.obj")
             )
+            self.gimbal_ring.setTransparency(TransparencyAttrib.M_dual)
 
     def stop_following(self: Self) -> None:
         """
@@ -354,30 +414,17 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.mouse_scroll_up = 0
             self.mouse_scroll_down = 0
 
-            self.direction = urs.Vec3(
-                self.my_forward * (urs.held_keys["w"] - urs.held_keys["s"])
-                + self.my_right * (urs.held_keys["d"] - urs.held_keys["a"])
-                + self.my_up * (urs.held_keys["e"] - urs.held_keys["x"])
-            ).normalized()
+            if not self.colliding:
 
-            self.velocity = self.direction * FPS.dt * self.speed
+                self.direction = urs.Vec3(
+                    self.my_forward * (urs.held_keys["w"] - urs.held_keys["s"])
+                    + self.my_right * (urs.held_keys["d"] - urs.held_keys["a"])
+                    + self.my_up * (urs.held_keys["e"] - urs.held_keys["x"])
+                ).normalized()
 
-            self.position += self.velocity
+                self.velocity = self.direction * (self.speed * FPS.dt)
 
-        self.gimbal.setPos(urs.scene, self.getPos(urs.scene))
-
-        self.gimbal.setPos(self, PanVec3(PanVec3.up() * -0.05))
-
-        if self.follow_entity is not None:
-            self.gimbal.lookAt(
-                urs.scene, self.follow_entity.getPos(urs.scene), self.my_up
-            )
-        elif BlobSurfaceUrsina.center_blob is not None:
-            self.gimbal.lookAt(
-                urs.scene, BlobSurfaceUrsina.center_blob.getPos(urs.scene), self.my_up
-            )
-
-        self.universe.universe.setPos(urs.scene, self.getPos(urs.scene))
+                self.position += self.velocity
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a keyboard event happens"""
