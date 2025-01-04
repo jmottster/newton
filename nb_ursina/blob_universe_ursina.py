@@ -99,8 +99,8 @@ class BlobUniverseUrsina:
         texture_index: int = None
 
         if texture is None:
-            # texture_index = blob_random.randint(0, len(BLOB_BACKGROUND_LARGE) - 1)
-            texture_index = 1
+            texture_index = blob_random.randint(0, len(BLOB_BACKGROUND_LARGE) - 1)
+            # texture_index = 1
             if LOW_VRAM:
                 self.texture = BLOB_BACKGROUND_SMALL[texture_index]
             else:
