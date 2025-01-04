@@ -125,7 +125,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.rotation = (0, 0, 0)
         urs.camera.position = urs.Vec3(0, 0, 0)
         lens = urs.camera.lens
-        lens.setNear(0.05)
+        lens.setNear(0.06)
         if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
             lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
         self.radius: float = lens.getNear() * bg_vars.first_person_scale  # + 0.01

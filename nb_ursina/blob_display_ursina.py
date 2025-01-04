@@ -11,7 +11,7 @@ from typing import Any, Callable, ClassVar, Dict, Tuple, Self
 
 from panda3d.core import loadPrcFileData  # type: ignore
 
-from direct.filter.CommonFilters import CommonFilters
+from direct.filter.CommonFilters import CommonFilters  # type: ignore
 
 from direct.showbase import DirectObject  # type: ignore
 import ursina as urs  # type: ignore

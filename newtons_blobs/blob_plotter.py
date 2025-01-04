@@ -123,6 +123,7 @@ class BlobPlotter:
             ],
             dtype=MassiveBlob,
         )
+        self.num_moons: int = (NUM_BLOBS - 1) - bg_vars.num_planets
         self.square_grid: bool = bg_vars.square_blob_plotter
         self.start_perfect_orbit: bool = bg_vars.start_perfect_orbit
         self.start_angular_chaos: bool = bg_vars.start_angular_chaos
@@ -158,13 +159,13 @@ class BlobPlotter:
         self.square_grid = data["square_grid"]
         self.start_perfect_orbit = data["start_perfect_orbit"]
         self.start_angular_chaos = data["start_angular_chaos"]
-        self.blobs = np.empty([len(data["blobs"])], dtype=MassiveBlob)
+        self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.z_axis.clear()
         bp.set_gravitational_range(self.universe_size_h * bg_vars.scale_up)
 
         i = 0
         for blob_pref in data["blobs"]:
-            self.blobs[i] = MassiveBlob(
+            self.blobs[blob_pref["index"]] = MassiveBlob(
                 self.universe_size_h,
                 blob_pref["index"],
                 blob_pref["name"],
@@ -174,10 +175,11 @@ class BlobPlotter:
                     blob_pref["radius"] * bg_vars.au_scale_factor,
                     blob_pref["mass"],
                     tuple(blob_pref["color"]),  # type: ignore
-                    blob_pref.get("texture"),  # Might not exist
-                    blob_pref.get("ring_texture"),  # Might not exist
-                    blob_pref.get("rotation_speed"),  # Might not exist
-                    blob_pref.get("rotation_pos"),  # Might not exist
+                    blob_pref.get("texture", None),  # Might not exist
+                    blob_pref.get("ring_texture", None),  # Might not exist
+                    blob_pref.get("ring_scale", None),  # Might not exist
+                    blob_pref.get("rotation_speed", None),  # Might not exist
+                    blob_pref.get("rotation_pos", None),  # Might not exist
                 ),
                 blob_pref["mass"],
                 blob_pref["x"],
@@ -188,10 +190,23 @@ class BlobPlotter:
                 blob_pref["vz"],
             )
 
+            self.blobs[blob_pref["index"]].blob_surface.barycenter_index = (
+                blob_pref.get("barycenter_index", 0)
+            )
+
             if not bg_vars.true_3d:
-                self.add_z_axis(self.blobs[i])
+                self.add_z_axis(self.blobs[blob_pref["index"]])
 
             i += 1
+
+        for blob in self.blobs:
+            if blob is not None:
+                if blob.blob_surface.barycenter_index > 0:
+                    blob.blob_surface.set_barycenter(
+                        self.blobs[blob.blob_surface.barycenter_index].blob_surface
+                    )
+
+        self.blobs = np.delete(self.blobs, np.where(self.blobs == None)[0])
 
     def start_over(self: Self) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
@@ -267,9 +282,10 @@ class BlobPlotter:
             radius: float = 0.0
             mass: float = 0.0
 
-            if i > ((NUM_BLOBS - 1) * bg_vars.blob_moon_percent):
+            if i > self.num_moons:
 
                 moon = False
+
                 if blob_random.randint(1, 10) > 4:
                     radius = round(
                         (
@@ -630,6 +646,9 @@ class BlobPlotter:
         scaled_half_universe_h: float = self.blobs[0].y
 
         orbiting_blobs: int = len(planets)
+        blobs_per_ring: int = 5
+        if self.num_moons > 0:
+            blobs_per_ring = bg_vars.num_planets + 1
 
         # Iterators for circular grid placement, blobs will be placed in ever
         # increasing sized circles around the center blob
@@ -640,13 +659,13 @@ class BlobPlotter:
         # How much the radius will increase each time we move to the next biggest
         # circle around the center blob (the size will be some multiple of the diameter of the biggest
         # blob)
-        plot_radius_partition: float = AU * 3  # ((MAX_RADIUS * 10)) * SCALE_UP
+        plot_radius_partition: float = AU * 4  # ((MAX_RADIUS * 10)) * SCALE_UP
 
         # The start radius (smallest circle around center blob)
         plot_radius: float = AU * 4
 
         # arc length between each blob, i.e. how many blobs per circumference
-        arc: float = (math.pi * (plot_radius * 2)) / 6
+        arc: float = (math.pi * (plot_radius * 2)) / blobs_per_ring
 
         # How far apart each blob will be on each circumference
         chord_scaled: float = 2 * plot_radius * math.sin(arc / (plot_radius * 2))
@@ -672,7 +691,8 @@ class BlobPlotter:
         if ((math.pi * 2) / pi_inc) > (orbiting_blobs):
             stagger_radius = True
             pi_inc = (math.pi * 2) / (orbiting_blobs)
-            plot_radius -= AU
+            plot_radius_partition /= 2
+            # plot_radius -= AU
 
         for i in range(0, len(planets)):
 
@@ -693,7 +713,9 @@ class BlobPlotter:
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
 
             if stagger_radius:
-                plot_radius += AU + (blob_random.random() * plot_radius_partition)
+                plot_radius += plot_radius_partition + (
+                    blob_random.random() * plot_radius_partition
+                )
 
             if round(plot_phi + pi_inc, 8) > round((math.pi * 2) - (pi_inc), 8):
                 plot_phi = 0.0

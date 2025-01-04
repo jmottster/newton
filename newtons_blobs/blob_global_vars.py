@@ -87,7 +87,7 @@ class BlobGlobalVars:
     BlobGlobalVars.orig_timescale: ClassVar[int] - number of seconds to pass with each frame, original value
     BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
     BlobGlobalVars.true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
-    BlobGlobalVars.blob_moon_percent: ClassVar[float] - Percentage of blobs that are moons (if true_3d)
+    BlobGlobalVars.num_planets: ClassVar[int] - how many blobs to make planets (out of NUM_BLOBS)
     BlobGlobalVars.textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
     BlobGlobalVars.start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
     BlobGlobalVars.start_angular_chaos: ClassVar[bool] - whether or not to start orbit with a perpendicular push
@@ -119,8 +119,8 @@ class BlobGlobalVars:
     BlobGlobalVars.set_wrap_if_no_escape(wrap_if_no_escape: bool) -> None
         Class method to set whether to wrap around at edges (or bounce) when edge detection is used
 
-    BlobGlobalVars.set_blob_moon_percent(blob_moon_percent: float) -> None
-        Class method to set BlobGlobalVars.blob_moon_percent
+    BlobGlobalVars.set_num_planets(num_planets: int) -> None
+        Class method to set BlobGlobalVars.num_planets
 
     BlobGlobalVars.apply_configure() -> None
         Resets all variables that are calculated based on other variables
@@ -246,7 +246,7 @@ class BlobGlobalVars:
     orig_timescale: ClassVar[int] = TIMESCALE
     timescale_inc: ClassVar[int] = MINUTES
     true_3d: ClassVar[bool] = TRUE_3D
-    blob_moon_percent: ClassVar[float] = BLOB_MOON_PERCENT
+    num_planets: ClassVar[int] = NUM_PLANETS
     textures_3d: ClassVar[bool] = TEXTURES_3D
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
     start_angular_chaos: ClassVar[bool] = START_ANGULAR_CHAOS
@@ -301,9 +301,9 @@ class BlobGlobalVars:
         cls.apply_configure()
 
     @classmethod
-    def set_blob_moon_percent(cls, blob_moon_percent: float) -> None:
-        """Class method to set BlobGlobalVars.blob_moon_percent"""
-        cls.blob_moon_percent = blob_moon_percent
+    def set_num_planets(cls, num_planets: int) -> None:
+        """Class method to set BlobGlobalVars.num_planets"""
+        cls.num_planets = num_planets
         cls.apply_configure()
 
     @classmethod
@@ -328,7 +328,7 @@ class BlobGlobalVars:
         cls.min_radius = (cls.au_scale_factor * (E / AU)) * cls.blob_scale
         cls.max_radius = (cls.au_scale_factor * (J / AU)) * cls.blob_scale
 
-        cls.min_moon_radius = (cls.au_scale_factor * (MIM / AU)) * cls.blob_scale
+        cls.min_moon_radius = (cls.au_scale_factor * (ENC / AU)) * cls.blob_scale
         cls.max_moon_radius = (cls.au_scale_factor * (GAN / AU)) * cls.blob_scale
 
         if cls.scale_blob_mass_with_size:
@@ -346,7 +346,7 @@ class BlobGlobalVars:
         cls.wrap_if_no_escape = cls.wrap_if_no_escape and not cls.center_blob_escape
 
         if not cls.true_3d:
-            cls.blob_moon_percent = 0
+            cls.num_planets = NUM_BLOBS - 1
 
     @classmethod
     def print_info(cls) -> None:

@@ -175,6 +175,7 @@ class MassiveBlob:
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
         data["index"] = self.index
+        data["barycenter_index"] = self.blob_surface.barycenter_index
         data["name"] = self.blob_surface.name
         data["radius"] = self.orig_radius[2] / bg_vars.au_scale_factor
         data["color"] = self.blob_surface.color
@@ -182,6 +183,8 @@ class MassiveBlob:
             data["texture"] = self.blob_surface.texture
         if getattr(self.blob_surface, "ring_texture"):
             data["ring_texture"] = self.blob_surface.ring_texture
+        if getattr(self.blob_surface, "ring_scale"):
+            data["ring_scale"] = self.blob_surface.ring_scale
         if getattr(self.blob_surface, "rotation_speed"):
             data["rotation_speed"] = self.blob_surface.rotation_speed
         if getattr(self.blob_surface, "rotation_pos"):

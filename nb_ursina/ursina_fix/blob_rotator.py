@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 from pathlib import Path
-from typing import Self, Tuple
+from typing import Self, Tuple, Protocol
 
 from panda3d.core import Vec3 as PanVec3  # type: ignore
 from panda3d.core import Vec4 as PanVec4  # type: ignore
@@ -36,6 +36,20 @@ __version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
+
+
+class FollowerEntity(Protocol):
+
+    @property
+    def position(self: Self) -> urs.Vec3:
+        pass
+
+    @position.setter
+    def position(self: Self, position: urs.Vec3) -> None:
+        pass
+
+    def stop_following(self: Self) -> None:
+        pass
 
 
 class BlobRotator(urs.Entity):
@@ -76,7 +90,7 @@ class BlobRotator(urs.Entity):
         The x,y,z axis rotation positions in degrees relative to urs.scene
         Setting this is relative to current self position
 
-    follower_entity: urs.Entity
+    follower_entity: BlobFirstPersonUrsina
         Setting ths makes the Entity use this BlobRotator as its inertial frame of
         reference. I.e., its position will be updated in such a way that this BlobRotator
         will maintain the same relative distance/position, still allowing it to move
@@ -144,10 +158,11 @@ class BlobRotator(urs.Entity):
         self.texture_name: str = kwargs.get("texture_name")
         self.glow_map_name: str = kwargs.get("glow_map_name")
         self.ring_texture: str = kwargs.get("ring_texture")
+        self.ring_scale: float = kwargs.get("ring_scale")
         self.center_light: NodePath = kwargs.get("center_light")
         self.color = kwargs.get("color")
 
-        self._follower_entity: urs.Entity = None
+        self._follower_entity: FollowerEntity = None
         self.follower_entity_last_pos: urs.Vec3 = None
 
         for key in (
@@ -310,12 +325,12 @@ class BlobRotator(urs.Entity):
         self.rotation_pos = (x, y, z)
 
     @property
-    def follower_entity(self: Self) -> urs.Entity:
+    def follower_entity(self: Self) -> FollowerEntity:
         """Get this follower_entity property"""
         return self._follower_entity
 
     @follower_entity.setter
-    def follower_entity(self: Self, follower_entity: urs.Entity) -> None:
+    def follower_entity(self: Self, follower_entity: FollowerEntity) -> None:
         """
         Setting ths makes the Entity use this BlobRotator as its inertial frame of
         reference. I.e., its position will be updated in such a way that this BlobRotator
@@ -437,9 +452,11 @@ class BlobRotator(urs.Entity):
             )
 
             self.planet_ring.reparentTo(self.rotator_model)
-            scale: float = (blob_random.random() * 0.3) + 0.4
             self.planet_ring.setDepthOffset(-4)
-            self.planet_ring.setScale((scale, scale, scale))
+            if self.ring_scale is not None:
+                self.planet_ring.setScale(
+                    (self.ring_scale, self.ring_scale, self.ring_scale)
+                )
             self.planet_ring.setTransparency(TransparencyAttrib.M_dual)
             if self.color is not None:
                 self.planet_ring.setColor(self.color)
@@ -496,6 +513,10 @@ class BlobRotator(urs.Entity):
 
     def on_destroy(self: Self) -> None:
         """Called by Ursina when this Entity is destroyed"""
+
+        if self.follower_entity is not None:
+            self.follower_entity.stop_following()
+
         if self.rotator_model is not None:
             if self.planet_ring is not None:
                 self.planet_ring.removeNode()

@@ -65,7 +65,16 @@ class BlobUrsinaFactory:
     reset(num_blobs: int = NUM_BLOBS) -> None
         Resets to default state
 
-    new_blob_surface(name: str, radius: float, mass: float, color: Tuple[int, int, int], texture: str = None, ring_texture: str = None, rotation_speed: float = None, rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+    new_blob_surface(index: int,
+                     name: str,
+                     radius: float,
+                     mass: float,
+                     color: Tuple[int, int, int],
+                     texture: str = None,
+                     ring_texture: str = None,
+                     ring_scale: float = None,
+                     rotation_speed : float = None,
+                     rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -114,13 +123,13 @@ class BlobUrsinaFactory:
         bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
-        bg_vars.set_first_person_scale(bg_vars.max_radius * 2)
+        bg_vars.set_first_person_scale(bg_vars.max_radius * 1)
         bg_vars.set_background_scale(bg_vars.universe_size)
-        bg_vars.set_timescale(DAYS * 2)
-        bg_vars.set_orig_timescale(DAYS * 2)
-        bg_vars.set_timescale_inc(HOURS * 6)
+        bg_vars.set_timescale(DAYS * 1)
+        bg_vars.set_orig_timescale(DAYS * 1)
+        bg_vars.set_timescale_inc(HOURS * 3)
         bg_vars.set_true_3d(True)
-        bg_vars.set_blob_moon_percent(0.875)
+        bg_vars.set_num_planets(5)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)
@@ -130,7 +139,7 @@ class BlobUrsinaFactory:
 
         bg_vars.print_info()
 
-        self.start_distance = bg_vars.au_scale_factor * 15
+        self.start_distance = bg_vars.au_scale_factor * 4 * bg_vars.num_planets
 
         BlobText.default_font = DISPLAY_FONT
         # BlobText.size = 0.5
@@ -300,6 +309,7 @@ class BlobUrsinaFactory:
         color: Tuple[int, int, int],
         texture: str = None,
         ring_texture: str = None,
+        ring_scale: float = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
     ) -> BlobSurface:
@@ -316,6 +326,7 @@ class BlobUrsinaFactory:
             self.get_blob_universe(),
             texture,
             ring_texture,
+            ring_scale,
             rotation_speed,
             rotation_pos,
         )
@@ -440,7 +451,7 @@ class BlobUrsinaFactory:
                             diff = urs.Vec3(pos1 - pos2)
                             d = math.sqrt(diff[0] ** 2 + diff[1] ** 2 + diff[2] ** 2)
                             if d <= touching:
-                                touching += 0.01
+                                touching += 20
                                 diff = urs.Vec3(diff.normalized() * (touching - d))
                                 self.first_person_blob.blob_surface.first_person_viewer.position += (
                                     diff

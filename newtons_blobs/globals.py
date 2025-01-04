@@ -31,6 +31,7 @@ E = 6.3781 * 10**6  # Radius of the Earth
 # Moons
 GAN = 2.6341 * 10**6  # Radius of Ganymede (largest moon in solar system)
 M = 1.7381 * 10**6  # Radius of the Moon
+ENC = 0.2521 * 10**6  # Radius of Enceladus (small moon in solar system)
 MIM = 0.1982 * 10**6  # Radius of Mimas (smallest round moon in solar system)
 
 # Masses in Kilograms
@@ -44,14 +45,12 @@ E_MASS = 5.972 * 10**24  # Mass of Earth
 # Moons
 GAN_MASS = 1.4819 * 10**23  # Mass of Ganymede (largest moon in solar system)
 M_MASS = 7.342 * 10**22  # Mass of the Moon
+ENC_MASS = 1.080318 * 10**20  # Mass of Enceladus (small moon in solar system)
 MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar system)
 
 
 LOW_VRAM = False
 TRUE_3D = True
-BLOB_MOON_PERCENT = 0.75  # Percentage of blobs that are moons (if true_3d)
-if not TRUE_3D:
-    BLOB_MOON_PERCENT = 0
 TEXTURES_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
@@ -67,7 +66,7 @@ SCALE_DOWN = AU_SCALE_FACTOR / AU  # 1 AU = SCALE_FACTOR pixels
 SCALE_UP = AU / AU_SCALE_FACTOR  # SCALE_FACTOR pixels = 1 AU
 
 FRAME_RATE = 60  # there are FRAME_RATE frames per second
-CLOCK_FPS = True
+CLOCK_FPS = False
 
 SECONDS = 1
 MINUTES = SECONDS * 60
@@ -83,6 +82,11 @@ LIGHTING = True
 
 # Constants for creating blobs somewhat randomly
 NUM_BLOBS = 41
+
+# number of NUM_BLOBS that are planets (if true_3d)
+NUM_PLANETS = 5
+if not TRUE_3D:
+    NUM_PLANETS = NUM_BLOBS - 1
 
 # If true all blobs will start
 # with a perfect orbital velocity
@@ -124,13 +128,13 @@ MIN_RADIUS = (AU_SCALE_FACTOR * (E / AU)) * BLOB_SCALE
 MAX_RADIUS = (AU_SCALE_FACTOR * (J / AU)) * BLOB_SCALE
 BLOB_SHADOW_RESOLUTION = 8192
 
-MIN_MOON_RADIUS = (AU_SCALE_FACTOR * (MIM / AU)) * BLOB_SCALE
+MIN_MOON_RADIUS = (AU_SCALE_FACTOR * (ENC / AU)) * BLOB_SCALE
 MAX_MOON_RADIUS = (AU_SCALE_FACTOR * (GAN / AU)) * BLOB_SCALE
 
 MIN_MASS = E_MASS
 MAX_MASS = J_MASS
 
-MIN_MOON_MASS = MIM_MASS
+MIN_MOON_MASS = ENC_MASS
 MAX_MOON_MASS = GAN_MASS
 
 FIRST_PERSON_SCALE = MAX_RADIUS * 2.5

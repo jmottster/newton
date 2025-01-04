@@ -21,6 +21,7 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 
 from .blob_surface_ursina import BlobCore
+from .fps import FPS
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -42,11 +43,11 @@ class MoonWatcher(urs.Entity):
 
     self.num_moons : int
         The number of moons, used to create the array that will hold them.
-        Set to int((NUM_BLOBS - 1) * bg_vars.blob_moon_percent)
+        Set to int(NUM_BLOBS - 1) - bg_vars.num_planets
 
     self.num_planets : int
         The number of planets, used to create the array that will hold them.
-        Set to int((NUM_BLOBS - 1) - self.num_moons)
+        Set to bg_vars.num_planets
 
     self.planet_index_offset : int
         Used to turn planet number into a proper array index that begins at 0
@@ -138,8 +139,8 @@ class MoonWatcher(urs.Entity):
 
         self.eternal = True
 
-        self.num_moons: int = int((NUM_BLOBS - 1) * bg_vars.blob_moon_percent)
-        self.num_planets: int = int((NUM_BLOBS - 1) - self.num_moons)
+        self.num_moons: int = int(NUM_BLOBS - 1) - bg_vars.num_planets
+        self.num_planets: int = bg_vars.num_planets
         self.planet_index_offset: int = self.num_moons + 1
 
         self.planets: npt.NDArray = np.empty([self.num_planets], dtype=BlobCore)
@@ -197,7 +198,7 @@ class MoonWatcher(urs.Entity):
         """
 
         if self.trail_on:
-            self._t += urs.time.dt
+            self._t += FPS.dt
             if self._t >= self.update_step:
 
                 distance: float = urs.distance(

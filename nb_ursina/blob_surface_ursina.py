@@ -396,6 +396,7 @@ class BlobCore(BlobRotator):
             texture_name=kwargs.get("texture_name"),
             glow_map_name=kwargs.get("glow_map_name"),
             ring_texture=kwargs.get("ring_texture"),
+            ring_scale=kwargs.get("ring_scale"),
             radius=kwargs.get("radius"),
             scale=kwargs.get("scale"),
             center_light=kwargs.get("center_light"),
@@ -457,8 +458,10 @@ class BlobCore(BlobRotator):
             )
             * 100
         )
-        self.is_moon: bool = self.scale_x < bg_vars.min_radius
+        self.is_gas: bool = self.percent_radius > 50
+        self.is_rocky: bool = self.percent_radius < 50
 
+        self.is_moon: bool = self.scale_x < bg_vars.min_radius
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
             self.percent_mass = round(
@@ -825,7 +828,7 @@ class BlobCore(BlobRotator):
         if not self.blob_name == CENTER_BLOB_NAME and not self.is_moon and key == "y":
 
             if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
-                self.scale = urs.Vec3(self.radius * 30)
+                self.scale = urs.Vec3(self.radius * 35)
 
             else:
                 self.scale = urs.Vec3(self.radius)
@@ -833,7 +836,19 @@ class BlobCore(BlobRotator):
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
             if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
-                self.scale = urs.Vec3(self.radius * 5)
+                size_factor = 10
+                if hasattr(self.barycenter_blob, "is_rocky") or hasattr(
+                    self.barycenter_blob, "is_gas"
+                ):
+                    if self.barycenter_blob.is_rocky:
+                        size_factor = (
+                            3 * (self.barycenter_blob.percent_radius / 25)
+                        ) + 1
+                    else:
+                        size_factor = (
+                            2 * ((self.barycenter_blob.percent_radius - 75) / 25)
+                        ) + 7
+                self.scale = urs.Vec3(self.radius * size_factor)
             else:
                 self.scale = urs.Vec3(self.radius)
 
@@ -902,15 +917,24 @@ class BlobSurfaceUrsina:
         The universe instance the blobs will be drawn on
     texture : str
         For 3d rendering, this is optional (implement as texture = None in __init__)
+    ring_texture : str = None
+        For 3d rendering, this is optional (implement as ring_texture = None in __init__)
+    ring_scale : float = None
+        Scale of ring relative to blob scale for gas blobs with rings, optional
     rotation_speed : float = None
         For 3d rendering, the speed (degrees per frame) at which the blob will spin
     rotation_pos : Tuple[float, float, float] = None
         For 3d rendering, the z,y,z angles of orientation of the blob (in degrees)
     position : Tuple[float,float,float] = (0,0,0)
         The x,y,z position for this blob
+    barycenter_index : int
+        The index of the blob that this blob orbits (used for moon blobs)
 
     Methods
     -------
+    set_barycenter(blob: "BlobSurface") -> None:
+        Sets the blob that this blob orbits (used for moon blobs)
+
     set_orbital_pos_vel(orbital: BlobSurface) -> None
         Sets orbital to a position and velocity appropriate for an orbital of this blob
 
@@ -947,10 +971,12 @@ class BlobSurfaceUrsina:
         "universe",
         "_texture",
         "ring_texture",
+        "ring_scale",
         "_rotation_speed",
         "_rotation_pos",
         "ursina_center_blob_light",
         "ursina_blob",
+        "_barycenter_index",
     )
 
     center_blob_x: ClassVar[float] = 0
@@ -969,6 +995,7 @@ class BlobSurfaceUrsina:
         universe: BlobUniverse,
         texture: str = None,
         ring_texture: str = None,
+        ring_scale: float = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[float, float, float] = None,
     ):
@@ -985,9 +1012,11 @@ class BlobSurfaceUrsina:
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.texture: str = texture
         self.ring_texture: str = ring_texture
+        self.ring_scale: float = ring_scale
         self._rotation_speed: float = None
         self._rotation_pos: Tuple[float, float, float] = None
         self._position: Tuple[float, float, float] = (0, 0, 0)
+        self._barycenter_index: int = 0
         self.trail_color: urs.Color = urs.color.rgb32(25, 100, 150)
         self.ursina_blob: BlobCore = None
 
@@ -1008,9 +1037,12 @@ class BlobSurfaceUrsina:
                 if self.radius >= (halfway_max_halfway):
                     i: int = blob_random.randint(0, len(BLOB_TEXTURES_GAS) - 1)
                     self.texture = BLOB_TEXTURES_GAS[i]
-                    if (blob_random.random() * 100) > 0:
+                    if (blob_random.random() * 100) > 50:
                         self.ring_texture = BLOB_TEXTURES_RINGS[i]
-                        # self.name = self.ring_texture
+
+                        if self.ring_scale is None:
+                            self.ring_scale: float = (blob_random.random() * 0.3) + 0.4
+
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
                         blob_random.randint(0, len(BLOB_TEXTURES_ROCKY) - 1)
@@ -1084,6 +1116,7 @@ class BlobSurfaceUrsina:
                 texture_name=self.texture,
                 glow_map_name=glow_map_name,
                 ring_texture=self.ring_texture,
+                ring_scale=self.ring_scale,
                 center_light=BlobSurfaceUrsina.center_blob.light_node,
                 color=urs_color,
                 trail_color=self.trail_color,
@@ -1171,6 +1204,24 @@ class BlobSurfaceUrsina:
         """Sets the rotation_speed attribute"""
         self._rotation_speed = rotation_speed
 
+    @property
+    def barycenter_index(self: Self) -> int:
+        """The index of the blob that this blob orbits (used for moon blobs)"""
+        if self.ursina_blob.barycenter_blob is not None:
+            self._barycenter_index = self.ursina_blob.barycenter_blob.index
+            return self.ursina_blob.barycenter_blob.index
+        else:
+            return self._barycenter_index
+
+    @barycenter_index.setter
+    def barycenter_index(self: Self, barycenter_index: int) -> None:
+        self._barycenter_index = barycenter_index
+
+    def set_barycenter(self: Self, blob: BlobSurface) -> None:
+        """Sets the blob that this blob orbits (used for moon blobs)"""
+        u_blob: BlobSurfaceUrsina = cast(BlobSurfaceUrsina, blob)
+        self.ursina_blob.barycenter_blob = u_blob.ursina_blob
+
     def set_orbital_pos_vel(
         self: Self, orbital: BlobSurface
     ) -> Tuple[float, float, float]:
@@ -1220,7 +1271,7 @@ class BlobSurfaceUrsina:
     def destroy(self: Self) -> None:
         """Called when getting rid of this instance, so it can clean up"""
 
-        if BlobSurfaceUrsina.center_blob is not None:
+        if self.index == 0:
             BlobSurfaceUrsina.center_blob = None
 
         urs.destroy(self.ursina_blob)
