@@ -455,11 +455,11 @@ class BlobUrsinaFactory:
                             if d <= touching:
                                 touching += 20
                                 diff = urs.Vec3(diff.normalized() * (touching - d))
-                                self.first_person_blob.blob_surface.first_person_viewer.position += (
+                                self.urs_display.first_person_surface.first_person_viewer.position += (
                                     diff
                                 )
                                 colliding = True
                                 pos1 = urs.Vec3(
                                     self.first_person_blob.blob_surface.position
                                 )
-        self.first_person_blob.blob_surface.first_person_viewer.colliding = colliding
+        self.urs_display.first_person_surface.first_person_viewer.colliding = colliding
