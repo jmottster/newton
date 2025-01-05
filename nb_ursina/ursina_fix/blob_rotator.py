@@ -383,7 +383,7 @@ class BlobRotator(urs.Entity):
     def create_blob(self: Self, texture_name: str = None) -> None:
         """Creates the blob model"""
 
-        if self.index == 10:
+        if not LOW_VRAM and self.index == 10:
             self.create_special_blob()
             return
 
