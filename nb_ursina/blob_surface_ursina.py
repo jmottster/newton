@@ -335,6 +335,10 @@ class BlobCore(BlobRotator):
         Creates the orbital trail. Called by input() when the "t" key is pressed if it
         is not running
 
+    destroy_trail() -> None
+        Disables and destroys the trail entity. Called by input() when the "t" is pressed
+        and there is a trail running.
+
     create_text_overlay() -> None
         Instantiates all the objects necessary to display the text overlay.
         This is called by on_click()
@@ -441,6 +445,7 @@ class BlobCore(BlobRotator):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        self._barycenter_blob: BlobCore = None
         self.trail: TrailRenderer = None
         self.trail_ready: bool = False
         self.text_entity: urs.Entity = None
@@ -482,7 +487,6 @@ class BlobCore(BlobRotator):
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
-        self._barycenter_blob: BlobCore = None
 
         if not self.is_moon:
             for bit in range(1, len(BlobCore.bit_masks)):
@@ -649,6 +653,16 @@ class BlobCore(BlobRotator):
             unlit=True,
             shader=shd.unlit_shader,
         )
+
+    def destroy_trail(self: Self) -> None:
+        """
+        Disables and destroys the trail entity. Called by input() when the "t" is pressed
+        and there is a trail running.
+        """
+        if self.trail is not None:
+            self.trail.enabled = False  # type: ignore
+            urs.destroy(self.trail)
+            self.trail = None
 
     def create_text_overlay(self: Self) -> None:
         """
@@ -817,11 +831,9 @@ class BlobCore(BlobRotator):
                 self.update_text_background()
 
         if self.trail_ready and key == "t":
-            if self.trail is not None:
-                self.trail.enabled = False  # type: ignore
-                urs.destroy(self.trail)
-                self.trail = None
 
+            if self.trail is not None:
+                self.destroy_trail()
             elif self.trail is None:
                 self.create_trail()
 
@@ -836,7 +848,7 @@ class BlobCore(BlobRotator):
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
             if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
-                size_factor = 10
+                size_factor: float = 10
                 if hasattr(self.barycenter_blob, "is_rocky") or hasattr(
                     self.barycenter_blob, "is_gas"
                 ):
@@ -1011,6 +1023,7 @@ class BlobSurfaceUrsina:
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.texture: str = texture
+        glow_map_name: str = None
         self.ring_texture: str = ring_texture
         self.ring_scale: float = ring_scale
         self._rotation_speed: float = None
@@ -1041,7 +1054,7 @@ class BlobSurfaceUrsina:
                         self.ring_texture = BLOB_TEXTURES_RINGS[i]
 
                         if self.ring_scale is None:
-                            self.ring_scale: float = (blob_random.random() * 0.3) + 0.4
+                            self.ring_scale = (blob_random.random() * 0.3) + 0.4
 
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
@@ -1060,7 +1073,7 @@ class BlobSurfaceUrsina:
         if color == CENTER_BLOB_COLOR:
 
             enabled: bool = not bg_vars.black_hole_mode
-            glow_map_name: str = "glow_maps/8k_sun-glow_map.jpg"
+            glow_map_name = "glow_maps/8k_sun-glow_map.jpg"
 
             urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
             self.texture = "suns/8k_sun.jpg"
@@ -1098,7 +1111,7 @@ class BlobSurfaceUrsina:
 
         else:
 
-            glow_map_name: str = "glow_maps/no_glow_map.png"
+            glow_map_name = "glow_maps/no_glow_map.png"
 
             if not bg_vars.textures_3d:
                 self.texture = None

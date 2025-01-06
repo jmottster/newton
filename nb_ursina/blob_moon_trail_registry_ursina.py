@@ -142,6 +142,7 @@ class MoonWatcher(urs.Entity):
         self.num_moons: int = int(NUM_BLOBS - 1) - bg_vars.num_planets
         self.num_planets: int = bg_vars.num_planets
         self.planet_index_offset: int = self.num_moons + 1
+        self.proximity: float = bg_vars.au_scale_factor * 2
 
         self.planets: npt.NDArray = np.empty([self.num_planets], dtype=BlobCore)
         self.moons: npt.NDArray = np.empty([self.num_moons], dtype=BlobCore)
@@ -201,49 +202,56 @@ class MoonWatcher(urs.Entity):
             self._t += FPS.dt
             if self._t >= self.update_step:
 
-                distance: float = urs.distance(
-                    self.first_person_viewer.world_position,
-                    self.planets[0].world_position,
-                )
-                next_distance: float = 0
-                closest: int = -1
-                proximity: float = bg_vars.au_scale_factor * 2
-                if distance <= proximity:
-                    closest = 0
+                barycenter: BlobCore = self.first_person_viewer.follow_entity
 
-                for i in range(1, len(self.planets)):
-                    next_distance = urs.distance(
-                        self.first_person_viewer.world_position,
-                        self.planets[i].world_position,
-                    )
+                if barycenter is not None:
+                    if (
+                        urs.distance(
+                            self.first_person_viewer.world_position,
+                            barycenter.world_position,
+                        )
+                        > self.proximity
+                    ):
+                        barycenter = None
 
-                    if next_distance < distance:
-                        distance = next_distance
-                        if distance <= proximity:
-                            closest = i
+                if barycenter is None:
+                    next_distance: float = 0
+                    distance: float = 0
+                    for i in range(1, len(self.planets)):
+                        next_distance = urs.distance(
+                            self.first_person_viewer.world_position,
+                            self.planets[i].world_position,
+                        )
+
+                        if next_distance < distance:
+                            distance = next_distance
+                            if distance <= self.proximity:
+                                barycenter = self.planets[i]
+                        elif distance == 0:
+                            distance = next_distance
+                            if distance <= self.proximity:
+                                barycenter = self.planets[i]
 
                 for blob in self.moons:
+
                     if (
-                        closest >= 0
-                        and urs.distance(
-                            blob.world_position, self.planets[closest].world_position
-                        )
+                        barycenter is not None
+                        and urs.distance(blob.world_position, barycenter.world_position)
                         <= bg_vars.au_scale_factor
+                        and blob.blob_name != barycenter.blob_name
                     ):
+
                         if (
-                            not blob.trail.enabled
-                            or blob.barycenter_blob is None
-                            or blob.barycenter_blob.blob_name
-                            != self.planets[closest].blob_name
+                            blob.trail.barycenter_blob is None
+                            or blob.trail.barycenter_blob.blob_name
+                            != barycenter.blob_name
                         ):
 
-                            if (
-                                blob.trail.barycenter_blob is None
-                                or blob.trail.barycenter_blob.blob_name
-                                != self.planets[closest].blob_name
-                            ):
-                                blob.barycenter_blob = self.planets[closest]
-                                blob.trail.barycenter_blob = self.planets[closest]
+                            blob.destroy_trail()
+                            blob.create_trail()
+                            blob.trail.barycenter_blob = barycenter
+
+                        if not blob.trail.enabled:
 
                             blob.trail.enabled = True
 
