@@ -409,7 +409,7 @@ class BlobRunner:
 
             # Bottom left, showing number of blobs swallowed by the sun
             self.display.blit_text(
-                f"Blobs swallowed by Sun: {self.blob_plotter.blobs_swallowed}",
+                f"Blobs swallowed by blobs: {self.blob_plotter.blobs_swallowed}",
                 (
                     20,
                     20,

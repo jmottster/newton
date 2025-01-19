@@ -26,6 +26,8 @@ from .blob_textures import (
 
 from .ursina_fix import PlanetMaterial
 
+from .blob_utils_ursina import MathFunctions as mf
+
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
 __license__ = "GPL 3.0"
@@ -77,7 +79,6 @@ class BlobUniverseUrsina:
 
     size_w: float
     size_h: float
-    bit_masks: list = [0b0001, 0b0010, 0b0100, 0b1000, 0b10000, 0b100000]
 
     def __init__(self: Self, size_w: float, size_h: float):
 
@@ -155,8 +156,8 @@ class BlobUniverseUrsina:
             )
 
         self.universe.setLightOff(True)
-        for bit in range(0, len(BlobUniverseUrsina.bit_masks)):
-            self.universe.hide(BlobUniverseUrsina.bit_masks[bit])
+        for bit in range(0, len(mf.bit_masks)):
+            self.universe.hide(mf.bit_masks[bit])
 
         if texture_index is not None:
             self.universe.setHpr(BLOB_BACKGROUND_ROTATION[texture_index])

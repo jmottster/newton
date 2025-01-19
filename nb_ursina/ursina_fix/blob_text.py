@@ -178,19 +178,23 @@ class BlobText(urs.Entity):
     @property
     def text(self: Self) -> str:
         """The text to be displayed"""
-        t: str = ""
-        z: float = 0
+
         if self.text_nodes:
-            z = self.text_nodes[0].getZ()
+            if len(self.text_nodes) > 1:
+                t: str = ""
+                z: float = 0
+                z = self.text_nodes[0].getZ()
 
-        for tn in self.text_nodes:
-            if z != tn.getZ():
-                t += "\n"
-                z = tn.getZ()
+                for tn in self.text_nodes:
+                    if z != tn.getZ():
+                        t += "\n"
+                        z = tn.getZ()
 
-            t += tn.node().text
+                    t += tn.node().text
 
-        return t
+                return t
+            return self.text_nodes[0].node().text
+        return ""
 
     @text.setter  # set this to update the text.
     def text(self: Self, text: str) -> None:
@@ -458,46 +462,46 @@ class BlobText(urs.Entity):
         except:
             pass  # default font
 
-        if self.use_tags and tag != "<>":
-            tag = tag[1:-1]
+        # if self.use_tags and tag != "<>":
+        #     tag = tag[1:-1]
 
-            if tag.startswith("hsb("):  # set color based on numbers
-                tag = tag[4:-1]
-                hsb_values: Tuple[float, ...] = tuple(
-                    float(e.strip()) for e in tag.split(",")
-                )
-                self.current_color = urs.color.hsv(*hsb_values)
+        #     if tag.startswith("hsb("):  # set color based on numbers
+        #         tag = tag[4:-1]
+        #         hsb_values: Tuple[float, ...] = tuple(
+        #             float(e.strip()) for e in tag.split(",")
+        #         )
+        #         self.current_color = urs.color.hsv(*hsb_values)
 
-            elif tag.startswith("rgb("):  # set color based on numbers
-                tag = tag[4:-1]
-                rgb_values: Tuple[float, ...] = tuple(
-                    float(e.strip()) for e in tag.split(",")
-                )
-                self.current_color = urs.color.rgba(*rgb_values)
+        #     elif tag.startswith("rgb("):  # set color based on numbers
+        #         tag = tag[4:-1]
+        #         rgb_values: Tuple[float, ...] = tuple(
+        #             float(e.strip()) for e in tag.split(",")
+        #         )
+        #         self.current_color = urs.color.rgba(*rgb_values)
 
-            if tag.startswith("scale:"):
-                scale: str = tag.split(":")[1]
-                self.scale_override = float(scale)
+        #     if tag.startswith("scale:"):
+        #         scale: str = tag.split(":")[1]
+        #         self.scale_override = float(scale)
 
-            elif tag.startswith("image:"):
-                texture_name: str = tag.split(":")[1]
-                image: urs.Entity = urs.Entity(
-                    parent=text_node_path,
-                    name="inline_image",
-                    model="quad",
-                    texture=texture_name,
-                    color=self.current_color,
-                    origin=(0.0, 0, -0.25),
-                    add_to_scene_entities=False,
-                )
-                if not image.texture:
-                    urs.destroy(image)
-                else:
-                    self.images.append(image)
+        #     elif tag.startswith("image:"):
+        #         texture_name: str = tag.split(":")[1]
+        #         image: urs.Entity = urs.Entity(
+        #             parent=text_node_path,
+        #             name="inline_image",
+        #             model="quad",
+        #             texture=texture_name,
+        #             color=self.current_color,
+        #             origin=(0.0, 0, -0.25),
+        #             add_to_scene_entities=False,
+        #         )
+        #         if not image.texture:
+        #             urs.destroy(image)
+        #         else:
+        #             self.images.append(image)
 
-            else:
-                if tag in self.text_colors:
-                    self.current_color = self.text_colors[tag]
+        #     else:
+        #         if tag in self.text_colors:
+        #             self.current_color = self.text_colors[tag]
 
         text_node_path.setScale(self.scale_override * self.size)
 

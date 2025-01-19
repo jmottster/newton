@@ -6,8 +6,11 @@ A collection of utility classes
 by Jason Mott, copyright 2024
 """
 
+import math
 from typing import ClassVar, Self, Tuple
 from collections import deque
+
+from panda3d.core import Vec3 as PanVec3, BitMask32  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -25,6 +28,42 @@ __version__ = VERSION
 __maintainer__ = "Jason Mott"
 __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
+
+
+class MathFunctions:
+    """
+    Static class to hold math related helper functions
+
+    Attributes
+    ----------
+    camera_mask_counter : int use to keep track of how many bit_masks you've used
+
+    bit_masks: list a list of available bit masks to use in lights and cameras
+
+    Methods
+    -------
+    distance(point1: PanVec3, point2: PanVec3) -> float
+        returns the distance between the two points
+
+    """
+
+    camera_mask_counter: int = 0
+    bit_masks: list = [
+        BitMask32(1),
+        BitMask32(2),
+        BitMask32(4),
+        BitMask32(8),
+        BitMask32(16),
+        BitMask32(32),
+        BitMask32(64),
+        # BitMask32(128),
+    ]
+
+    @staticmethod
+    def distance(point1: PanVec3, point2: PanVec3) -> float:
+        """returns the distance between the two points"""
+        diff: PanVec3 = point2 - point1
+        return math.sqrt((diff[0] ** 2) + (diff[1] ** 2) + (diff[2] ** 2))
 
 
 class FontUtils:

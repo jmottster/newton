@@ -6,7 +6,12 @@ Class file for the physics attributes of blobs that will interact with each othe
 by Jason Mott, copyright 2024
 """
 
+from decimal import *
+from collections import deque
 from typing import Any, ClassVar, Dict, Tuple, Self
+
+import numpy as np
+import numpy.typing as npt
 
 
 from .globals import *
@@ -55,6 +60,9 @@ class MassiveBlob:
 
     Methods
     -------
+    add_orbital(orbital: "MassiveBlob") -> None
+        Positions the provided blob around this blob (randomly) and sets the velocity accordingly
+
     get_prefs(data: dict) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
@@ -94,10 +102,10 @@ class MassiveBlob:
         "index",
         "name",
         "blob_surface",
-        "radius",
+        "_radius",
         "scaled_radius",
         "orig_radius",
-        "mass",
+        "_mass",
         "x",
         "y",
         "z",
@@ -108,6 +116,7 @@ class MassiveBlob:
         "swallowed",
         "escaped",
         "pause",
+        "pos_log",
     )
 
     center_blob_x: ClassVar[float] = bg_vars.universe_size_w / 2
@@ -135,14 +144,12 @@ class MassiveBlob:
         self.index: int = index
         self.name: str = name
         self.blob_surface: BlobSurface = blob_surface
-        self.radius: float = blob_surface.radius
-        self.scaled_radius: float = self.radius * bg_vars.scale_up
-        self.orig_radius: Tuple[float, float, float] = (
-            self.scaled_radius,
-            self.scaled_radius / 2,
-            self.radius,
-        )
-        self.mass: float = mass
+        self._radius: float = None
+        self.scaled_radius: float = None
+        self.orig_radius: Tuple[float, float, float] = None
+        self.radius = blob_surface.radius
+        self._mass: float = None
+        self.mass = mass
         self.x: float = x
         self.y: float = y
         self.z: float = z
@@ -154,23 +161,63 @@ class MassiveBlob:
         self.swallowed: bool = False
         self.escaped: bool = False
         self.pause: bool = False
+        self.pos_log: deque[npt.NDArray] = deque(
+            [np.array([x, y, z], dtype=float), np.array([x, y, z], dtype=float)]
+        )
 
-        if not bg_vars.true_3d:
-            self.fake_blob_z()
+    @property
+    def radius(self: Self) -> float:
+        """Returns the radius of the blob"""
+        return self.blob_surface.radius
+
+    @radius.setter
+    def radius(self: Self, radius: float) -> None:
+        """Sets the radius of the blob and updates self.org_radius"""
+        self._radius = radius
+
+        self.scaled_radius = self._radius * bg_vars.scale_up
+        self.orig_radius = (
+            self.scaled_radius,
+            self.scaled_radius / 2,
+            self._radius,
+        )
+
+        if self._radius != self.blob_surface.radius:
+            self.blob_surface.radius = self._radius
+
+    @property
+    def mass(self: Self) -> float:
+        """Returns the mass of the blob"""
+
+        if self.blob_surface is not None:
+            return self.blob_surface.mass
+        else:
+            return self._mass
+
+    @mass.setter
+    def mass(self: Self, mass: float) -> None:
+        """Sets the mass of the blob"""
+        self._mass = mass
+
+        if (
+            self.blob_surface is not None
+            and hasattr(self.blob_surface, "mass")
+            and self.blob_surface.mass != self._mass
+        ):
+            self.blob_surface.mass = self._mass
 
     def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
+        """Positions the provided blob around this blob (randomly) and sets the velocity accordingly"""
 
-        if bg_vars.true_3d:
+        vel: Tuple[float, float, float] = None
 
-            vel: Tuple[float, float, float] = None
+        vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
 
-            vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
+        x = orbital.blob_surface.position[0] * bg_vars.scale_up
+        y = orbital.blob_surface.position[1] * bg_vars.scale_up
+        z = orbital.blob_surface.position[2] * bg_vars.scale_up
 
-            x = orbital.blob_surface.position[0] * bg_vars.scale_up
-            y = orbital.blob_surface.position[1] * bg_vars.scale_up
-            z = orbital.blob_surface.position[2] * bg_vars.scale_up
-
-            orbital.update_pos_vel(x, y, z, vel[0], vel[1], vel[2])
+        orbital.update_pos_vel(x, y, z, vel[0], vel[1], vel[2])
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
@@ -251,27 +298,10 @@ class MassiveBlob:
                 (x, y, z), (LIGHTING and not self.pause)
             )
 
-    def fake_blob_z(self: Self) -> None:
-        """
-        Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
-        (closer=bigger/further=smaller), a 3d effect according the the z position
-        """
-        diff = self.scaled_universe_size_half_z - self.z
-
-        self.scaled_radius = self.orig_radius[0] + (
-            self.orig_radius[1] * (diff / self.scaled_universe_size_half_z)
-        )
-        self.radius = round(self.scaled_radius * bg_vars.scale_down)
-        self.blob_surface.resize(self.radius)
-
-    def advance(self: Self, dt: float) -> None:
+    def advance(self: Self, dt: Decimal) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)"""
 
-        if not bg_vars.true_3d and self.name == CENTER_BLOB_NAME:
-            self.fake_blob_z()
-            return
-
-        timescale: float = bg_vars.timescale * dt
+        timescale: float = float(Decimal(bg_vars.timescale) * dt)
 
         # Advance x by velocity (one frame, with TIMESCALE elapsed time)
         self.x += self.vx * timescale
@@ -282,8 +312,17 @@ class MassiveBlob:
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
         self.z += self.vz * timescale
 
-        if not bg_vars.true_3d:
-            self.fake_blob_z()
+        self.pos_log.append(
+            np.array(
+                [
+                    self.x * bg_vars.scale_down,
+                    self.y * bg_vars.scale_down,
+                    self.z * bg_vars.scale_down,
+                ],
+                dtype=float,
+            )
+        )
+        self.pos_log.popleft()
 
     def destroy(self: Self) -> None:
         """Call when no longer needed, so it can clean up and disappear"""
@@ -300,9 +339,6 @@ class MassiveBlob:
         self.vx = vx
         self.vy = vy
         self.vz = vz
-
-        if not bg_vars.true_3d:
-            self.fake_blob_z()
 
     def rotate_x(self: Self) -> None:
         """For starting position, swap y and z to get a different angle of viewing"""

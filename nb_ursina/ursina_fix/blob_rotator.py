@@ -219,7 +219,10 @@ class BlobRotator(urs.Entity):
     @property
     def scale(self: Self) -> urs.Vec3:
         """The scale of this blob relative to urs.scene"""
-        return urs.Vec3(self.rotator_model.getScale())
+        if self.rotator_model is not None:
+            return urs.Vec3(self.rotator_model.getScale())
+        else:
+            return urs.Vec3(self.getScale())
 
     @scale.setter
     def scale(self: Self, scale: urs.Vec3) -> None:
@@ -473,13 +476,9 @@ class BlobRotator(urs.Entity):
             self.base_dir.joinpath("models").joinpath("death_star.glb")
         )
 
-        self.radius = bg_vars.max_moon_radius
-        # self.scale = urs.Vec3(self.radius)
         self.texture_name = "moons/death_star.jpg"
         self.blob_name = "That's no moon!"
 
-        if self.radius is not None:
-            self.scale = urs.Vec3(self.radius)
         if self.position is not None:
             self.position = self.position
         self.rotator_model.setTransparency(TransparencyAttrib.M_none)

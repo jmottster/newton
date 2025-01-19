@@ -21,6 +21,7 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 
 from .blob_surface_ursina import BlobCore
+from .blob_utils_ursina import MathFunctions as mf
 from .fps import FPS
 
 __author__ = "Jason Mott"
@@ -206,9 +207,9 @@ class MoonWatcher(urs.Entity):
 
                 if barycenter is not None:
                     if (
-                        urs.distance(
-                            self.first_person_viewer.world_position,
-                            barycenter.world_position,
+                        mf.distance(
+                            self.first_person_viewer.position,
+                            barycenter.position,
                         )
                         > self.proximity
                     ):
@@ -218,9 +219,9 @@ class MoonWatcher(urs.Entity):
                     next_distance: float = 0
                     distance: float = 0
                     for i in range(1, len(self.planets)):
-                        next_distance = urs.distance(
-                            self.first_person_viewer.world_position,
-                            self.planets[i].world_position,
+                        next_distance = mf.distance(
+                            self.first_person_viewer.position,
+                            self.planets[i].position,
                         )
 
                         if next_distance < distance:
@@ -236,7 +237,7 @@ class MoonWatcher(urs.Entity):
 
                     if (
                         barycenter is not None
-                        and urs.distance(blob.world_position, barycenter.world_position)
+                        and mf.distance(blob.position, barycenter.position)
                         <= bg_vars.au_scale_factor
                         and blob.blob_name != barycenter.blob_name
                     ):
@@ -256,7 +257,7 @@ class MoonWatcher(urs.Entity):
                             blob.trail.enabled = True
 
                             blob.trail.barycenter_last_pos = (
-                                blob.trail.barycenter_blob.world_position
+                                blob.trail.barycenter_blob.position
                             )
 
                     else:

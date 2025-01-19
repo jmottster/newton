@@ -31,6 +31,7 @@ from newtons_blobs import blob_random
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import *
+from .blob_utils_ursina import MathFunctions as mf
 
 from .fps import FPS
 from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial
@@ -141,7 +142,7 @@ class TrailRenderer(urs.Entity):
             self.thickness = 1
             self.min_spacing = bg_vars.min_moon_radius
             self.update_step = 0
-            self.segments = 250
+            self.segments = 200
 
         self.orig_segments: int = self.segments
 
@@ -167,8 +168,8 @@ class TrailRenderer(urs.Entity):
             shader=shd.unlit_shader,
         )
 
-        for bit in range(1, len(BlobCore.bit_masks)):
-            self.line_renderer.hide(BlobCore.bit_masks[bit])
+        for bit in range(1, len(mf.bit_masks)):
+            self.line_renderer.hide(mf.bit_masks[bit])
 
         if self.is_moon:
             self.enabled = False
@@ -183,10 +184,8 @@ class TrailRenderer(urs.Entity):
 
         if self.barycenter_blob is not None:
 
-            diff: urs.Vec3 = (
-                self.barycenter_blob.world_position - self.barycenter_last_pos
-            )
-            self.barycenter_last_pos = self.barycenter_blob.world_position
+            diff: urs.Vec3 = self.barycenter_blob.position - self.barycenter_last_pos
+            self.barycenter_last_pos = self.barycenter_blob.position
 
             for i in range(0, len(self.points)):
                 self.points[i] = self.points[i] + diff
@@ -199,10 +198,10 @@ class TrailRenderer(urs.Entity):
                 self.calibrate_segments()
 
             self.last_point_distances.append(
-                urs.distance(self.points[-2], self.points[-1])
+                mf.distance(self.points[-2], self.points[-1])
             )
 
-            if self.last_point_distances[-1] > self.min_spacing:
+            if self.last_point_distances[-1] >= self.min_spacing:
 
                 self.points.popleft()
                 self.points.append(self.world_position)
@@ -234,7 +233,7 @@ class TrailRenderer(urs.Entity):
         if self.barycenter_blob is not None:
             barycenter = self.barycenter_blob
 
-        r = urs.distance(self.parent, barycenter)
+        r = mf.distance(self.parent.position, barycenter.position)
 
         self.min_spacing = (r * math.pi) / self.orig_segments
 
@@ -263,10 +262,9 @@ class TrailRenderer(urs.Entity):
             while len(self.points) > self.segments:
                 self.points.popleft()
 
-        else:
-            if len(self.points) < self.segments:
-                while len(self.points) < self.segments:
-                    self.points.appendleft(self.points[0])
+        elif len(self.points) < self.segments:
+            while len(self.points) < self.segments:
+                self.points.appendleft(self.points[0])
 
     def on_enable(self: Self) -> None:
         """
@@ -379,12 +377,11 @@ class BlobCore(BlobRotator):
     #     "blob_name",
     # )
 
-    camera_mask_counter: int = 0
-    bit_masks: list = [0b0001, 0b0010, 0b0100, 0b1000, 0b10000, 0b100000]
-
     def __init__(self: Self, **kwargs):
 
-        self.mass: float = kwargs.get("mass")
+        self._mass: float = None
+        self.percent_radius: int = None
+        self.percent_mass: int = None
         self.trail_color: urs.Color = kwargs.get("trail_color")
         self.light: PointLight = None
         self.light_bit_mask: int = None
@@ -401,11 +398,13 @@ class BlobCore(BlobRotator):
             glow_map_name=kwargs.get("glow_map_name"),
             ring_texture=kwargs.get("ring_texture"),
             ring_scale=kwargs.get("ring_scale"),
-            radius=kwargs.get("radius"),
             scale=kwargs.get("scale"),
             center_light=kwargs.get("center_light"),
             color=kwargs.get("color"),
         )
+
+        self.is_moon: bool = kwargs.get("radius") < bg_vars.min_radius
+        self.mass = kwargs.get("mass")
 
         for key in (
             "model",
@@ -424,7 +423,6 @@ class BlobCore(BlobRotator):
             "texture_name",
             "glow_map_name",
             "ring_texture",
-            "radius",
             "scale",
             "center_light",
             "color",
@@ -453,46 +451,21 @@ class BlobCore(BlobRotator):
         self.text: str = None
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
         self.text_position: float = 11
-        self.percent_mass: int = round(
-            (self.mass - bg_vars.min_mass) / (bg_vars.max_mass - bg_vars.min_mass) * 100
-        )
-        self.percent_radius: int = round(
-            (
-                (self.scale_x - bg_vars.min_radius)
-                / (bg_vars.max_radius - bg_vars.min_radius)
-            )
-            * 100
-        )
         self.is_gas: bool = self.percent_radius > 50
         self.is_rocky: bool = self.percent_radius < 50
 
-        self.is_moon: bool = self.scale_x < bg_vars.min_radius
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
-            self.percent_mass = round(
-                (self.mass - bg_vars.min_moon_mass)
-                / (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
-                * 100
-            )
-
-            self.percent_radius = round(
-                (
-                    (self.scale_x - bg_vars.min_moon_radius)
-                    / (bg_vars.max_moon_radius - bg_vars.min_moon_radius)
-                )
-                * 100
-            )
 
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
 
-        if not self.is_moon:
-            for bit in range(1, len(BlobCore.bit_masks)):
-                self.hide(BlobCore.bit_masks[bit])
-                if self.blob_name == CENTER_BLOB_NAME:
-                    self.rotator_model.hide(BlobCore.bit_masks[bit])
+        for bit in range(1, len(mf.bit_masks)):
+            self.hide(mf.bit_masks[bit])
+            # if self.blob_name == CENTER_BLOB_NAME:
+            self.rotator_model.hide(mf.bit_masks[bit])
 
     @property
     def barycenter_blob(self: Self) -> "BlobCore":
@@ -508,12 +481,62 @@ class BlobCore(BlobRotator):
             self._barycenter_blob is not None
             and self._barycenter_blob.ring_texture is not None
         ):
-            self.rotator_model.setLightOff(self.center_light)
-            self.rotator_model.hide(0b0001)
+            self.rotator_model.setLightOff(self.center_light, 1)
+            self.rotator_model.hide(mf.bit_masks[0])
 
             self.rotator_model.setLight(self.barycenter_blob.light_node)
             self.rotator_model.show(
                 self.barycenter_blob.light_node.node().getCameraMask()
+            )
+
+    @property
+    def radius(self: Self) -> float:
+        """The blob's radius (equivalent to scale)"""
+        return super().radius
+
+    @BlobRotator.radius.setter
+    def radius(self: Self, radius: float) -> None:
+        """Set the blob's radius (and scale)"""
+        super(BlobCore, type(self)).radius.fset(self, radius)  # type: ignore
+        if not self.is_moon:
+            self.percent_radius = round(
+                (
+                    (self.scale_x - bg_vars.min_radius)
+                    / (bg_vars.max_radius - bg_vars.min_radius)
+                )
+                * 100
+            )
+        else:
+            self.percent_radius = round(
+                (
+                    (self.scale_x - bg_vars.min_moon_radius)
+                    / (bg_vars.max_moon_radius - bg_vars.min_moon_radius)
+                )
+                * 100
+            )
+
+    @property
+    def mass(self: Self) -> float:
+        """Returns the mass of the blob"""
+        return self._mass
+
+    @mass.setter
+    def mass(self: Self, mass: float) -> None:
+        """Sets the blob's mass, and updates the % mass attribute"""
+        self._mass = mass
+
+        if not self.is_moon:
+            self.percent_mass = round(
+                (self._mass - bg_vars.min_mass)
+                / (bg_vars.max_mass - bg_vars.min_mass)
+                * 100
+            )
+
+        else:
+            self.percent_mass = round(
+                (self.mass - bg_vars.min_moon_mass)
+                / (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
+                * 100
             )
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
@@ -561,16 +584,16 @@ class BlobCore(BlobRotator):
         self.light_node.reparentTo(self.rotator_model)  # type: ignore
 
         self.light_node.setScale(urs.scene, bg_vars.center_blob_radius)
-        self.light_bit_mask = 0b0001
-        self.light_node.node().setCameraMask(0b0001)
+        self.light_bit_mask = mf.bit_masks[0]
+        self.light_node.node().setCameraMask(mf.bit_masks[0])
         self.setLightOff(1)
         self.rotator_model.setLightOff(1)
         self.light_node.setLightOff(1)
         BlobSurfaceUrsina.universe_node.setLightOff(1)
-        self.hide(0b0001)
-        self.rotator_model.hide(0b0001)
-        self.light_node.hide(0b0001)
-        BlobSurfaceUrsina.universe_node.hide(0b0001)
+        self.hide(mf.bit_masks[0])
+        self.rotator_model.hide(mf.bit_masks[0])
+        self.light_node.hide(mf.bit_masks[0])
+        BlobSurfaceUrsina.universe_node.hide(mf.bit_masks[0])
 
     def create_ring_light(self: Self) -> None:
         """
@@ -596,8 +619,8 @@ class BlobCore(BlobRotator):
         self.light_scale = bg_vars.center_blob_radius * 30
 
         self.light_node.setScale(urs.scene, self.light_scale)
-        BlobCore.camera_mask_counter += 1
-        self.light_bit_mask = BlobCore.bit_masks[BlobCore.camera_mask_counter]
+        mf.camera_mask_counter += 1
+        self.light_bit_mask = mf.bit_masks[mf.camera_mask_counter]
         self.light_node.node().setCameraMask(self.light_bit_mask)
 
         lens = self.light_node.node().getLens()
@@ -613,14 +636,12 @@ class BlobCore(BlobRotator):
         self.rotator_model.setShaderAuto(
             BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
         )
-        self.hide(0b0001)
-        self.rotator_model.hide(0b0001)
-        self.light_node.hide(0b0001)
+        self.hide(mf.bit_masks[0])
+        self.light_node.hide(mf.bit_masks[0])
+        self.rotator_model.setLightOff(1)
+        self.rotator_model.hide(mf.bit_masks[0])
         self.rotator_model.setLight(self.light_node)
         self.rotator_model.show(self.light_bit_mask)
-
-        self.hide(self.light_bit_mask)
-        self.light_node.hide(self.light_bit_mask)
 
     def update_ring_light(self: Self) -> None:
         """
@@ -644,7 +665,7 @@ class BlobCore(BlobRotator):
         is not running
         """
         self.trail = TrailRenderer(
-            segments=250,
+            segments=200,
             min_spacing=bg_vars.max_radius,
             parent=self,
             color=self.trail_color,
@@ -678,8 +699,8 @@ class BlobCore(BlobRotator):
                 shader=shd.unlit_shader,
             )
 
-            for bit in range(1, len(BlobCore.bit_masks)):
-                self.text_entity.hide(BlobCore.bit_masks[bit])
+            for bit in range(1, len(mf.bit_masks)):
+                self.text_entity.hide(mf.bit_masks[bit])
 
             self.text = self.short_overlay_text()
 
@@ -748,23 +769,15 @@ class BlobCore(BlobRotator):
 
         if self.text_entity is not None and self.info_text.enabled:
 
-            self.text = self.short_overlay_text()
-
-            if self.text_on and self.text_full_details:
-                self.text = self.full_overlay_text()
-
             self.text_entity.position = self.position
             self.text_entity.rotation = urs.camera.parent.rotation
-            dx = urs.camera.world_x - self.text_entity.world_x
-            dy = urs.camera.world_y - self.text_entity.world_y
-            dz = urs.camera.world_z - self.text_entity.world_z
-            d = math.sqrt(dx**2 + dy**2 + dz**2)
+
+            d = mf.distance(self.text_entity.world_position, urs.camera.world_position)
 
             self.text_entity.scale = self.text_scale * d
             self.text_entity.position += self.text_entity.my_up * (
                 (self.world_scale_x * self.text_position) / d
             )
-            self.info_text.text = self.text
 
         if not self.trail_ready:
             from .blob_moon_trail_registry_ursina import (
@@ -839,7 +852,7 @@ class BlobCore(BlobRotator):
 
         if not self.blob_name == CENTER_BLOB_NAME and not self.is_moon and key == "y":
 
-            if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
+            if round(self.scale_x) == round(self.radius):  # type: ignore
                 self.scale = urs.Vec3(self.radius * 35)
 
             else:
@@ -847,7 +860,7 @@ class BlobCore(BlobRotator):
 
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
-            if round(self.scale_x, 2) == round(self.radius, 2):  # type: ignore
+            if round(self.scale_x) == round(self.radius):  # type: ignore
                 size_factor: float = 10
                 if hasattr(self.barycenter_blob, "is_rocky") or hasattr(
                     self.barycenter_blob, "is_gas"
@@ -976,7 +989,7 @@ class BlobSurfaceUrsina:
         "index",
         "_name",
         "_radius",
-        "mass",
+        "_mass",
         "_position",
         "color",
         "trail_color",
@@ -1014,12 +1027,13 @@ class BlobSurfaceUrsina:
 
         self._name: str = None
         self._texture: str = None
-
+        self.ursina_blob: BlobCore = None
         self.index: int = index
         self.name: str = name
         self._radius: float = None
         self.radius = radius
-        self.mass: float = mass
+        self._mass: float = None
+        self.mass = mass
         self.color: Tuple[int, int, int] = color
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
         self.texture: str = texture
@@ -1031,7 +1045,6 @@ class BlobSurfaceUrsina:
         self._position: Tuple[float, float, float] = (0, 0, 0)
         self._barycenter_index: int = 0
         self.trail_color: urs.Color = urs.color.rgb32(25, 100, 150)
-        self.ursina_blob: BlobCore = None
 
         BlobSurfaceUrsina.universe_node = self.universe.universe
 
@@ -1040,6 +1053,8 @@ class BlobSurfaceUrsina:
         )
 
         if bg_vars.textures_3d:
+
+            num_rings: int = 2
 
             if index != 0 and self.texture is None:
 
@@ -1050,11 +1065,12 @@ class BlobSurfaceUrsina:
                 if self.radius >= (halfway_max_halfway):
                     i: int = blob_random.randint(0, len(BLOB_TEXTURES_GAS) - 1)
                     self.texture = BLOB_TEXTURES_GAS[i]
-                    if (blob_random.random() * 100) > 50:
+                    if num_rings > 0 and (blob_random.random() * 100) > 50:
                         self.ring_texture = BLOB_TEXTURES_RINGS[i]
 
                         if self.ring_scale is None:
                             self.ring_scale = (blob_random.random() * 0.3) + 0.4
+                        num_rings -= 1
 
                 elif self.radius >= bg_vars.min_radius:
                     self.texture = BLOB_TEXTURES_ROCKY[
@@ -1175,6 +1191,25 @@ class BlobSurfaceUrsina:
     @radius.setter
     def radius(self: Self, radius: float) -> None:
         self._radius = radius
+
+        if self.ursina_blob is not None and self.ursina_blob.radius != self._radius:
+            self.ursina_blob.radius = self._radius
+
+    @property
+    def mass(self: Self) -> float:
+        """Returns the mass of the blob"""
+        if self.ursina_blob is not None:
+            return self.ursina_blob.mass
+        else:
+            return self._mass
+
+    @mass.setter
+    def mass(self: Self, mass: float) -> None:
+        """Sets the mass of the blob"""
+        self._mass = mass
+
+        if self.ursina_blob is not None and self.ursina_blob.mass != self._mass:
+            self.ursina_blob.mass = self._mass
 
     @property
     def position(self: Self) -> Tuple[float, float, float]:

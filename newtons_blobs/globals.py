@@ -50,7 +50,6 @@ MIM_MASS = 3.75094 * 10**19  # Mass of Mimas (smallest round moon in solar syste
 
 
 LOW_VRAM = False
-TRUE_3D = True
 TEXTURES_3D = True
 AU_SCALE_FACTOR = 12500  # Number of pixels to equal 1 AU
 
@@ -83,10 +82,8 @@ LIGHTING = True
 # Constants for creating blobs somewhat randomly
 NUM_BLOBS = 41
 
-# number of NUM_BLOBS that are planets (if true_3d)
+# number of NUM_BLOBS that are planets
 NUM_PLANETS = 5
-if not TRUE_3D:
-    NUM_PLANETS = NUM_BLOBS - 1
 
 # If true all blobs will start
 # with a perfect orbital velocity

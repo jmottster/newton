@@ -35,6 +35,7 @@ from .blob_surface_ursina import BlobCore, BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
 from .fps import FPS
 from .ursina_fix import BlobText
+from .blob_utils_ursina import MathFunctions as mf
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -109,8 +110,7 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(5700000)
-        # bg_vars.set_au_scale_factor(100000)
+        bg_vars.set_au_scale_factor(1.495978707 * 10**6)
         bg_vars.set_universe_scale(100)
         bg_vars.set_center_blob_scale(20)
         bg_vars.set_scale_center_blob_mass_with_size(True)
@@ -129,14 +129,13 @@ class BlobUrsinaFactory:
             bg_vars.set_background_scale(bg_vars.universe_size * 0.5)
         bg_vars.set_timescale(DAYS * 1)
         bg_vars.set_orig_timescale(DAYS * 1)
-        bg_vars.set_timescale_inc(HOURS * 3)
-        bg_vars.set_true_3d(True)
+        bg_vars.set_timescale_inc(HOURS * 6)
         bg_vars.set_num_planets(5)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)
         bg_vars.set_square_blob_plotter(False)
-        bg_vars.set_center_blob_escape(False)
+        bg_vars.set_center_blob_escape(True)
         bg_vars.set_wrap_if_no_escape(True)
 
         bg_vars.print_info()
@@ -298,7 +297,7 @@ class BlobUrsinaFactory:
 
         self.loading_screen_start(num_blobs)
 
-        BlobCore.camera_mask_counter = 0
+        mf.camera_mask_counter = 0
 
         self.urs_display.update()
 

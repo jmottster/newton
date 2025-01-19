@@ -86,7 +86,6 @@ class BlobGlobalVars:
     BlobGlobalVars.timescale: ClassVar[int] - number of seconds to pass with each frame
     BlobGlobalVars.orig_timescale: ClassVar[int] - number of seconds to pass with each frame, original value
     BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
-    BlobGlobalVars.true_3d: ClassVar[bool] - whether or not the display engine uses real 3D
     BlobGlobalVars.num_planets: ClassVar[int] - how many blobs to make planets (out of NUM_BLOBS)
     BlobGlobalVars.textures_3d: ClassVar[bool] - whether or not blobs have textures applied (or solid colors)
     BlobGlobalVars.start_perfect_orbit: ClassVar[bool] - whether or not to start with a perfect orbit of blobs
@@ -168,9 +167,6 @@ class BlobGlobalVars:
     BlobGlobalVars.set_timescale_inc(timescale_inc: int) -> None
         Class method to set BlobGlobalVars.timescale_inc
 
-    BlobGlobalVars.set_true_3d(true_3d: bool) -> None
-        Class method to set BlobGlobalVars.true_3d
-
     BlobGlobalVars.set_textures_3d(textures_3d: bool) -> None
         Class method to set BlobGlobalVars.textures_3d
 
@@ -245,7 +241,6 @@ class BlobGlobalVars:
     timescale: ClassVar[int] = TIMESCALE
     orig_timescale: ClassVar[int] = TIMESCALE
     timescale_inc: ClassVar[int] = MINUTES
-    true_3d: ClassVar[bool] = TRUE_3D
     num_planets: ClassVar[int] = NUM_PLANETS
     textures_3d: ClassVar[bool] = TEXTURES_3D
     start_perfect_orbit: ClassVar[bool] = START_PERFECT_ORBIT
@@ -345,9 +340,6 @@ class BlobGlobalVars:
 
         cls.wrap_if_no_escape = cls.wrap_if_no_escape and not cls.center_blob_escape
 
-        if not cls.true_3d:
-            cls.num_planets = NUM_BLOBS - 1
-
     @classmethod
     def print_info(cls) -> None:
         """Prints info about settings"""
@@ -431,11 +423,6 @@ class BlobGlobalVars:
     def set_timescale_inc(cls, timescale_inc: int) -> None:
         """Class method to set BlobGlobalVars.timescale_inc"""
         cls.timescale_inc = timescale_inc
-
-    @classmethod
-    def set_true_3d(cls, true_3d: bool) -> None:
-        """Class method to set BlobGlobalVars.true_3d"""
-        cls.true_3d = true_3d
 
     @classmethod
     def set_textures_3d(cls, textures_3d: bool) -> None:

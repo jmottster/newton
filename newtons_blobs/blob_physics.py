@@ -7,7 +7,11 @@ by Jason Mott, copyright 2024
 """
 
 import math
+from decimal import *
 from typing import Self
+
+import numpy as np
+import numpy.typing as npt
 
 from .massive_blob import MassiveBlob
 from .globals import *
@@ -62,6 +66,8 @@ class BlobPhysics:
     GRAVITATIONAL_RANGE : float = 0 - The distance from the center blob at which we get rid of a blob
                                       set this via the set_gravitational_range() method
 
+    COR : float = 0.5 - Coefficient of restitution used to make blob collisions inelastic
+
     Methods
     -------
     set_gravitational_range(scaled_universe_height: float) -> None
@@ -71,6 +77,11 @@ class BlobPhysics:
     edge_detection(blob: MassiveBlob, wrap: bool) -> None
         Checks to see if blob is hitting the edge of the screen, and reverses velocity if so
         or it wraps to other end of screen if wrap==True (wrap currently not working)
+
+    new_radius(r1: float, r2: float) -> float
+        Calculates and returns a new radius based on the combined volumes of
+        two spheres with the provided radii (i.e., when two blobs combine,
+        this is their new radius)
 
     collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None
         Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
@@ -83,9 +94,9 @@ class BlobPhysics:
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         uses the Euler method with trig
 
-    euler_gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None
+    gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
-        uses the Euler method without trig
+        this will also call collision_detection() with the provided blobs
 
     jjm_gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float, num_steps: int = 5) -> None
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other.
@@ -95,6 +106,9 @@ class BlobPhysics:
 
     g: float = G
     GRAVITATIONAL_RANGE: float = 0
+
+    # coefficient of restitution
+    COR: float = 0.5
 
     @classmethod
     def set_gravitational_range(cls, scaled_universe_height: float) -> None:
@@ -195,75 +209,106 @@ class BlobPhysics:
                 blob.vz = blob.vz * velocity_loss
 
     @staticmethod
-    def collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None:
+    def new_radius(r1: float, r2: float) -> float:
+        """
+        Calculates and returns a new radius based on the combined volumes of
+        two spheres with the provided radii (i.e., when two blobs combine,
+        this is their new radius)
+        """
+        v1 = (4 / 3) * math.pi * (r1**3)
+        v2 = (4 / 3) * math.pi * (r2**3)
+        return math.cbrt(((v1 + v2) * 3) / (4 * math.pi))
+
+    @staticmethod
+    def collision_detection(
+        blob1: MassiveBlob, blob2: MassiveBlob, d: float = 0
+    ) -> None:
         """
         Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
         """
-        dd = blob1.orig_radius[0] + blob2.orig_radius[0]
+        dd: float = blob1.orig_radius[0] + blob2.orig_radius[0]
         if abs(blob2.x - blob1.x) > dd:
             return
 
-        dx = blob2.x - blob1.x
-        dy = blob2.y - blob1.y
-        dz = blob2.z - blob1.z
-        d = math.sqrt((dx**2) + (dy**2) + (dz**2))
+        if d == 0:
+            dx = blob2.x - blob1.x
+            dy = blob2.y - blob1.y
+            dz = blob2.z - blob1.z
+            d = math.sqrt((dx**2) + (dy**2) + (dz**2))
+
+        diff: float = dd - d
 
         # Check if the two blobs are touching
         if d <= dd:
+
+            ux1: float
+            uy1: float
+            uz1: float
+            ux2: float
+            uy2: float
+            uz2: float
+
+            ux1, uy1, uz1 = blob1.vx, blob1.vy, blob1.vz
+            ux2, uy2, uz2 = blob2.vx, blob2.vy, blob2.vz
+
+            cor_m1: float = BlobPhysics.COR * blob1.mass
+            cor_m2: float = BlobPhysics.COR * blob2.mass
+
+            m1_m2: float = blob1.mass + blob2.mass
+
             # x reaction
-            ux1, ux2 = blob1.vx, blob2.vx
 
-            blob1.vx = ux1 * (blob1.mass - blob2.mass) / (
-                blob1.mass + blob2.mass
-            ) + 2 * ux2 * blob2.mass / (blob1.mass + blob2.mass)
+            px1_px2: float = (blob1.mass * ux1) + (blob2.mass * ux2)
 
-            blob2.vx = 2 * ux1 * blob1.mass / (blob1.mass + blob2.mass) + ux2 * (
-                blob2.mass - blob1.mass
-            ) / (blob1.mass + blob2.mass)
+            vx1: float = (cor_m2 * (ux2 - ux1) + (px1_px2)) / (m1_m2)
+            vx2: float = (cor_m1 * (ux1 - ux2) + (px1_px2)) / (m1_m2)
 
             # y reaction
-            uy1, uy2 = blob1.vy, blob2.vy
 
-            blob1.vy = uy1 * (blob1.mass - blob2.mass) / (
-                blob1.mass + blob2.mass
-            ) + 2 * uy2 * blob2.mass / (blob1.mass + blob2.mass)
+            py1_py2: float = (blob1.mass * uy1) + (blob2.mass * uy2)
 
-            blob2.vy = 2 * uy1 * blob1.mass / (blob1.mass + blob2.mass) + uy2 * (
-                blob2.mass - blob1.mass
-            ) / (blob1.mass + blob2.mass)
+            vy1: float = (cor_m2 * (uy2 - uy1) + (py1_py2)) / (m1_m2)
+            vy2: float = (cor_m1 * (uy1 - uy2) + (py1_py2)) / (m1_m2)
 
             # z reaction
-            uz1, uz2 = blob1.vz, blob2.vz
 
-            blob1.vz = uz1 * (blob1.mass - blob2.mass) / (
-                blob1.mass + blob2.mass
-            ) + 2 * uz2 * blob2.mass / (blob1.mass + blob2.mass)
+            pz1_pz2: float = (blob1.mass * uz1) + (blob2.mass * uz2)
 
-            blob2.vz = 2 * uz1 * blob1.mass / (blob1.mass + blob2.mass) + uz2 * (
-                blob2.mass - blob1.mass
-            ) / (blob1.mass + blob2.mass)
+            vz1: float = (cor_m2 * (uz2 - uz1) + (pz1_pz2)) / (m1_m2)
+            vz2: float = (cor_m1 * (uz1 - uz2) + (pz1_pz2)) / (m1_m2)
 
-            # some fake energy loss due to collision
-            blob1.vx = blob1.vx * 0.995
-            blob2.vx = blob2.vx * 0.995
-            blob1.vy = blob1.vy * 0.995
-            blob2.vy = blob2.vy * 0.995
-            blob1.vz = blob1.vz * 0.995
-            blob2.vz = blob2.vz * 0.995
+            # ------------------------------------------------#
 
-            # To prevent (or reduce) cling-ons, we have the center blob swallow blobs
-            # that cross the collision boundary too far
-            if blob1.name == CENTER_BLOB_NAME or blob2.name == CENTER_BLOB_NAME:
-                smaller_blob = blob1
-                larger_blob = blob2
-                if blob1.name == CENTER_BLOB_NAME:
-                    smaller_blob = blob2
-                    larger_blob = blob1
-                if d <= dd:
-                    larger_blob.mass += smaller_blob.mass
+            pvx1, pvy1, pvz1 = blob1.pos_log[-1] - blob1.pos_log[-2]
+            pvx2, pvy2, pvz2 = blob2.pos_log[-1] - blob2.pos_log[-2]
+
+            v1 = math.sqrt((pvx1**2) + (pvy1**2) + (pvz1**2))
+            v2 = math.sqrt((pvx2**2) + (pvy2**2) + (pvz2**2))
+            v_diff = round(abs(v2 - v1), 2)
+            b1_d_diff = round(((diff / 2) / blob1.orig_radius[0]) * 100)
+            b2_d_diff = round(((diff / 2) / blob2.orig_radius[0]) * 100)
+            d_ratio = round((d / dd) * 100)
+
+            if v_diff < 50 or b1_d_diff > 25 or b2_d_diff > 25:
+
+                if d_ratio < 30 or b1_d_diff > 100 or b2_d_diff > 100:
+                    smaller_blob = blob1
+                    larger_blob = blob2
+                    if smaller_blob.radius > larger_blob.radius:
+                        smaller_blob = blob2
+                        larger_blob = blob1
+                    larger_blob.mass += smaller_blob.mass * 0.95
+                    larger_blob.radius = BlobPhysics.new_radius(
+                        larger_blob.radius, smaller_blob.radius
+                    )
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True
+
+                return
+
+            blob1.vx, blob1.vy, blob1.vz = vx1, vy1, vz1
+            blob2.vx, blob2.vy, blob2.vz = vx2, vy2, vz2
 
     @staticmethod
     def partial_step(pos: point, vel: point, time_step: float = 1) -> point:
@@ -310,12 +355,10 @@ class BlobPhysics:
             blob2.escaped = True
 
     @staticmethod
-    def euler_gravitational_pull(
-        blob1: MassiveBlob, blob2: MassiveBlob, dt: float
-    ) -> None:
+    def gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: Decimal) -> None:
         """
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
-        uses the Euler method
+        this will also call collision_detection() with the provided blobs
         """
         blob1_location: point = point(blob1.x, blob1.y, blob1.z)
         blob2_location: point = point(blob2.x, blob2.y, blob2.z)
@@ -324,12 +367,12 @@ class BlobPhysics:
 
         if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
 
-            timescale: float = bg_vars.timescale * dt
+            BlobPhysics.collision_detection(blob1, blob2, d.d)
 
-            F = BlobPhysics.g * blob1.mass * blob2.mass / d.d**3
+            timescale: float = float(Decimal(bg_vars.timescale) * dt)
 
-            F1 = F / blob1.mass
-            F2 = F / blob2.mass
+            F1 = BlobPhysics.g * blob2.mass / d.d**3
+            F2 = BlobPhysics.g * blob1.mass / d.d**3
 
             blob1.vx -= d.dx * F1 * timescale
             blob1.vy -= d.dy * F1 * timescale
