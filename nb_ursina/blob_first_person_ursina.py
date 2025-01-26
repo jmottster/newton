@@ -137,13 +137,13 @@ class BlobFirstPersonUrsina(urs.Entity):
             parent=urs.camera.ui,
             model="pan_quad",
             color=urs.color.rgb32(179, 0, 27),
-            scale=urs.Vec3(0.01, 0.01, 0.01),
+            scale=urs.Vec3(0.007, 0.007, 0.007),
             eternal=kwargs["eternal"],
             shader=shd.unlit_shader,
         )
         self.center_cursor.setHpr(urs.scene, (0, 0, 45))
 
-        self.gimbal_color: PanVec4 = PanVec4(1.1, 1.1, 1.1, 0.59)
+        self.gimbal_color: PanVec4 = PanVec4(0.5, 0.5, 0.5, 0.59)
         self.gimbal_texture: str = "suns/8k_sun.jpg"
         self.gimbal_glow_map: str = "glow_maps/8k_sun-glow_map.jpg"
         if not bg_vars.textures_3d:

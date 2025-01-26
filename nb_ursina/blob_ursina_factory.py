@@ -295,6 +295,8 @@ class BlobUrsinaFactory:
 
         self.urs_display.clear_stats()
 
+        BlobSurfaceUrsina.num_rings = 2
+
         self.loading_screen_start(num_blobs)
 
         mf.camera_mask_counter = 0

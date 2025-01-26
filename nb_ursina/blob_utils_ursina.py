@@ -7,7 +7,7 @@ by Jason Mott, copyright 2024
 """
 
 import math
-from typing import ClassVar, Self, Tuple
+from typing import ClassVar, List, Self, Tuple
 from collections import deque
 
 from panda3d.core import Vec3 as PanVec3, BitMask32  # type: ignore
@@ -64,6 +64,37 @@ class MathFunctions:
         """returns the distance between the two points"""
         diff: PanVec3 = point2 - point1
         return math.sqrt((diff[0] ** 2) + (diff[1] ** 2) + (diff[2] ** 2))
+
+    @staticmethod
+    def sample_gradient(list_of_values: List[urs.Color], t: float) -> urs.Color:
+        """distribute list_of_values equally on a line and get the interpolated value at t (0-1)."""
+        l = len(list_of_values) - 1
+        if l == 0:
+            return list_of_values[0]
+
+        t *= l
+        index = math.floor(t - 0.001)
+        index = max(min(index, l), 0)
+        relative = t - index
+
+        if index < l:
+            return MathFunctions.lerp_color(
+                list_of_values[index], list_of_values[index + 1], relative
+            )
+        else:
+            return MathFunctions.lerp_color(
+                list_of_values[index - 1], list_of_values[index], relative
+            )
+
+    @staticmethod
+    def lerp_color(a: urs.Color, b: urs.Color, t: float) -> urs.Color:
+
+        col = [MathFunctions.lerp(e[0], e[1], t) for e in zip(a, b)]
+        return urs.Color(col[0], col[1], col[2], col[3])
+
+    @staticmethod
+    def lerp(a: float, b: float, t: float) -> float:
+        return a + (b - a) * t
 
 
 class FontUtils:

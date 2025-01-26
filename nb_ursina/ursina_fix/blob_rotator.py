@@ -349,9 +349,7 @@ class BlobRotator(urs.Entity):
 
     @property
     def world_up(self) -> PanVec3:
-        return PanVec3(
-            *self.rotator_model.getRelativeVector(self.center_light, PanVec3.up())
-        )
+        return PanVec3(*self.rotator_model.getRelativeVector(urs.scene, PanVec3.up()))
 
     @property
     def my_forward(self: Self) -> PanVec3:

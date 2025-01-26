@@ -42,35 +42,35 @@ class MoonWatcher(urs.Entity):
     ----------
     **kwargs
 
-    self.num_moons : int
+    num_moons : int
         The number of moons, used to create the array that will hold them.
         Set to int(NUM_BLOBS - 1) - bg_vars.num_planets
 
-    self.num_planets : int
+    num_planets : int
         The number of planets, used to create the array that will hold them.
         Set to bg_vars.num_planets
 
-    self.planet_index_offset : int
+    planet_index_offset : int
         Used to turn planet number into a proper array index that begins at 0
         Set to self.num_moons + 1
 
-    self.planets : npt.NDArray
+    planets : npt.NDArray
         Array of planet blobs
 
-    self.moons : npt.NDArray
+    moons : npt.NDArray
         Array of moon blobs
 
     self.first_person_viewer : urs.Entity
         The Entity that represents the position of the player
 
-    self._t : float
+    _t : float
         Variable to track time intervals, when it reaches self.update_step, positions
         are checked to find which moons get trails
 
-    self.update_step : float
+    update_step : float
         Time interval between position checks (in seconds)
 
-    self.trail_on : bool
+    trail_on : bool
         Whether or not to check positions to turn on/off moon trails
 
 
@@ -253,12 +253,7 @@ class MoonWatcher(urs.Entity):
                             blob.trail.barycenter_blob = barycenter
 
                         if not blob.trail.enabled:
-
                             blob.trail.enabled = True
-
-                            blob.trail.barycenter_last_pos = (
-                                blob.trail.barycenter_blob.position
-                            )
 
                     else:
                         blob.trail.enabled = False
