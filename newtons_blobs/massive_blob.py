@@ -60,6 +60,9 @@ class MassiveBlob:
 
     Methods
     -------
+    swallowed_by(blob: "BlobSurface") -> None
+        Tells this blob what other blob is swallowing it
+
     add_orbital(orbital: "MassiveBlob") -> None
         Positions the provided blob around this blob (randomly) and sets the velocity accordingly
 
@@ -112,8 +115,8 @@ class MassiveBlob:
         "vx",
         "vy",
         "vz",
-        "dead",
-        "swallowed",
+        "_dead",
+        "_swallowed",
         "escaped",
         "pause",
         "pos_log",
@@ -157,8 +160,8 @@ class MassiveBlob:
         self.vx: float = vx  # x velocity per frame
         self.vy: float = vy  # y velocity per frame
         self.vz: float = vz  # z velocity per frame
-        self.dead: bool = False
-        self.swallowed: bool = False
+        self._dead: bool = False
+        self._swallowed: bool = False
         self.escaped: bool = False
         self.pause: bool = False
         self.pos_log: deque[npt.NDArray] = deque(
@@ -205,6 +208,37 @@ class MassiveBlob:
             and self.blob_surface.mass != self._mass
         ):
             self.blob_surface.mass = self._mass
+
+    @property
+    def swallowed(self: Self) -> bool:
+        """Returns bool indicating if this blob has been swallowed"""
+        if self.blob_surface.swallowed:
+            return self._swallowed
+        else:
+            return False
+
+    @swallowed.setter
+    def swallowed(self: Self, swallowed: bool) -> None:
+        """Sets bool indicating if this blob has been swallowed"""
+        self.blob_surface.swallowed = swallowed
+        self._swallowed = swallowed
+
+    def swallowed_by(self: Self, blob: "MassiveBlob") -> None:
+        """Tells this blob what other blob is swallowing it"""
+        self.blob_surface.swallowed_by(blob.blob_surface)
+
+    @property
+    def dead(self: Self) -> bool:
+        """Returns bool indicating if this is a dead blob"""
+        if self.swallowed or self.escaped:
+            return self._dead
+        else:
+            return False
+
+    @dead.setter
+    def dead(self: Self, dead: bool) -> None:
+        """Sets bool indicating if this is a dead blob"""
+        self._dead = dead
 
     def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
         """Positions the provided blob around this blob (randomly) and sets the velocity accordingly"""

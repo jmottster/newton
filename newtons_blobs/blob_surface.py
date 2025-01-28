@@ -76,6 +76,9 @@ class BlobSurface(Protocol):
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
 
+    swallowed_by(blob: "BlobSurface") -> None
+        Tells this blob what other blob is swallowing it
+
     destroy() -> None
         Call to get rid of this instance, so it can clean up
     """
@@ -93,6 +96,7 @@ class BlobSurface(Protocol):
     rotation_pos: Tuple[float, float, float] = None
     position: Tuple[float, float, float] = None
     barycenter_index: int = None
+    swallowed: bool = False
 
     def set_barycenter(self: Self, blob: "BlobSurface") -> None:
         """Sets the blob that this blob orbits (used for moon blobs)"""
@@ -134,6 +138,10 @@ class BlobSurface(Protocol):
         Draw the blob to the universe surface as the center blob (special glowing effect, no light/shade effect)
         send (pos,False) to turn off glowing effect
         """
+        pass
+
+    def swallowed_by(self: Self, blob: "BlobSurface") -> None:
+        """Tells this blob what other blob is swallowing it"""
         pass
 
     def destroy(self: Self) -> None:

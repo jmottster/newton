@@ -304,6 +304,7 @@ class BlobPhysics:
                     )
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True
+                    smaller_blob.swallowed_by(larger_blob)
 
                 return
 

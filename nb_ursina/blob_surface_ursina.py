@@ -35,6 +35,7 @@ from .blob_utils_ursina import MathFunctions as mf
 
 from .fps import FPS
 from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial, BlobLine
+from .blob_collision_cloud import BlobCollisionCloud as coll_cloud
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -361,6 +362,12 @@ class BlobCore(BlobRotator):
 
     Methods
     -------
+    swallowed_by(blob: "BlobSurface") -> None
+        Tells this blob what other blob is swallowing it
+
+    begin_disintegration() -> None
+        Instantiates the dust cloud object
+
     set_orbital_pos_vel(orbital: BlobSurface) -> None
         Sets orbital to a position and velocity appropriate for an orbital of this blob
 
@@ -509,6 +516,12 @@ class BlobCore(BlobRotator):
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
+        self._swallowed: bool = False
+        self.collision_cloud: coll_cloud = None
+        self.collision_timer: float = FPS.dt
+        self.collision_cleanup_timer: float = 1.5
+        self.swallowed_by_blob: BlobCore = None
+        self.collisions: deque[urs.Vec3] = deque([])
 
         for bit in range(1, len(mf.bit_masks)):
             self.hide(mf.bit_masks[bit])
@@ -586,6 +599,24 @@ class BlobCore(BlobRotator):
                 / (bg_vars.max_moon_mass - bg_vars.min_moon_mass)
                 * 100
             )
+
+    @property
+    def swallowed(self: Self) -> bool:
+        """Returns bool indicating if this blob has been swallowed"""
+        return self._swallowed
+
+    @swallowed.setter
+    def swallowed(self: Self, swallowed: bool) -> None:
+        """Sets bool indicating if this blob has been swallowed"""
+        self.begin_disintegration()
+
+    def swallowed_by(self: Self, blob: "BlobCore") -> None:
+        """Tells this blob what other blob is swallowing it"""
+        self.swallowed_by_blob = blob
+
+    def begin_disintegration(self: Self) -> None:
+        """Instantiates the dust cloud object"""
+        self.collision_cloud = coll_cloud(self.blob_name)
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
@@ -815,6 +846,34 @@ class BlobCore(BlobRotator):
 
         super().update()
 
+        if not FPS.paused:
+
+            if self.collision_cloud is not None and self.swallowed_by_blob is not None:
+                if self.collision_timer > 0:
+
+                    self.collision_cloud.start(self.swallowed_by_blob)
+                    self.collision_cloud.setScale(urs.scene, self.radius)
+                    self.collision_cloud.setPos(
+                        self.swallowed_by_blob, self.getPos(self.swallowed_by_blob)
+                    )
+                    self.swallowed_by_blob.collisions.append(self.collision_cloud)
+
+                    self.collision_timer = 0
+                else:
+                    self._swallowed = True
+                    self.collision_timer = FPS.dt
+
+            if len(self.collisions) > 0:
+                if self.collision_cleanup_timer <= 0:
+                    cloud = self.collisions.popleft()
+
+                    cloud.cleanup()
+                    del cloud
+                    self.collision_cleanup_timer = 1
+                else:
+
+                    self.collision_cleanup_timer -= FPS.dt
+
         if self.text_entity is not None and self.info_text.enabled:
 
             self.text_entity.position = self.position
@@ -1005,6 +1064,9 @@ class BlobSurfaceUrsina:
 
     Methods
     -------
+    swallowed_by(blob: "BlobSurface") -> None
+        Tells this blob what other blob is swallowing it
+
     set_barycenter(blob: "BlobSurface") -> None:
         Sets the blob that this blob orbits (used for moon blobs)
 
@@ -1050,6 +1112,7 @@ class BlobSurfaceUrsina:
         "ursina_center_blob_light",
         "ursina_blob",
         "_barycenter_index",
+        "_swallowed",
     )
 
     center_blob_x: ClassVar[float] = 0
@@ -1094,6 +1157,7 @@ class BlobSurfaceUrsina:
         self._position: Tuple[float, float, float] = (0, 0, 0)
         self._barycenter_index: int = 0
         self.trail_color: urs.Color = urs.color.rgba32(25, 100, 150, 255)
+        self._swallowed: bool = False
 
         BlobSurfaceUrsina.universe_node = self.universe.universe
 
@@ -1314,6 +1378,20 @@ class BlobSurfaceUrsina:
     @barycenter_index.setter
     def barycenter_index(self: Self, barycenter_index: int) -> None:
         self._barycenter_index = barycenter_index
+
+    @property
+    def swallowed(self: Self) -> bool:
+        """Returns bool indicating if this blob has been swallowed"""
+        return self.ursina_blob.swallowed
+
+    @swallowed.setter
+    def swallowed(self: Self, swallowed: bool) -> None:
+        """Sets bool indicating if this blob has been swallowed"""
+        self.ursina_blob.swallowed = swallowed
+
+    def swallowed_by(self: Self, blob: "BlobSurface") -> None:
+        """Tells this blob what other blob is swallowing it"""
+        self.ursina_blob.swallowed_by(blob.ursina_blob)
 
     def set_barycenter(self: Self, blob: BlobSurface) -> None:
         """Sets the blob that this blob orbits (used for moon blobs)"""
