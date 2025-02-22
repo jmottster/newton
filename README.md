@@ -2,7 +2,7 @@
 
 ### Version 0.1.1 Alpha Prototype 3D
 
-**_A space simulator using Newton's laws of physics: explore randomly generated solar systems with planets and moons!_**
+**_Explore randomly generated solar systems with planets and moons!_**
 
 <img align="right" src="./resources/atari_logo.png" style="margin: 10px;" /> 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
