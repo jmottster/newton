@@ -1,13 +1,13 @@
 # Newton's Blobs
 
-### Version 0.1.1 Alpha Prototype 3D
+### Version 0.1.2 Alpha Prototype 3D
 
 **_Explore randomly generated solar systems with planets and moons!_**
 
 <img align="right" src="./resources/atari_logo.png" style="margin: 10px;" /> 
 This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
 
-Alpha release 0.1.1! Huge visual improvements! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
+Alpha release 0.1.2! Bug fixes! It has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
 
 To toggle auto save and load, just press the 3 key. To pause, press the spacebar. **See below for full explanation and instructions.**
 
@@ -19,9 +19,9 @@ Two ways, the easy way and the nerdy way . . .
 ###### The easy way (Windows 10 and Ubuntu 24.04 only)
 
 1. Download Ubuntu 24.04 executable here:
-   1. [Ubuntu Release 0.1.1](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.1/newton3D.bin)
+   1. [Ubuntu Release 0.1.2](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.2/newton3D.bin)
 2. Download Windows 10 executable here:
-   1. [Windows Release 0.1.1](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.1/newton3D.exe)
+   1. [Windows Release 0.1.2](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.2/newton3D.exe)
 3. Save where you want to store it
 4. You may need to whitelist the executable with your malware protection software
 5. These may work on other versions of Windows and Ubuntu, but haven't been tested for it
@@ -44,7 +44,7 @@ Two ways, the easy way and the nerdy way . . .
 
 This is a space-level gravity and collision simulator that randomly generates solar systems with 5 planets and 35 moons randomly distributed among them. Each iteration is unique, no two generated solar systems are ever the same. You can explore and navigate through space from a first person perspective, controlled with keyboard and mouse just like a first person shooter game. At the center is a sun size/mass blob, and orbiting it are randomly created Earth to Jupiter size/mass blobs, and they have moon (Enceladus to Ganymede size/mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated (otherwise the space between them would be unbearably huge) but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Enceladus sized. Time is sped up to about 24 hours per second, and is adjustable via up and down arrow keys.
 
-A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.1/controls_quick_reference.pdf).
+A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.1.2/controls_quick_reference.pdf).
 
 <img src="./newtons_blobs/img/controls.png"/>
 
