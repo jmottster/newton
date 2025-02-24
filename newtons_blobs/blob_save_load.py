@@ -61,6 +61,7 @@ class BlobSaveLoad:
 
         with open(home_path_plus((".newton",), file_name), "w") as json_file:
             json.dump(self.json_data, json_file, indent=3)
+        json_file.close()
 
     def load(self: Self, set_prefs: bool = True) -> bool:
         """
@@ -69,6 +70,7 @@ class BlobSaveLoad:
         try:
             with open(home_path_plus((".newton",), "saved.json"), "r") as json_file:
                 self.json_data = json.load(json_file)
+            json_file.close()
         except:
             print(f"No such file: {home_path_plus((".newton",),"saved.json")}")
             return False

@@ -108,7 +108,7 @@ class BlobPhysics:
     GRAVITATIONAL_RANGE: float = 0
 
     # coefficient of restitution
-    COR: float = 0.5
+    COR: float = 0.25
 
     @classmethod
     def set_gravitational_range(cls, scaled_universe_height: float) -> None:
@@ -280,24 +280,19 @@ class BlobPhysics:
 
             # ------------------------------------------------#
 
-            pvx1, pvy1, pvz1 = blob1.pos_log[-1] - blob1.pos_log[-2]
-            pvx2, pvy2, pvz2 = blob2.pos_log[-1] - blob2.pos_log[-2]
-
-            v1 = math.sqrt((pvx1**2) + (pvy1**2) + (pvz1**2))
-            v2 = math.sqrt((pvx2**2) + (pvy2**2) + (pvz2**2))
-            v_diff = round(abs(v2 - v1), 2)
-            b1_d_diff = round(((diff / 2) / blob1.orig_radius[0]) * 100)
-            b2_d_diff = round(((diff / 2) / blob2.orig_radius[0]) * 100)
+            b1_d_diff = round((diff / blob1.orig_radius[0]) * 100)
+            b2_d_diff = round((diff / blob2.orig_radius[0]) * 100)
             d_ratio = round((d / dd) * 100)
 
-            if v_diff < 50 or b1_d_diff > 25 or b2_d_diff > 25:
+            if d_ratio < 95 or b1_d_diff > 8 or b2_d_diff > 8:
+                smaller_blob = blob1
+                larger_blob = blob2
+                if smaller_blob.radius > larger_blob.radius:
+                    smaller_blob = blob2
+                    larger_blob = blob1
 
-                if d_ratio < 30 or b1_d_diff > 100 or b2_d_diff > 100:
-                    smaller_blob = blob1
-                    larger_blob = blob2
-                    if smaller_blob.radius > larger_blob.radius:
-                        smaller_blob = blob2
-                        larger_blob = blob1
+                if not smaller_blob.dead_pending:
+
                     larger_blob.mass += smaller_blob.mass * 0.95
                     larger_blob.radius = BlobPhysics.new_radius(
                         larger_blob.radius, smaller_blob.radius
@@ -305,8 +300,6 @@ class BlobPhysics:
                     smaller_blob.dead = True
                     smaller_blob.swallowed = True
                     smaller_blob.swallowed_by(larger_blob)
-
-                return
 
             blob1.vx, blob1.vy, blob1.vz = vx1, vy1, vz1
             blob2.vx, blob2.vy, blob2.vz = vx2, vy2, vz2

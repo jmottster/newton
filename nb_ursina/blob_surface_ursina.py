@@ -162,9 +162,11 @@ class TrailRenderer(urs.Entity):
         )
 
         self.line_renderer = urs.Entity(
+            name=self.parent.blob_name,
             parent=urs.scene,
             model=BlobLine(
-                vertices=self.points,
+                name=self.parent.blob_name,
+                vertices=self.points,  # type: ignore
                 colors=self.colors,
                 thickness=self.thickness,
             ),
@@ -224,8 +226,11 @@ class TrailRenderer(urs.Entity):
                 self.points.append(self.getPos(self.line_renderer))
 
                 self.pos_overlap = 0
+                end: int = self.segments - 1
                 while (
-                    self.points[self.pos_overlap] == self.points[self.pos_overlap + 1]
+                    self.pos_overlap < end
+                    and self.points[self.pos_overlap]
+                    == self.points[self.pos_overlap + 1]
                 ):
                     self.pos_overlap += 1
 
@@ -301,8 +306,6 @@ class TrailRenderer(urs.Entity):
 
         if len(self.points) != self.segments:
 
-            self.build_trail_gradient()
-
             if len(self.points) > self.segments:
                 while len(self.points) > self.segments:
                     self.points.popleft()
@@ -310,6 +313,16 @@ class TrailRenderer(urs.Entity):
             elif len(self.points) < self.segments:
                 while len(self.points) < self.segments:
                     self.points.appendleft(self.points[0])
+
+            self.pos_overlap = 0
+            end: int = self.segments - 1
+            while (
+                self.pos_overlap < end
+                and self.points[self.pos_overlap] == self.points[self.pos_overlap + 1]
+            ):
+                self.pos_overlap += 1
+
+            self.build_trail_gradient()
 
     def on_enable(self: Self) -> None:
         """
@@ -558,6 +571,11 @@ class BlobCore(BlobRotator):
     @BlobRotator.radius.setter
     def radius(self: Self, radius: float) -> None:
         """Set the blob's radius (and scale)"""
+
+        x_size: bool = False
+        if self.radius is not None and round(self.scale_x) != round(self.radius):  # type: ignore
+            x_size = True
+
         super(BlobCore, type(self)).radius.fset(self, radius)  # type: ignore
         if not self.is_moon:
             self.percent_radius = round(
@@ -567,6 +585,9 @@ class BlobCore(BlobRotator):
                 )
                 * 100
             )
+
+            if x_size:
+                self.input("y")
         else:
             self.percent_radius = round(
                 (
@@ -575,6 +596,9 @@ class BlobCore(BlobRotator):
                 )
                 * 100
             )
+
+            if x_size:
+                self.input("u")
 
     @property
     def mass(self: Self) -> float:
@@ -637,6 +661,7 @@ class BlobCore(BlobRotator):
         dz: float = (self.world_z - orbital.ursina_blob.world_z) * bg_vars.scale_up
 
         distance: float = math.sqrt(dx**2 + dy**2 + dz**2)
+        # print(f"{self.index} to {orbital.ursina_blob.index} dist: {distance}")
 
         vel: float = math.sqrt(G * self.mass / distance)
 
@@ -1391,7 +1416,8 @@ class BlobSurfaceUrsina:
 
     def swallowed_by(self: Self, blob: "BlobSurface") -> None:
         """Tells this blob what other blob is swallowing it"""
-        self.ursina_blob.swallowed_by(blob.ursina_blob)
+        blob_u: BlobSurfaceUrsina = cast(BlobSurfaceUrsina, blob)
+        self.ursina_blob.swallowed_by(blob_u.ursina_blob)
 
     def set_barycenter(self: Self, blob: BlobSurface) -> None:
         """Sets the blob that this blob orbits (used for moon blobs)"""

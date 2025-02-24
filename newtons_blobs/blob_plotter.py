@@ -419,6 +419,18 @@ class BlobPlotter:
                     blob,
                 )
 
+        # for debug purposes . . .
+        # for x in range(len(self.proximity_grid)):
+        #     for y in range(len(self.proximity_grid[x])):
+        #         for z in range(len(self.proximity_grid[x][y])):
+        #             if self.proximity_grid[x][y][z] is None:
+        #                 # print(f"{x}-{y}-{z}: 0")
+        #                 pass
+        #             else:
+        #                 print(f"{x}-{y}-{z}: {len(self.proximity_grid[x][y][z])}")
+        #                 for blob in self.proximity_grid[x][y][z]:
+        #                     print(f"{blob.name}")
+
     def update_blobs(self: Self, dt: float = 1 / FRAME_RATE) -> None:
         """
         Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict

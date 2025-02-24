@@ -10,10 +10,10 @@ import numbers
 import array
 from typing import Any, List, Self
 
-from ursina import Color
-from ursina.vec3 import Vec3
+from ursina import Color  # type: ignore
+from ursina.vec3 import Vec3  # type: ignore
 
-import panda3d.core as p3d
+import panda3d.core as p3d  # type: ignore
 
 from newtons_blobs.globals import *
 
@@ -79,6 +79,7 @@ class BlobLine(p3d.NodePath):
 
     def __init__(
         self: Self,
+        name: str = None,
         parent: p3d.NodePath = None,
         vertices: List[Vec3] = None,
         colors: Color = None,
@@ -88,6 +89,7 @@ class BlobLine(p3d.NodePath):
         super().__init__("mesh")
         if parent is not None:
             self.reparentTo(parent)
+        self.name: str = name
         self.vertices: List[Vec3] = vertices
         self.colors: Color = colors
         self.color_attribute_index: int = -1
@@ -139,17 +141,17 @@ class BlobLine(p3d.NodePath):
         """
         a: memoryview = None
         try:
-            a = memoryview(data).cast("B").cast(dtype_string)
+            a = memoryview(data).cast("B").cast(dtype_string)  # type: ignore
         except Exception as e:
-            a = array.array(dtype_string, data)
+            a = array.array(dtype_string, data)  # type: ignore
 
-        vmem: memoryview = memoryview(array_handle).cast("B").cast(dtype_string)
+        vmem: memoryview = memoryview(array_handle).cast("B").cast(dtype_string)  # type: ignore
         try:
             vmem[:] = a
 
         except Exception as e:
             raise Exception(
-                f"Error in Mesh: {e} || Ensure Mesh is valid and the inputs have same length: vertices:{len(self.vertices)}, colors:{len(self.colors)}"
+                f"Error in Mesh {self.name}: {e} || Ensure Mesh is valid and the inputs have same length: vertices:{len(self.vertices)}, colors:{len(self.colors)}"
             )
 
     def setup_data(self: Self) -> p3d.GeomVertexData:
@@ -270,6 +272,7 @@ class BlobLine(p3d.NodePath):
         """Returns the set name of this instance"""
         if hasattr(self, "name"):
             return self.name
+        return ""
 
     @property
     def thickness(self) -> float:

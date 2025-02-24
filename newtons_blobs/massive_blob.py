@@ -240,6 +240,11 @@ class MassiveBlob:
         """Sets bool indicating if this is a dead blob"""
         self._dead = dead
 
+    @property
+    def dead_pending(self: Self) -> bool:
+        """Returns the real dead state, even when swallowed or escaped are not True"""
+        return self._dead
+
     def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
         """Positions the provided blob around this blob (randomly) and sets the velocity accordingly"""
 
@@ -346,17 +351,17 @@ class MassiveBlob:
         # Advance z by velocity (one frame, with TIMESCALE elapsed time)
         self.z += self.vz * timescale
 
-        self.pos_log.append(
-            np.array(
-                [
-                    self.x * bg_vars.scale_down,
-                    self.y * bg_vars.scale_down,
-                    self.z * bg_vars.scale_down,
-                ],
-                dtype=float,
-            )
-        )
-        self.pos_log.popleft()
+        # self.pos_log.append(
+        #     np.array(
+        #         [
+        #             self.x * bg_vars.scale_down,
+        #             self.y * bg_vars.scale_down,
+        #             self.z * bg_vars.scale_down,
+        #         ],
+        #         dtype=float,
+        #     )
+        # )
+        # self.pos_log.popleft()
 
     def destroy(self: Self) -> None:
         """Call when no longer needed, so it can clean up and disappear"""
