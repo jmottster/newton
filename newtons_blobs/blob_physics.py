@@ -284,7 +284,7 @@ class BlobPhysics:
             b2_d_diff = round((diff / blob2.orig_radius[0]) * 100)
             d_ratio = round((d / dd) * 100)
 
-            if d_ratio < 95 or b1_d_diff > 8 or b2_d_diff > 8:
+            if d_ratio < 95 or b1_d_diff > 5 or b2_d_diff > 5:
                 smaller_blob = blob1
                 larger_blob = blob2
                 if smaller_blob.radius > larger_blob.radius:

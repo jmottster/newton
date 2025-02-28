@@ -155,6 +155,8 @@ class MoonWatcher(urs.Entity):
 
         self.trail_on: bool = False
 
+        self._is_ready: bool = False
+
     def set_first_person_viewer(self: Self, first_person_viewer: urs.Entity) -> None:
         """Sets the Entity that represents the position of the player"""
         self.first_person_viewer = first_person_viewer
@@ -182,9 +184,10 @@ class MoonWatcher(urs.Entity):
 
     def is_ready(self: Self) -> bool:
         """Returns True if all blob arrays are full and the moon blobs all have a barycenter"""
-        is_ready: bool = self.planets[-1] is not None and self.moons[-1] is not None
+        if not self._is_ready:
+            self._is_ready = self.planets[-1] is not None and self.moons[-1] is not None
 
-        return is_ready
+        return self._is_ready
 
     def input(self: Self, key: str) -> None:
         """Called by Ursina when a key event happens (looks for T, to turn functionality on/off)"""

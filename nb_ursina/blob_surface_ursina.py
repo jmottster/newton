@@ -573,7 +573,7 @@ class BlobCore(BlobRotator):
         """Set the blob's radius (and scale)"""
 
         x_size: bool = False
-        if self.radius is not None and round(self.scale_x) != round(self.radius):  # type: ignore
+        if self.radius is not None and round(self.scale_x) > round(self.radius) and (self.scale_x / self.radius) >= 1.5:  # type: ignore
             x_size = True
 
         super(BlobCore, type(self)).radius.fset(self, radius)  # type: ignore
@@ -687,9 +687,18 @@ class BlobCore(BlobRotator):
         self.light_node = self.rotator_model.attachNewNode(self.light)
         self.light_node.reparentTo(self.rotator_model)  # type: ignore
 
-        self.light_node.setScale(urs.scene, bg_vars.center_blob_radius)
+        self.light_node.setScale(urs.scene, bg_vars.center_blob_radius * 30)
+
         self.light_bit_mask = mf.bit_masks[0]
         self.light_node.node().setCameraMask(mf.bit_masks[0])
+
+        lens = self.light_node.node().getLens()
+        far = bg_vars.au_scale_factor * 4 * bg_vars.num_planets
+        lens.setNearFar(
+            500 / self.light_node.getSx(),
+            far,
+        )
+
         self.setLightOff(1)
         self.rotator_model.setLightOff(1)
         self.light_node.setLightOff(1)
@@ -878,9 +887,17 @@ class BlobCore(BlobRotator):
 
                     self.collision_cloud.start(self.swallowed_by_blob)
                     self.collision_cloud.setScale(urs.scene, self.radius)
+
+                    angle_pos = urs.Vec3(
+                        self.getPos(urs.scene)
+                        - self.swallowed_by_blob.getPos(urs.scene)
+                    ).normalized()
+
                     self.collision_cloud.setPos(
-                        self.swallowed_by_blob, self.getPos(self.swallowed_by_blob)
+                        self.swallowed_by_blob,
+                        angle_pos,
                     )
+
                     self.swallowed_by_blob.collisions.append(self.collision_cloud)
 
                     self.collision_timer = 0
@@ -894,9 +911,8 @@ class BlobCore(BlobRotator):
 
                     cloud.cleanup()
                     del cloud
-                    self.collision_cleanup_timer = 1
+                    self.collision_cleanup_timer = 1.5
                 else:
-
                     self.collision_cleanup_timer -= FPS.dt
 
         if self.text_entity is not None and self.info_text.enabled:
@@ -1000,7 +1016,7 @@ class BlobCore(BlobRotator):
                     if self.barycenter_blob.is_rocky:
                         size_factor = (
                             3 * (self.barycenter_blob.percent_radius / 25)
-                        ) + 1
+                        ) + 1.5
                     else:
                         size_factor = (
                             2 * ((self.barycenter_blob.percent_radius - 75) / 25)

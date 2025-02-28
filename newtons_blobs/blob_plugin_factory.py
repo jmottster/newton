@@ -72,6 +72,9 @@ class BlobPluginFactory(Protocol):
         if you want to the laoding screen to go away, or before starting a new
         one.
 
+    set_plot_radius(plot_radius: float) -> None
+        Set the radius of where the farthest blob from the center is
+
     get_blob_universe() -> BlobUniverse
         Returns a the single instance of a Universe object, intended to be the area that is drawn on.
         Can be larger than the display area, which represents the area shown on one's monitor
@@ -152,6 +155,10 @@ class BlobPluginFactory(Protocol):
         if you want to the laoding screen to go away, or before starting a new
         one.
         """
+        pass
+
+    def set_plot_radius(self: Self, plot_radius: float) -> None:
+        """Set the radius of where the farthest blob from the center is"""
         pass
 
     def get_blob_universe(self: Self) -> BlobUniverse:

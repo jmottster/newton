@@ -80,7 +80,7 @@ LIGHTING = True
 
 
 # Constants for creating blobs somewhat randomly
-NUM_BLOBS = 41
+NUM_BLOBS = 51
 
 # number of NUM_BLOBS that are planets
 NUM_PLANETS = 5

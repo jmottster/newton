@@ -720,8 +720,8 @@ class BlobPlotter:
         scaled_half_universe_h: float = self.blobs[0].y
 
         orbiting_blobs: int = len(planets)
-        blobs_per_ring: int = 5
-        if self.num_moons > 0:
+        blobs_per_ring: int = 10
+        if self.num_moons > 1:
             blobs_per_ring = bg_vars.num_planets + 1
 
         # Iterators for circular grid placement, blobs will be placed in ever
@@ -814,6 +814,8 @@ class BlobPlotter:
 
             self.add_pos_vel(planets[i], x, y, z)
             self.blob_factory.loading_screen_add_count()
+
+        self.blob_factory.set_plot_radius(plot_radius)
 
     def add_pos_vel(
         self: Self, blob: MassiveBlob, x: float, y: float, z: float
