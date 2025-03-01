@@ -17,6 +17,7 @@ from panda3d.core import (  # type: ignore
     NodePath,
     BitMask32,
     Shader,
+    Vec3 as PanVec3,
 )  # type: ignore
 
 import ursina as urs  # type: ignore
@@ -531,7 +532,6 @@ class BlobCore(BlobRotator):
         self.text_full_details: bool = True
         self._swallowed: bool = False
         self.collision_cloud: coll_cloud = None
-        self.collision_timer: float = FPS.dt
         self.collision_cleanup_timer: float = 1.5
         self.swallowed_by_blob: BlobCore = None
         self.collisions: deque[urs.Vec3] = deque([])
@@ -759,10 +759,9 @@ class BlobCore(BlobRotator):
         Updates the position of the spotlight created in create_ring_light(), and
         ensures the light is pointing at this blob.
         """
-        dx = self.center_light.getX(urs.scene) - self.rotator_model.getX(urs.scene)
-        dy = self.center_light.getY(urs.scene) - self.rotator_model.getY(urs.scene)
-        dz = self.center_light.getZ(urs.scene) - self.rotator_model.getZ(urs.scene)
-        direction = urs.Vec3(dx, dy, dz).normalized()
+        direction = urs.Vec3(
+            self.center_light.getPos(urs.scene) - self.rotator_model.getPos(urs.scene)
+        ).normalized()
 
         distance = self.scale_x * 30
 
@@ -883,27 +882,22 @@ class BlobCore(BlobRotator):
         if not FPS.paused:
 
             if self.collision_cloud is not None and self.swallowed_by_blob is not None:
-                if self.collision_timer > 0:
 
-                    self.collision_cloud.start(self.swallowed_by_blob)
-                    self.collision_cloud.setScale(urs.scene, self.radius)
+                self.collision_cloud.start(self.swallowed_by_blob)
+                self.collision_cloud.setScale(urs.scene, self.radius)
 
-                    angle_pos = urs.Vec3(
-                        self.getPos(urs.scene)
-                        - self.swallowed_by_blob.getPos(urs.scene)
-                    ).normalized()
+                angle_pos = PanVec3(
+                    self.getPos(self.swallowed_by_blob)
+                    - self.swallowed_by_blob.getPos(self.swallowed_by_blob)
+                ).normalized()
 
-                    self.collision_cloud.setPos(
-                        self.swallowed_by_blob,
-                        angle_pos,
-                    )
+                self.collision_cloud.setPos(
+                    self.swallowed_by_blob,
+                    angle_pos,
+                )
 
-                    self.swallowed_by_blob.collisions.append(self.collision_cloud)
-
-                    self.collision_timer = 0
-                else:
-                    self._swallowed = True
-                    self.collision_timer = FPS.dt
+                self.swallowed_by_blob.collisions.append(self.collision_cloud)
+                self._swallowed = True
 
             if len(self.collisions) > 0:
                 if self.collision_cleanup_timer <= 0:
