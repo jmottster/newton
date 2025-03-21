@@ -8,7 +8,7 @@ by Jason Mott, copyright 2024
 
 import json
 from typing import Any, Dict, List, Self
-from .resources import home_path_plus
+from .resources import home_path_plus, home_path_plus_exists
 from .globals import *
 from .savable_loadable_prefs import SavableLoadablePrefs
 
@@ -33,6 +33,13 @@ class BlobSaveLoad:
 
     Methods
     -------
+    find_session_num() -> int
+        Get the next available session number for incremental saving, if over 10, it remains at 10
+        deletes 1 and moves all other existing save file down one session number
+
+    rename_session(session_num: str, new_session_num: str) -> None
+        Rename a session series of files (session_num-session_save_itr.json to new_session_num-session_save_itr.json)
+
     save(get_prefs: bool = True, file_name: str = "saved.json") -> None
         Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval
 
@@ -51,6 +58,41 @@ class BlobSaveLoad:
         self.savable_loadables: List[SavableLoadablePrefs] = savable_loadables
         self.json_data: Dict[str, Any] = {}
 
+    def find_session_num(self: Self) -> int:
+        """
+        Get the next available session number for incremental saving, if over 10, it remains at 10
+        deletes 1 and moves all other existing save file down one session number
+        """
+        session_int: int = 1
+
+        while home_path_plus_exists((".newton",), f"{session_int}-0.json"):
+            session_int += 1
+
+        if session_int == 11:
+            session_int = 10
+            i: int = 1
+            y: int = 0
+
+            while home_path_plus_exists((".newton",), f"{i}-{y}.json"):
+                home_path_plus((".newton",), f"{i}-{y}.json").unlink()
+                y += 1
+
+            for n in range(2, 11):
+                self.rename_session(str(n), str(i))
+                i += 1
+
+        return session_int
+
+    def rename_session(self: Self, session_num: str, new_session_num: str) -> int:
+        """Rename a session series of files (session_num-session_save_itr.json to new_session_num-session_save_itr.json)"""
+        y = 0
+        while home_path_plus_exists((".newton",), f"{session_num}-{y}.json"):
+            home_path_plus((".newton",), f"{session_num}-{y}.json").rename(
+                home_path_plus((".newton",), f"{new_session_num}-{y}.json", False)
+            )
+            y += 1
+        return y - 1
+
     def save(self: Self, get_prefs: bool = True, file_name: str = "saved.json") -> None:
         """
         Saves the savable_loadables objects (by calling get_prefs() on each) to a json file for later retrieval
@@ -63,16 +105,16 @@ class BlobSaveLoad:
             json.dump(self.json_data, json_file, indent=3)
         json_file.close()
 
-    def load(self: Self, set_prefs: bool = True) -> bool:
+    def load(self: Self, set_prefs: bool = True, file_name: str = "saved.json") -> bool:
         """
         Returns the value of the single key in the json_data file, has no effect on any savable_loadables objects
         """
         try:
-            with open(home_path_plus((".newton",), "saved.json"), "r") as json_file:
+            with open(home_path_plus((".newton",), file_name), "r") as json_file:
                 self.json_data = json.load(json_file)
             json_file.close()
         except:
-            print(f"No such file: {home_path_plus((".newton",),"saved.json")}")
+            print(f"No such file: {home_path_plus((".newton",),file_name)}")
             return False
 
         if set_prefs:

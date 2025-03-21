@@ -95,6 +95,9 @@ class BlobRunner:
         )
 
         # Runtime preferences/states
+        self.session_num: int = self.blob_save_load.find_session_num()
+        self.session_inc_num: int = 0
+        self.session_save_itr: int = DAYS * 90
         self.auto_save_load: bool = AUTO_SAVE_LOAD
         self.running: bool = True
         self.paused: bool = False
@@ -153,18 +156,19 @@ class BlobRunner:
         self.fullscreen = not self.fullscreen
         self.keyboard_events[self.display.get_key_code("f")]()
 
-    def get_timescale_str(self: Self) -> str:
+    def get_timescale_str(
+        self: Self, time_seconds: int = 0, suffix: str = "/sec"
+    ) -> str:
 
-        days: int = int(bg_vars.timescale / DAYS)
-        hours: int = int(
-            ((bg_vars.timescale) - (DAYS * int(bg_vars.timescale / DAYS))) / HOURS
-        )
+        if time_seconds == 0:
+            time_seconds = bg_vars.timescale
+
+        days: int = int(time_seconds / DAYS)
+        hours: int = int(((time_seconds) - (DAYS * int(time_seconds / DAYS))) / HOURS)
         minutes: int = int(
-            ((bg_vars.timescale) - (HOURS * int(bg_vars.timescale / HOURS))) / MINUTES
+            ((time_seconds) - (HOURS * int(time_seconds / HOURS))) / MINUTES
         )
-        seconds: int = int(
-            ((bg_vars.timescale) - (MINUTES * int(bg_vars.timescale / MINUTES)))
-        )
+        seconds: int = int(((time_seconds) - (MINUTES * int(time_seconds / MINUTES))))
 
         return_str: str = ""
 
@@ -192,7 +196,7 @@ class BlobRunner:
                 return_str += "-"
             return_str += f"{seconds}s"
 
-        return_str += "/sec"
+        return_str += suffix
 
         return return_str
 
@@ -224,7 +228,12 @@ class BlobRunner:
             self.message = None
             self.message_counter = 0
             self.blob_plotter.start_over()
+            self.session_num = self.blob_save_load.find_session_num()
+            self.session_inc_num = 0
             self.blob_save_load.save(True, "last_blob_plot.json")
+            self.blob_save_load.save(
+                True, f"{self.session_num}-{self.elapsed_time}.json"
+            )
 
         def toggle_square_grid() -> None:
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -320,13 +329,17 @@ class BlobRunner:
 
         self.auto_save_load = self.blob_save_load.load_value("auto_save_load")
 
-        if self.auto_save_load:
-            if not self.blob_save_load.load():
-                self.blob_plotter.plot_blobs()
+        if self.auto_save_load and self.blob_save_load.load():
             self.universe = self.blob_factory.get_blob_universe()
+            self.session_inc_num = self.blob_save_load.rename_session(
+                "saved", str(self.session_num)
+            )
         else:
             self.blob_plotter.plot_blobs()
             self.blob_save_load.save(True, "last_blob_plot.json")
+            self.blob_save_load.save(
+                True, f"{self.session_num}-{self.session_inc_num}.json"
+            )
 
         while self.running:
             self.display.check_events(self.keyboard_events)
@@ -336,6 +349,7 @@ class BlobRunner:
         if self.auto_save_load:
             self.running = True
             self.blob_save_load.save()
+            self.blob_save_load.rename_session(str(self.session_num), "saved")
         else:
             self.blob_save_load.save_value("auto_save_load", False)
         self.display.quit()
@@ -367,6 +381,14 @@ class BlobRunner:
         if not self.paused:
             self.blob_plotter.update_blobs(self.display.fps_get_dt())
             self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
+            if (
+                self.elapsed_time >= (self.session_save_itr)
+                and (self.elapsed_time % (self.session_save_itr)) == 0
+            ):
+                self.session_inc_num += 1
+                self.blob_save_load.save(
+                    True, f"{self.session_num}-{self.session_inc_num}.json"
+                )
 
         self.display.update()
 

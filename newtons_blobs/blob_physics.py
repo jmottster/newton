@@ -363,7 +363,7 @@ class BlobPhysics:
 
             BlobPhysics.collision_detection(blob1, blob2, d.d)
 
-            timescale: float = float(Decimal(bg_vars.timescale) * dt)
+            timescale: float = bg_vars.timescale * float(dt)
 
             F1 = BlobPhysics.g * blob2.mass / d.d**3
             F2 = BlobPhysics.g * blob1.mass / d.d**3

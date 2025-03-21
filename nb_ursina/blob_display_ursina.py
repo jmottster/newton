@@ -338,15 +338,12 @@ class BlobDisplayUrsina:
                 self.clear_stats()
 
         def toggle_entity_follow() -> None:
-            if self.paused:
-                self.entity_follow = not self.entity_follow
-                if self.entity_follow and urs.mouse.hovered_entity is not None:
-                    self.first_person_surface.first_person_viewer.start_following(
-                        urs.mouse.hovered_entity
-                    )
-                else:
-                    self.entity_follow = False
-                    self.first_person_surface.first_person_viewer.stop_following()
+
+            self.entity_follow = not self.entity_follow
+            if self.entity_follow and urs.mouse.hovered_entity is not None:
+                self.first_person_surface.first_person_viewer.start_following(
+                    urs.mouse.hovered_entity
+                )
             else:
                 self.entity_follow = False
                 self.first_person_surface.first_person_viewer.stop_following()

@@ -1,7 +1,7 @@
 """
 Newton's Laws, a simulator of physics at the scale of space
 
-An Entity (Ursina) class that holds the first person view, 
+An Entity (Ursina) class that holds the first person view,
 position and rotation control via keyboard and mouse
 
 by Jason Mott, copyright 2024
@@ -130,7 +130,6 @@ class BlobFirstPersonUrsina(urs.Entity):
             lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
         self.radius: float = lens.getNear() * bg_vars.first_person_scale  # + 0.01
 
-        urs.camera.ui.collider = "sphere"
         urs.camera.ui.position = (0, 0, 0)
 
         self.center_cursor: urs.Entity = urs.Entity(
@@ -465,12 +464,6 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.mouse_scroll_up = 1
         if key == "scroll down":
             self.mouse_scroll_down = 1
-
-        if key == "space":
-            if urs.camera.ui.collider is None:
-                urs.camera.ui.collider = "sphere"
-            else:
-                urs.camera.ui.collider = None
 
     def report_throttle_speed(self: Self) -> None:
         """

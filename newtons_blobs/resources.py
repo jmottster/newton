@@ -38,17 +38,12 @@ def resource_path(relative_path: Path) -> Path:
     mypath = Path()
 
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
+        base_path = Path(__file__).parent
+        if not mypath.joinpath(base_path, relative_path).exists():
+            base_path = Path(__file__).parent.parent
+
     except Exception:
-
-        try:
-            base_path = Path(__file__).parent
-            if not mypath.joinpath(base_path, relative_path).exists():
-                base_path = Path(__file__).parent.parent
-
-        except Exception:
-            base_path = mypath.absolute()
+        base_path = mypath.absolute()
 
     return mypath.joinpath(base_path, relative_path)
 
@@ -68,3 +63,18 @@ def home_path_plus(
         full_path.touch()
 
     return full_path
+
+
+def home_path_plus_exists(path_tuple: Tuple[str], file: str) -> bool:
+    """find out if a file exists in the user home directory (no need to send home dir, it'll be the base no matter what)"""
+    mypath = Path()
+    full_path = mypath.home()
+    for item in path_tuple:
+        full_path = mypath.joinpath(full_path, item)
+        if not full_path.exists():
+            return False
+    full_path = mypath.joinpath(full_path, file)
+    if not full_path.exists():
+        return False
+
+    return True
