@@ -131,7 +131,7 @@ class BlobUrsinaFactory:
         bg_vars.set_timescale(DAYS * 1)
         bg_vars.set_orig_timescale(DAYS * 1)
         bg_vars.set_timescale_inc(HOURS * 6)
-        bg_vars.set_num_planets(5)
+        bg_vars.set_num_planets(1)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)
@@ -270,9 +270,7 @@ class BlobUrsinaFactory:
         )
 
         if data["paused"]:
-            urs.camera.ui.collider = None
             self.urs_display.paused = True
-            FPS.paused = True
 
         if not data["show_stats"]:
             self.urs_display.urs_keyboard_events[self.urs_display.get_key_code("2")]()
@@ -298,11 +296,13 @@ class BlobUrsinaFactory:
 
         BlobSurfaceUrsina.num_rings = 2
 
-        self.loading_screen_start(num_blobs)
-
         mf.camera_mask_counter = 0
 
-        self.urs_display.update()
+        if num_blobs > 0:
+
+            self.loading_screen_start(num_blobs)
+
+            self.urs_display.update()
 
     def new_blob_surface(
         self: Self,

@@ -201,10 +201,14 @@ class BlobPlotter:
 
         self.blobs = np.delete(self.blobs, np.where(self.blobs == None)[0])
 
-    def start_over(self: Self) -> None:
+    def start_over(self: Self, plot_blobs: bool = True) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
 
-        self.blob_factory.reset()
+        if plot_blobs:
+            self.blob_factory.reset()
+        else:
+            self.blob_factory.reset(1)
+
         self.display.update()
         for blob in np.flip(self.blobs):
             blob.destroy()
@@ -223,7 +227,9 @@ class BlobPlotter:
         self.display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
-        self.plot_blobs()
+
+        if plot_blobs:
+            self.plot_blobs()
 
     def plot_blobs(self: Self) -> None:
         """

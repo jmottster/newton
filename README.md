@@ -90,8 +90,11 @@ A PDF version of the following quick reference for controls can be downloaded [h
   - H - Toggle show full details (when info flag is on) or just name (see MOUSE LEFT CLICK)
   - N - Toggle show info flag for planets only (ONLY when B is activated, doesn't include flagS turned on with MOUSE LEFT CLICK)
   - U - Toggle exaggerate moon sizes
+  - M - Activate time rewind
   - UP ARROW - Increase timescale (make time go faster)
   - DOWN ARROW - Decrease timescale (make time go slower)
+  - LEFT ARROW - Adjust time rewind
+  - RIGHT ARROW - Adjust time rewind
 
 Some screen shots:
 

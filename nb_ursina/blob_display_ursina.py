@@ -284,7 +284,7 @@ class BlobDisplayUrsina:
 
         self.h: WindowHandler = WindowHandler(urs.window.size, self)
 
-        self.paused: bool = False
+        self._paused: bool = False
         self.show_stats: bool = True
         self.entity_follow: bool = False
 
@@ -301,10 +301,29 @@ class BlobDisplayUrsina:
             self.load_keyboard_events()
         )
 
+    @property
+    def paused(self: Self) -> bool:
+        """Returns True is paused, False if not"""
+        return self._paused
+
+    @paused.setter
+    def paused(self: Self, paused: bool) -> None:
+        """Sets the paused state"""
+        self._paused = paused
+        FPS.paused = paused
+
     def load_key_ints(self: Self) -> Dict[str, int]:
         """Loads up the Dict that holds integers that represent keys. (see get_key_code)"""
         mykeys = tuple("abcdefghijklmnopqrstuvwxyz1234567890")
-        morekeys = ("escape", "space", "up arrow", "down arrow", "right mouse down")
+        morekeys = (
+            "escape",
+            "space",
+            "up arrow",
+            "down arrow",
+            "right mouse down",
+            "left arrow",
+            "right arrow",
+        )
 
         key_ints: Dict[str, int] = {}
         i = 0
@@ -326,10 +345,6 @@ class BlobDisplayUrsina:
 
         def pause_game() -> None:
             self.paused = not self.paused
-            if self.paused:
-                FPS.paused = self.paused
-            else:
-                FPS.paused = self.paused
 
         def toggle_stats() -> None:
             self.show_stats = not self.show_stats

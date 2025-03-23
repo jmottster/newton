@@ -97,6 +97,8 @@ class BlobRunner:
         # Runtime preferences/states
         self.session_num: int = self.blob_save_load.find_session_num()
         self.session_inc_num: int = 0
+        self.session_inc_adj: int = 0
+        self.time_adj: bool = False
         self.session_save_itr: int = DAYS * 90
         self.auto_save_load: bool = AUTO_SAVE_LOAD
         self.running: bool = True
@@ -127,6 +129,8 @@ class BlobRunner:
         )
         self.toggle_save_load_on: str = f"Toggled auto save/load to on"
         self.toggle_save_load_off: str = f"Toggled auto save/load to off"
+        self.time_reverse_1_t: str = "Reverse time to "
+        self.time_reverse_2_t: str = "\n\nPress M to activate"
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
@@ -157,10 +161,10 @@ class BlobRunner:
         self.keyboard_events[self.display.get_key_code("f")]()
 
     def get_timescale_str(
-        self: Self, time_seconds: int = 0, suffix: str = "/sec"
+        self: Self, time_seconds: int = -1, suffix: str = "/sec"
     ) -> str:
 
-        if time_seconds == 0:
+        if time_seconds == -1:
             time_seconds = bg_vars.timescale
 
         days: int = int(time_seconds / DAYS)
@@ -196,6 +200,9 @@ class BlobRunner:
                 return_str += "-"
             return_str += f"{seconds}s"
 
+        if return_str == "":
+            return_str = "0"
+
         return_str += suffix
 
         return return_str
@@ -230,9 +237,10 @@ class BlobRunner:
             self.blob_plotter.start_over()
             self.session_num = self.blob_save_load.find_session_num()
             self.session_inc_num = 0
+            self.session_inc_adj = 0
             self.blob_save_load.save(True, "last_blob_plot.json")
             self.blob_save_load.save(
-                True, f"{self.session_num}-{self.elapsed_time}.json"
+                True, f"{self.session_num}-{self.session_inc_num}.json"
             )
 
         def toggle_square_grid() -> None:
@@ -286,6 +294,57 @@ class BlobRunner:
                 self.message = self.toggle_save_load_off
             self.message_counter = 60 * 3
 
+        def act_time_reversal() -> None:
+
+            if self.time_adj:
+                self.session_inc_num = self.session_inc_adj
+                self.elapsed_time = 0
+                self.message = None
+                self.message_counter = 0
+                self.blob_plotter.start_over(False)
+                self.blob_save_load.load(
+                    True, f"{self.session_num}-{self.session_inc_num}.json"
+                )
+                self.blob_plotter.populate_grid()
+                self.paused = True
+                self.display.paused = True
+                self.universe = self.blob_factory.get_blob_universe()
+                self.blob_save_load.save(True, "last_blob_plot.json")
+
+        def time_reverse_left() -> None:
+            if not self.paused:
+                self.paused = True
+                self.display.paused = True
+
+            if self.session_inc_adj > 0:
+                self.session_inc_adj -= 1
+
+            self.time_adj = True
+
+            self.message = (
+                self.time_reverse_1_t
+                + f"{self.get_timescale_str(self.session_inc_adj*self.session_save_itr, "")}"
+                + self.time_reverse_2_t
+            )
+            self.message_counter = 60 * 3
+
+        def time_reverse_right() -> None:
+            if not self.paused:
+                self.paused = True
+                self.display.paused = True
+
+            if self.session_inc_adj < self.session_inc_num:
+                self.session_inc_adj += 1
+
+            self.time_adj = True
+
+            self.message = (
+                self.time_reverse_1_t
+                + f"{self.get_timescale_str(self.session_inc_adj*self.session_save_itr, "")}"
+                + self.time_reverse_2_t
+            )
+            self.message_counter = 60 * 3
+
         def time_faster() -> None:
             if bg_vars.timescale < (bg_vars.timescale_inc):
                 bg_vars.set_timescale(bg_vars.timescale_inc)
@@ -314,10 +373,16 @@ class BlobRunner:
         keyboard_events[self.display.get_key_code("4")] = toggle_square_grid
         keyboard_events[self.display.get_key_code("5")] = toggle_perfect_orbit
         keyboard_events[self.display.get_key_code("6")] = toggle_angular_chaos
+        keyboard_events[self.display.get_key_code("m")] = act_time_reversal
         keyboard_events[self.display.get_key_code("up")] = time_faster
         keyboard_events[self.display.get_key_code("down")] = time_slower
         keyboard_events[self.display.get_key_code("up arrow")] = time_faster
         keyboard_events[self.display.get_key_code("down arrow")] = time_slower
+
+        keyboard_events[self.display.get_key_code("left")] = time_reverse_left
+        keyboard_events[self.display.get_key_code("right")] = time_reverse_right
+        keyboard_events[self.display.get_key_code("left arrow")] = time_reverse_left
+        keyboard_events[self.display.get_key_code("right arrow")] = time_reverse_right
 
         return keyboard_events
 
@@ -334,6 +399,11 @@ class BlobRunner:
             self.session_inc_num = self.blob_save_load.rename_session(
                 "saved", str(self.session_num)
             )
+
+            while self.elapsed_time < (self.session_inc_num * self.session_save_itr):
+                self.session_inc_num -= 1
+
+            self.session_inc_adj = self.session_inc_num
         else:
             self.blob_plotter.plot_blobs()
             self.blob_save_load.save(True, "last_blob_plot.json")
@@ -386,6 +456,7 @@ class BlobRunner:
                 and (self.elapsed_time % (self.session_save_itr)) == 0
             ):
                 self.session_inc_num += 1
+                self.session_inc_adj += 1
                 self.blob_save_load.save(
                     True, f"{self.session_num}-{self.session_inc_num}.json"
                 )

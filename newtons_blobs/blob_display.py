@@ -106,6 +106,7 @@ class BlobDisplay(Protocol):
 
     size_w: float
     size_h: float
+    paused: bool
 
     def get_framework(self: Self) -> Any:
         """
