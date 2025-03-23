@@ -129,7 +129,7 @@ class BlobRunner:
         )
         self.toggle_save_load_on: str = f"Toggled auto save/load to on"
         self.toggle_save_load_off: str = f"Toggled auto save/load to off"
-        self.time_reverse_1_t: str = "Reverse time to "
+        self.time_reverse_1_t: str = "Rewind time to "
         self.time_reverse_2_t: str = "\n\nPress M to activate"
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
