@@ -235,13 +235,18 @@ class BlobRunner:
             self.message = None
             self.message_counter = 0
             self.blob_plotter.start_over()
-            self.session_num = self.blob_save_load.find_session_num()
+            if self.session_inc_num > 1:
+                self.session_num = self.blob_save_load.find_session_num()
             self.session_inc_num = 0
             self.session_inc_adj = 0
             self.blob_save_load.save(True, "last_blob_plot.json")
             self.blob_save_load.save(
                 True, f"{self.session_num}-{self.session_inc_num}.json"
             )
+
+            self.session_inc_num += 1
+            self.session_inc_adj = self.session_inc_num
+            self.time_adj = False
 
         def toggle_square_grid() -> None:
             self.blob_plotter.square_grid = not self.blob_plotter.square_grid
@@ -310,6 +315,9 @@ class BlobRunner:
                 self.display.paused = True
                 self.universe = self.blob_factory.get_blob_universe()
                 self.blob_save_load.save(True, "last_blob_plot.json")
+                self.session_inc_num += 1
+                self.session_inc_adj = self.session_inc_num
+                self.time_adj = False
 
         def time_reverse_left() -> None:
             if not self.paused:
@@ -335,6 +343,9 @@ class BlobRunner:
 
             if self.session_inc_adj < self.session_inc_num:
                 self.session_inc_adj += 1
+
+            if self.session_inc_adj == self.session_inc_num:
+                self.session_inc_adj -= 1
 
             self.time_adj = True
 
@@ -403,13 +414,14 @@ class BlobRunner:
             while self.elapsed_time < (self.session_inc_num * self.session_save_itr):
                 self.session_inc_num -= 1
 
-            self.session_inc_adj = self.session_inc_num
         else:
             self.blob_plotter.plot_blobs()
             self.blob_save_load.save(True, "last_blob_plot.json")
             self.blob_save_load.save(
                 True, f"{self.session_num}-{self.session_inc_num}.json"
             )
+        self.session_inc_num += 1
+        self.session_inc_adj = self.session_inc_num
 
         while self.running:
             self.display.check_events(self.keyboard_events)
@@ -451,15 +463,13 @@ class BlobRunner:
         if not self.paused:
             self.blob_plotter.update_blobs(self.display.fps_get_dt())
             self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
-            if (
-                self.elapsed_time >= (self.session_save_itr)
-                and (self.elapsed_time % (self.session_save_itr)) == 0
-            ):
-                self.session_inc_num += 1
-                self.session_inc_adj += 1
+            if (self.elapsed_time / self.session_save_itr) >= self.session_inc_num:
                 self.blob_save_load.save(
                     True, f"{self.session_num}-{self.session_inc_num}.json"
                 )
+                self.session_inc_num += 1
+                self.session_inc_adj = self.session_inc_num
+                self.time_adj = False
 
         self.display.update()
 
