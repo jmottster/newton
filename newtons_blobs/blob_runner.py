@@ -301,6 +301,8 @@ class BlobRunner:
 
         def act_time_reversal() -> None:
 
+            auto_save: bool = self.auto_save_load
+
             if self.time_adj:
                 self.session_inc_num = self.session_inc_adj
                 self.elapsed_time = 0
@@ -313,6 +315,7 @@ class BlobRunner:
                 self.blob_plotter.populate_grid()
                 self.paused = True
                 self.display.paused = True
+                self.auto_save_load = auto_save
                 self.universe = self.blob_factory.get_blob_universe()
                 self.blob_save_load.save(True, "last_blob_plot.json")
                 self.session_inc_num += 1

@@ -28,8 +28,8 @@ from newtons_blobs import blob_random
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
 from .blob_first_person_surface import FirstPersonSurface
-from .blob_moon_trail_registry_ursina import (
-    BlobMoonTrailRegistryUrsina as moon_registry,
+from .blob_watcher_registry_ursina import (
+    BlobWatcherRegistryUrsina as blob_registry,
 )
 from .blob_surface_ursina import BlobCore, BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
@@ -160,7 +160,7 @@ class BlobUrsinaFactory:
             self.urs_universe,
         )
 
-        moon_registry.set_first_person_viewer(
+        blob_registry.set_first_person_viewer(
             self.urs_display.first_person_surface.first_person_viewer
         )
 
@@ -284,17 +284,17 @@ class BlobUrsinaFactory:
     def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
 
-        moon_registry.reset()
+        blob_registry.reset()
 
         self.urs_display.first_person_surface.first_person_viewer.stop_following()
 
-        moon_registry.set_first_person_viewer(
+        blob_registry.set_first_person_viewer(
             self.urs_display.first_person_surface.first_person_viewer
         )
 
         self.urs_display.clear_stats()
 
-        BlobSurfaceUrsina.num_rings = 2
+        BlobSurfaceUrsina.num_rings = 1
 
         mf.camera_mask_counter = 0
 
@@ -337,14 +337,14 @@ class BlobUrsinaFactory:
 
         if name != CENTER_BLOB_NAME:
             if radius < bg_vars.min_radius:
-                moon_registry.add_moon(new_blob.ursina_blob)
+                blob_registry.add_moon(new_blob.ursina_blob)
             else:
-                moon_registry.add_planet(new_blob.ursina_blob)
+                blob_registry.add_planet(new_blob.ursina_blob)
 
         self.loading_screen_add_count()
 
         if self.loading_screen_is_at_max():
-            moon_registry.purge_none_elements()
+            blob_registry.purge_none_elements()
             self.setup_start_pos(self.default_start_pos)
             self.loading_screen_end(False)
 

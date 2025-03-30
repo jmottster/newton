@@ -64,6 +64,9 @@ class TrailRenderer(urs.Entity):
         Called by Ursina once per frame. This will keep the trial
         current and only min_spacing * segments long
 
+    build_trail_gradient() -> None
+        Constructs the color gradient for the trail using colors in self.color_gradient
+
     calibrate_segments(new: bool = False) -> None
         Called when the number of items in self.last_point_distances >= self.spacing_check
         this will adjust self.min_spacing and self.segments to control the length of the trail
@@ -248,6 +251,7 @@ class TrailRenderer(urs.Entity):
         self.line_renderer.model.generate()
 
     def build_trail_gradient(self: Self) -> None:
+        """Constructs the color gradient for the trail using colors in self.color_gradient"""
 
         self.colors.clear()
 
@@ -379,6 +383,10 @@ class BlobCore(BlobRotator):
     swallowed_by(blob: "BlobSurface") -> None
         Tells this blob what other blob is swallowing it
 
+    check_light_source() -> None
+        Checks if the barycenter blob has its own light and uses that if so.
+        Otherwise it will use the center blob light
+
     begin_disintegration() -> None
         Instantiates the dust cloud object
 
@@ -389,14 +397,26 @@ class BlobCore(BlobRotator):
         Creates a point light at the center of this blob. Used for
         center blob only.
 
-    create_ring_light() -> None
+    create_spotlight() -> None
         Creates a spotlight just for this blob, used to correct
-        poor shadowing on rings by the point light from center blob.
-        Thus only used on gas giants with rings.
+        poor shadowing -- especially on rings -- by the point light from center blob.
 
-    update_ring_light() -> None
-        Updates the position of the spotlight created in create_ring_light(), and
+    set_spotlight(light_node: NodePath) -> None
+        Sets a spotlight just for this blob from another source, used to correct
+        poor shadowing by the point light from center blob.
+
+    unset_spotlight() -> None
+        Removes the spotlight reference set on this blob by set_spotlight(), and returns to using
+        the center blob. Notably, this does not destroy the spotlight, as that is the responsibility
+        of the sender to set_spotlight()
+
+    update_spotlight() -> None
+        Updates the position of the spotlight created in create_spotlight(), and
         ensures the light is pointing at this blob.
+
+    remove_spotlight() -> None
+        Destroys the spotlight just for this blob, and returns to using
+        the center blob
 
     create_trail() -> None
         Creates the orbital trail. Called by input() when the "t" key is pressed if it
@@ -416,6 +436,12 @@ class BlobCore(BlobRotator):
     destroy_text_overlay() -> None
         Cleans up all the objects related to the text overlay. Called by
         on_click()
+
+    full_overlay_text() -> str
+        creates info text with full details
+
+    short_overlay_text() -> str
+        creates info text with just name
 
     update() -> None
         Called by Ursina engine once per frame
@@ -452,7 +478,7 @@ class BlobCore(BlobRotator):
         self.percent_radius: int = None
         self.percent_mass: int = None
         self.trail_color: urs.Color = kwargs.get("trail_color")
-        self.light: PointLight = None
+        self.light_node: NodePath = None
         self.light_bit_mask: int = None
         self.light_scale: float = None
 
@@ -550,18 +576,7 @@ class BlobCore(BlobRotator):
     def barycenter_blob(self: Self, barycenter_blob: "BlobCore") -> None:
         """Sets the blob that this blob orbits, if it's not the center blob"""
         self._barycenter_blob = barycenter_blob
-
-        if (
-            self._barycenter_blob is not None
-            and self._barycenter_blob.ring_texture is not None
-        ):
-            self.rotator_model.setLightOff(self.center_light, 1)
-            self.rotator_model.hide(mf.bit_masks[0])
-
-            self.rotator_model.setLight(self.barycenter_blob.light_node)
-            self.rotator_model.show(
-                self.barycenter_blob.light_node.node().getCameraMask()
-            )
+        self.check_light_source()
 
     @property
     def radius(self: Self) -> float:
@@ -638,6 +653,31 @@ class BlobCore(BlobRotator):
         """Tells this blob what other blob is swallowing it"""
         self.swallowed_by_blob = blob
 
+    def check_light_source(self: Self) -> None:
+        """
+        Checks if the barycenter blob has its own light and uses that if so.
+        Otherwise it will use the center blob light
+        """
+        if (
+            self._barycenter_blob is not None
+            and self._barycenter_blob.light_node is not None
+            and self._barycenter_blob.blob_name != CENTER_BLOB_NAME
+        ):
+
+            if not self.rotator_model.hasLight(self.barycenter_blob.light_node):
+                self.rotator_model.clearLight()
+                self.rotator_model.hide(mf.bit_masks[0])
+
+                self.rotator_model.setLight(self.barycenter_blob.light_node)
+                self.rotator_model.show(
+                    self.barycenter_blob.light_node.node().getCameraMask()
+                )
+        else:
+            if not self.rotator_model.hasLight(self.center_light):
+                self.rotator_model.clearLight()
+                self.rotator_model.setLight(self.center_light)
+                self.rotator_model.show(mf.bit_masks[0])
+
     def begin_disintegration(self: Self) -> None:
         """Instantiates the dust cloud object"""
         self.collision_cloud = coll_cloud(self.blob_name)
@@ -675,16 +715,16 @@ class BlobCore(BlobRotator):
         center blob only.
         """
 
-        self.light = PointLight(f"{self.blob_name}_plight")
-        self.light.setShadowCaster(
+        light: PointLight = PointLight(f"{self.blob_name}_plight")
+        light.setShadowCaster(
             True,
             bg_vars.center_blob_shadow_resolution,
             bg_vars.center_blob_shadow_resolution,
         )
-        self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
-        self.light.setColor((3, 3, 3, 1))
+        light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
+        light.setColor((3, 3, 3, 1))
 
-        self.light_node = self.rotator_model.attachNewNode(self.light)
+        self.light_node = self.rotator_model.attachNewNode(light)
         self.light_node.reparentTo(self.rotator_model)  # type: ignore
 
         self.light_node.setScale(urs.scene, bg_vars.center_blob_radius * 30)
@@ -708,24 +748,26 @@ class BlobCore(BlobRotator):
         self.light_node.hide(mf.bit_masks[0])
         BlobSurfaceUrsina.universe_node.hide(mf.bit_masks[0])
 
-    def create_ring_light(self: Self) -> None:
+    def create_spotlight(self: Self) -> None:
         """
         Creates a spotlight just for this blob, used to correct
-        poor shadowing on rings by the point light from center blob.
-        Thus only used on gas giants with rings.
+        poor shadowing -- especially on rings -- by the point light from center blob.
         """
+
+        if self.light_node is not None:
+            return
 
         self.clearLight(self.center_light)
         self.rotator_model.clearLight(self.center_light)
 
-        self.light = Spotlight(f"{self.blob_name}_slight")
-        self.light.setShadowCaster(
+        light: Spotlight = Spotlight(f"{self.blob_name}_slight")
+        light.setShadowCaster(
             True, bg_vars.blob_shadow_resolution, bg_vars.blob_shadow_resolution
         )
-        self.light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
-        self.light.setColor((3, 3, 3, 1))
+        light.setAttenuation((1, 0, 0))  # constant, linear, and quadratic.
+        light.setColor((3, 3, 3, 1))
 
-        self.light_node = self.rotator_model.attachNewNode(self.light)
+        self.light_node = self.rotator_model.attachNewNode(light)
         self.light_node.reparentTo(urs.scene)  # type: ignore
 
         self.light_scale = bg_vars.center_blob_radius * 30
@@ -744,7 +786,7 @@ class BlobCore(BlobRotator):
         lens.setFov(90)
 
         # self.light_node.node().showFrustum()
-        self.update_ring_light()
+        self.update_spotlight()
 
         self.rotator_model.setShaderAuto(
             BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
@@ -754,9 +796,53 @@ class BlobCore(BlobRotator):
         self.rotator_model.setLight(self.light_node)
         self.rotator_model.show(self.light_bit_mask)
 
-    def update_ring_light(self: Self) -> None:
+    def set_spotlight(self: Self, light_node: NodePath) -> None:
         """
-        Updates the position of the spotlight created in create_ring_light(), and
+        Sets a spotlight just for this blob from another source, used to correct
+        poor shadowing by the point light from center blob.
+        """
+
+        if self.light_node is not None:
+            return
+
+        self.clearLight(self.center_light)
+        self.rotator_model.clearLight(self.center_light)
+
+        self.light_node = light_node
+
+        self.update_spotlight()
+
+        self.rotator_model.setShaderAuto(
+            BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
+        )
+        self.hide(mf.bit_masks[0])
+        self.rotator_model.hide(mf.bit_masks[0])
+        self.rotator_model.setLight(self.light_node)
+        self.rotator_model.show(self.light_node.node().getCameraMask())
+
+    def unset_spotlight(self: Self) -> None:
+        """
+        Removes the spotlight reference set on this blob by set_spotlight(), and returns to using
+        the center blob. Notably, this does not destroy the spotlight, as that is the responsibility
+        of the sender to set_spotlight()
+        """
+
+        if (
+            self.ring_texture is None
+            and self.light_node is not None
+            and self.blob_name != CENTER_BLOB_NAME
+        ):
+            self.clearLight()
+            self.rotator_model.clearLight()
+
+            self.light_node = None
+
+            self.rotator_model.setLight(self.center_light)
+            self.rotator_model.show(mf.bit_masks[0])
+
+    def update_spotlight(self: Self) -> None:
+        """
+        Updates the position of the spotlight created in create_spotlight(), and
         ensures the light is pointing at this blob.
         """
         direction = urs.Vec3(
@@ -771,17 +857,43 @@ class BlobCore(BlobRotator):
             self.rotator_model, BlobSurfaceUrsina.center_blob.world_up
         )
 
-    def create_trail(self: Self) -> None:
+    def remove_spotlight(self: Self) -> None:
+        """
+        Destroys the spotlight just for this blob, and returns to using
+        the center blob
+        """
+
+        if (
+            self.ring_texture is None
+            and self.light_node is not None
+            and self.blob_name != CENTER_BLOB_NAME
+        ):
+            self.clearLight()
+            self.rotator_model.clearLight()
+            self.light_node.removeNode()
+            del self.light_node
+
+            self.light_node = None
+            mf.camera_mask_counter -= 1
+
+            self.rotator_model.setLight(self.center_light)
+            self.rotator_model.show(mf.bit_masks[0])
+
+    def create_trail(self: Self, barycenter_blob: "BlobCore" = None) -> None:
         """
         Creates the orbital trail. Called by input() when the "t" key is pressed if it
         is not running
         """
+
+        if barycenter_blob is None:
+            barycenter_blob = self.barycenter_blob
+
         self.trail = TrailRenderer(
             segments=250,
             min_spacing=bg_vars.max_radius,
             parent=self,
             color=self.trail_color,
-            barycenter_blob=self.barycenter_blob,
+            barycenter_blob=barycenter_blob,
             is_moon=self.is_moon,
             unlit=True,
             shader=shd.unlit_shader,
@@ -869,9 +981,11 @@ class BlobCore(BlobRotator):
             self.text_entity = None
 
     def full_overlay_text(self: Self) -> str:
+        """creates info text with full details"""
         return f"{self.blob_name}: mass: {float(self.mass)} ({self.percent_mass}%) radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
     def short_overlay_text(self: Self) -> str:
+        """creates info text with just name"""
         return f"{self.blob_name}"
 
     def update(self: Self) -> None:
@@ -922,14 +1036,14 @@ class BlobCore(BlobRotator):
             )
 
         if not self.trail_ready:
-            from .blob_moon_trail_registry_ursina import (
-                BlobMoonTrailRegistryUrsina as moon_registry,
+            from .blob_watcher_registry_ursina import (
+                BlobWatcherRegistryUrsina as blob_registry,
             )
 
-            self.trail_ready = moon_registry.is_ready()
+            self.trail_ready = blob_registry.is_ready()
 
-        if self.blob_name != CENTER_BLOB_NAME and self.light is not None:
-            self.update_ring_light()
+        if self.blob_name != CENTER_BLOB_NAME and self.light_node is not None:
+            self.update_spotlight()
 
     def on_click(self: Self) -> None:
         """
@@ -1029,8 +1143,8 @@ class BlobCore(BlobRotator):
     def on_destroy(self: Self) -> None:
         """Called when this Entity is destroyed"""
 
-        from .blob_moon_trail_registry_ursina import (
-            BlobMoonTrailRegistryUrsina as moon_registry,
+        from .blob_watcher_registry_ursina import (
+            BlobWatcherRegistryUrsina as blob_registry,
         )
 
         if self.trail is not None:
@@ -1038,26 +1152,23 @@ class BlobCore(BlobRotator):
 
         if self.is_moon:
             self.barycenter_blob = None
-            moon_registry.remove_moon(self)
+            blob_registry.remove_moon(self)
         else:
-            moon_registry.remove_planet(self)
+            blob_registry.remove_planet(self)
 
         self.destroy_text_overlay()
 
-        if self.light is not None and self.blob_name != CENTER_BLOB_NAME:
+        if self.light_node is not None and self.blob_name != CENTER_BLOB_NAME:
+            self.rotator_model.clearLight()
             self.clearLight()
-            self.light_node.removeNode()
-            del self.light
-            del self.light_node
-        else:
-            if self.light is not None:
-                self.light_node.removeNode()
-                del self.light
-                del self.light_node
 
-        if self.blob_name != CENTER_BLOB_NAME:
-            if self.center_light is not None:
-                self.clearLight()
+            if self.ring_texture is not None:
+                self.light_node.removeNode()
+                del self.light_node
+        else:
+            if self.light_node is not None:
+                self.light_node.removeNode()
+                del self.light_node
 
         super().on_destroy()
 
@@ -1155,7 +1266,7 @@ class BlobSurfaceUrsina:
     center_blob_z: ClassVar[float] = 0
     center_blob: BlobCore = None
     universe_node: NodePath = None
-    num_rings: int = 2
+    num_rings: int = 1
 
     def __init__(
         self: Self,
@@ -1306,7 +1417,7 @@ class BlobSurfaceUrsina:
             )
 
             if self.ring_texture is not None:
-                self.ursina_blob.create_ring_light()
+                self.ursina_blob.create_spotlight()
 
     @property
     def name(self: Self) -> str:
