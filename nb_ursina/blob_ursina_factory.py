@@ -113,13 +113,13 @@ class BlobUrsinaFactory:
 
         bg_vars.set_au_scale_factor(1.495978707 * 10**6)
         bg_vars.set_universe_scale(100)
-        bg_vars.set_center_blob_scale(20)
+        bg_vars.set_center_blob_scale(15)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
         if LOW_VRAM:
             bg_vars.set_center_blob_shadow_resolution(2048)
             bg_vars.set_blob_shadow_resolution(4096)
-        bg_vars.set_blob_scale(20)
+        bg_vars.set_blob_scale(15)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
@@ -142,6 +142,8 @@ class BlobUrsinaFactory:
         bg_vars.print_info()
 
         self.start_distance: float = bg_vars.au_scale_factor * 4 * bg_vars.num_planets
+
+        self.num_moons: int = (NUM_BLOBS - bg_vars.num_planets) - 1
 
         BlobText.default_font = DISPLAY_FONT
         # BlobText.size = 0.5
@@ -336,7 +338,7 @@ class BlobUrsinaFactory:
         )
 
         if name != CENTER_BLOB_NAME:
-            if radius < bg_vars.min_radius:
+            if index <= self.num_moons:
                 blob_registry.add_moon(new_blob.ursina_blob)
             else:
                 blob_registry.add_planet(new_blob.ursina_blob)

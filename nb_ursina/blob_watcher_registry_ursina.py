@@ -199,7 +199,7 @@ class BlobWatcher(urs.Entity):
         self.nearby_light = self.attachNewNode(light)
         self.nearby_light.reparentTo(urs.scene)  # type: ignore
 
-        light_scale: float = bg_vars.center_blob_radius * 30
+        light_scale: float = bg_vars.center_blob_radius
 
         self.nearby_light.setScale(urs.scene, light_scale)
         mf.camera_mask_counter += 1
@@ -210,7 +210,7 @@ class BlobWatcher(urs.Entity):
         far = bg_vars.max_radius * 30
         lens.setNearFar(
             500 / self.nearby_light.getSx(),
-            far,
+            far / self.nearby_light.getSx(),
         )
         lens.setFov(90)
         # self.nearby_light.node().showFrustum()
