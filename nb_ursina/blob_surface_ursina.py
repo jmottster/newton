@@ -576,7 +576,8 @@ class BlobCore(BlobRotator):
     def barycenter_blob(self: Self, barycenter_blob: "BlobCore") -> None:
         """Sets the blob that this blob orbits, if it's not the center blob"""
         self._barycenter_blob = barycenter_blob
-        self.check_light_source()
+        if barycenter_blob is not None:
+            self.check_light_source()
 
     @property
     def radius(self: Self) -> float:
@@ -660,8 +661,10 @@ class BlobCore(BlobRotator):
         """
         if (
             self._barycenter_blob is not None
-            and self._barycenter_blob.light_node is not None
             and self._barycenter_blob.blob_name != CENTER_BLOB_NAME
+            and mf.distance(self._barycenter_blob.position, self.position)
+            < (self._barycenter_blob.scale_x * 50)
+            and self._barycenter_blob.light_node is not None
         ):
 
             if not self.rotator_model.hasLight(self.barycenter_blob.light_node):
@@ -677,6 +680,9 @@ class BlobCore(BlobRotator):
                 self.rotator_model.clearLight()
                 self.rotator_model.setLight(self.center_light)
                 self.rotator_model.show(mf.bit_masks[0])
+                for bit in range(1, len(mf.bit_masks)):
+                    self.hide(mf.bit_masks[bit])
+                    self.rotator_model.hide(mf.bit_masks[bit])
 
     def begin_disintegration(self: Self) -> None:
         """Instantiates the dust cloud object"""
@@ -778,10 +784,10 @@ class BlobCore(BlobRotator):
         self.light_node.node().setCameraMask(self.light_bit_mask)
 
         lens = self.light_node.node().getLens()
-        far = self.scale_x * 30
+        far = self.scale_x * 50
         lens.setNearFar(
             500 / self.light_node.getSx(),
-            far,
+            far / self.light_node.getSx(),
         )
         lens.setFov(90)
 
@@ -849,7 +855,8 @@ class BlobCore(BlobRotator):
             self.center_light.getPos(urs.scene) - self.rotator_model.getPos(urs.scene)
         ).normalized()
 
-        distance = self.scale_x * 30
+        distance = self.scale_x * 40
+        # distance = bg_vars.max_radius * 30
 
         pos = self.rotator_model.getPos(urs.scene) + urs.Vec3(direction * distance)
         self.light_node.setPos(urs.scene, pos)

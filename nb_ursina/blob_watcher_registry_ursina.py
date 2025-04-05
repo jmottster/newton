@@ -199,7 +199,7 @@ class BlobWatcher(urs.Entity):
         self.nearby_light = self.attachNewNode(light)
         self.nearby_light.reparentTo(urs.scene)  # type: ignore
 
-        light_scale: float = bg_vars.center_blob_radius
+        light_scale: float = bg_vars.center_blob_radius * 30
 
         self.nearby_light.setScale(urs.scene, light_scale)
         mf.camera_mask_counter += 1
@@ -207,7 +207,7 @@ class BlobWatcher(urs.Entity):
         self.nearby_light.node().setCameraMask(light_bit_mask)
 
         lens = self.nearby_light.node().getLens()
-        far = bg_vars.max_radius * 30
+        far = bg_vars.max_radius * 50
         lens.setNearFar(
             500 / self.nearby_light.getSx(),
             far / self.nearby_light.getSx(),
@@ -275,8 +275,9 @@ class BlobWatcher(urs.Entity):
                     self.nearest_planet = this_nearest_planet
                     self.planets[self.nearest_planet].set_spotlight(self.nearby_light)
 
-                    for blob in self.moons:
-                        blob.check_light_source()
+                for blob in self.moons:
+                    blob.check_light_source()
+
             elif self.trail_on:
 
                 this_nearest_planet = self.find_nearest_planet()
@@ -320,16 +321,15 @@ class BlobWatcher(urs.Entity):
 
                             blob.destroy_trail()
                             blob.create_trail(barycenter)
-                            # blob.trail.barycenter_blob = barycenter
 
                         if not blob.trail.enabled:
                             blob.trail.enabled = True
-                            blob.check_light_source()
+                        blob.check_light_source()
 
                     else:
                         if blob.trail.enabled:
                             blob.trail.enabled = False
-                            blob.check_light_source()
+                        blob.check_light_source()
 
             self._t = 0
 
