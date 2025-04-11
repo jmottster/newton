@@ -83,6 +83,10 @@ class BlobPhysics:
         two spheres with the provided radii (i.e., when two blobs combine,
         this is their new radius)
 
+    is_distance_cleared(blob1: MassiveBlob, blob2: MassiveBlob, distance: float) -> bool
+        Returns False of blob1 and blob2 are distance apart
+        or closer, True if further than distance
+
     collision_detection(blob1: MassiveBlob, blob2: MassiveBlob) -> None
         Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
@@ -125,88 +129,93 @@ class BlobPhysics:
         or it wraps to other end of screen if wrap==True (wrap currently not working)
         """
         velocity_loss = 0.75
+        scaled_universe_size: float = blob.scaled_universe_size
 
         if bg_vars.wrap_if_no_escape:
             # Move real x to other side of screen if it's gone off the edge
-            universe_size = blob.universe_size * bg_vars.scale_up
             if blob.vx < 0 and blob.x < 0:
-                blob.x += universe_size
+                blob.x += scaled_universe_size
                 blob.vx = blob.vx * velocity_loss
                 blob.vy = -blob.vy
                 blob.vz = -blob.vz
-            elif blob.vx > 0 and blob.x > universe_size:
-                blob.x -= universe_size
+            elif blob.vx > 0 and blob.x > scaled_universe_size:
+                blob.x -= scaled_universe_size
                 blob.vx = blob.vx * velocity_loss
                 blob.vy = -blob.vy
                 blob.vz = -blob.vz
 
             # Move real y to other side of screen if it's gone off the edge
             if blob.vy < 0 and blob.y < 0:
-                blob.y += universe_size
+                blob.y += scaled_universe_size
                 blob.vy = blob.vy * velocity_loss
                 blob.vx = -blob.vx
                 blob.vz = -blob.vz
-            elif blob.vy > 0 and blob.y > universe_size:
-                blob.y -= universe_size
+            elif blob.vy > 0 and blob.y > scaled_universe_size:
+                blob.y -= scaled_universe_size
                 blob.vy = blob.vy * velocity_loss
                 blob.vx = -blob.vx
                 blob.vz = -blob.vz
 
             # Move real z to other side of screen if it's gone off the edge
             if blob.vz < 0 and blob.z < 0:
-                blob.z += universe_size
+                blob.z += scaled_universe_size
                 blob.vz = blob.vz * velocity_loss
                 blob.vx = -blob.vx
                 blob.vy = -blob.vy
-            elif blob.vz > 0 and blob.z > universe_size:
-                blob.z -= universe_size
+            elif blob.vz > 0 and blob.z > scaled_universe_size:
+                blob.z -= scaled_universe_size
                 blob.vz = blob.vz * velocity_loss
                 blob.vx = -blob.vx
                 blob.vy = -blob.vy
 
         else:
+
             zero = 0
-            universe_size_w = blob.universe_size
-            universe_size_h = blob.universe_size
-            scaled_universe_size_w = blob.universe_size * bg_vars.scale_up
-            scaled_universe_size_h = blob.universe_size * bg_vars.scale_up
 
-            local_x = blob.x * bg_vars.scale_down
-            local_y = blob.y * bg_vars.scale_down
-            local_z = blob.z * bg_vars.scale_down
+            my_cor: float = 0.9
 
-            # Change x direction if hitting the edge of screen
-            if ((local_x - blob.radius) <= zero) and (blob.vx <= 0):
-                blob.vx = -blob.vx
-                blob.x = blob.scaled_radius
-                blob.vx = blob.vx * velocity_loss
+            ux1: float
+            uy1: float
+            uz1: float
+            ux2: float
+            uy2: float
+            uz2: float
 
-            if ((local_x + blob.radius) >= universe_size_w) and (blob.vx >= 0):
-                blob.vx = -blob.vx
-                blob.x = scaled_universe_size_w - blob.scaled_radius
-                blob.vx = blob.vx * velocity_loss
+            ux1, uy1, uz1 = blob.vx, blob.vy, blob.vz
+            ux2, uy2, uz2 = 0.0, 0.0, 0.0
+            edge_mass = bg_vars.center_blob_mass
 
-            # Change y direction if hitting the edge of screen
-            if ((local_y - blob.radius) <= zero) and (blob.vy <= 0):
-                blob.vy = -blob.vy
-                blob.y = blob.scaled_radius
-                blob.vy = blob.vy * velocity_loss
+            cor_m2: float = my_cor * edge_mass
 
-            if ((local_y + blob.radius) >= universe_size_h) and blob.vy >= 0:
-                blob.vy = -blob.vy
-                blob.y = scaled_universe_size_h - blob.scaled_radius
-                blob.vy = blob.vy * velocity_loss
+            m1_p_m2: float = blob.mass + edge_mass
 
-            # Change z direction if hitting the edge of screen
-            if ((local_z - blob.radius) <= zero) and (blob.vz <= 0):
-                blob.vz = -blob.vz
-                blob.z = blob.scaled_radius
-                blob.vz = blob.vz * velocity_loss
+            # x reaction
+            if (((blob.x - blob.scaled_radius) <= zero) and (blob.vx <= 0)) or (
+                ((blob.x + blob.scaled_radius) >= scaled_universe_size)
+                and (blob.vx >= 0)
+            ):
 
-            if ((local_z + blob.radius) >= universe_size_h) and blob.vz >= 0:
-                blob.vz = -blob.vz
-                blob.z = scaled_universe_size_h - blob.scaled_radius
-                blob.vz = blob.vz * velocity_loss
+                px1_px2: float = (blob.mass * ux1) + (edge_mass * ux2)
+
+                blob.vx = (px1_px2 + cor_m2 * (ux2 - ux1)) / m1_p_m2
+
+            # y reaction
+            if (((blob.y - blob.scaled_radius) <= zero) and (blob.vy <= 0)) or (
+                ((blob.y + blob.scaled_radius) >= scaled_universe_size)
+                and (blob.vy >= 0)
+            ):
+                py1_py2: float = (blob.mass * uy1) + (edge_mass * uy2)
+
+                blob.vy = (py1_py2 + cor_m2 * (uy2 - uy1)) / m1_p_m2
+
+            # z reaction
+            if (((blob.z - blob.scaled_radius) <= zero) and (blob.vz <= 0)) or (
+                ((blob.z + blob.scaled_radius) >= scaled_universe_size)
+                and (blob.vz >= 0)
+            ):
+                pz1_pz2: float = (blob.mass * uz1) + (edge_mass * uz2)
+
+                blob.vz = (pz1_pz2 + cor_m2 * (uz2 - uz1)) / m1_p_m2
 
     @staticmethod
     def new_radius(r1: float, r2: float) -> float:
@@ -220,6 +229,25 @@ class BlobPhysics:
         return math.cbrt(((v1 + v2) * 3) / (4 * math.pi))
 
     @staticmethod
+    def is_distance_cleared(
+        blob1: MassiveBlob, blob2: MassiveBlob, distance: float
+    ) -> bool:
+        """
+        Returns False of blob1 and blob2 are distance apart
+        or closer, True if further than distance
+        """
+
+        dd: float = blob1.scaled_radius + blob2.scaled_radius + distance
+        if (
+            abs(blob2.x - blob1.x) <= dd
+            and abs(blob2.y - blob1.y) <= dd
+            and abs(blob2.z - blob1.z) <= dd
+        ):
+            return False
+
+        return True
+
+    @staticmethod
     def collision_detection(
         blob1: MassiveBlob, blob2: MassiveBlob, d: float = 0
     ) -> None:
@@ -227,7 +255,7 @@ class BlobPhysics:
         Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
         """
-        dd: float = blob1.orig_radius[0] + blob2.orig_radius[0]
+        dd: float = blob1.scaled_radius + blob2.scaled_radius
         if abs(blob2.x - blob1.x) > dd:
             return
 
@@ -242,46 +270,40 @@ class BlobPhysics:
         # Check if the two blobs are touching
         if d <= dd:
 
-            ux1: float
-            uy1: float
-            uz1: float
-            ux2: float
-            uy2: float
-            uz2: float
-
-            ux1, uy1, uz1 = blob1.vx, blob1.vy, blob1.vz
-            ux2, uy2, uz2 = blob2.vx, blob2.vy, blob2.vz
+            ux1: float = blob1.vx
+            uy1: float = blob1.vy
+            uz1: float = blob1.vz
+            ux2: float = blob2.vx
+            uy2: float = blob2.vy
+            uz2: float = blob2.vz
 
             cor_m1: float = BlobPhysics.COR * blob1.mass
             cor_m2: float = BlobPhysics.COR * blob2.mass
 
-            m1_m2: float = blob1.mass + blob2.mass
+            m1_p_m2: float = blob1.mass + blob2.mass
 
             # x reaction
-
             px1_px2: float = (blob1.mass * ux1) + (blob2.mass * ux2)
 
-            vx1: float = (cor_m2 * (ux2 - ux1) + (px1_px2)) / (m1_m2)
-            vx2: float = (cor_m1 * (ux1 - ux2) + (px1_px2)) / (m1_m2)
+            vx1: float = (px1_px2 + cor_m2 * (ux2 - ux1)) / m1_p_m2
+            vx2: float = (px1_px2 + cor_m1 * (ux1 - ux2)) / m1_p_m2
 
             # y reaction
-
             py1_py2: float = (blob1.mass * uy1) + (blob2.mass * uy2)
 
-            vy1: float = (cor_m2 * (uy2 - uy1) + (py1_py2)) / (m1_m2)
-            vy2: float = (cor_m1 * (uy1 - uy2) + (py1_py2)) / (m1_m2)
+            vy1: float = (py1_py2 + cor_m2 * (uy2 - uy1)) / m1_p_m2
+            vy2: float = (py1_py2 + cor_m1 * (uy1 - uy2)) / m1_p_m2
 
             # z reaction
-
             pz1_pz2: float = (blob1.mass * uz1) + (blob2.mass * uz2)
 
-            vz1: float = (cor_m2 * (uz2 - uz1) + (pz1_pz2)) / (m1_m2)
-            vz2: float = (cor_m1 * (uz1 - uz2) + (pz1_pz2)) / (m1_m2)
+            vz1: float = (pz1_pz2 + cor_m2 * (uz2 - uz1)) / m1_p_m2
+            vz2: float = (pz1_pz2 + cor_m1 * (uz1 - uz2)) / m1_p_m2
 
             # ------------------------------------------------#
 
-            b1_d_diff = round((diff / blob1.orig_radius[0]) * 100)
-            b2_d_diff = round((diff / blob2.orig_radius[0]) * 100)
+            b1_d_diff = round((diff / blob1.scaled_radius) * 100)
+            b2_d_diff = round((diff / blob2.scaled_radius) * 100)
             d_ratio = round((d / dd) * 100)
 
             if d_ratio < 95 or b1_d_diff > 5 or b2_d_diff > 5:
@@ -314,6 +336,39 @@ class BlobPhysics:
         )
 
     @staticmethod
+    def gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: Decimal) -> None:
+        """
+        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
+        this will also call collision_detection() with the provided blobs
+        """
+        blob1_location: point = point(blob1.x, blob1.y, blob1.z)
+        blob2_location: point = point(blob2.x, blob2.y, blob2.z)
+
+        d: distance = distance(blob1_location, blob2_location)
+
+        if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
+
+            timescale: float = bg_vars.timescale * float(dt)
+
+            BlobPhysics.collision_detection(blob1, blob2, d.d)
+
+            F1 = BlobPhysics.g * blob2.mass / d.d**3
+            F2 = BlobPhysics.g * blob1.mass / d.d**3
+
+            blob1.vx -= d.dx * F1 * timescale
+            blob1.vy -= d.dy * F1 * timescale
+            blob1.vz -= d.dz * F1 * timescale
+
+            blob2.vx += d.dx * F2 * timescale
+            blob2.vy += d.dy * F2 * timescale
+            blob2.vz += d.dz * F2 * timescale
+
+        elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
+            # If out of Sun's gravitational range, kill it
+            blob2.dead = True
+            blob2.escaped = True
+
+    @staticmethod
     def gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None:
         """
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
@@ -322,7 +377,7 @@ class BlobPhysics:
         dx = blob1.x - blob2.x
         dy = blob1.y - blob2.y
         dz = blob1.z - blob2.z
-        # dd = (blob1.orig_radius[0] * 0.90) + blob2.orig_radius[0]
+        # dd = (blob1.scaled_radius * 0.90) + blob2.scaled_radius
         d = math.sqrt((dx**2) + (dy**2) + (dz**2))
 
         if d < BlobPhysics.GRAVITATIONAL_RANGE:
@@ -342,39 +397,6 @@ class BlobPhysics:
             blob2.vx += fdx / blob2.mass * timescale
             blob2.vy += fdy / blob2.mass * timescale
             blob2.vz += fdz / blob2.mass * timescale
-
-        elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
-            # If out of Sun's gravitational range, kill it
-            blob2.dead = True
-            blob2.escaped = True
-
-    @staticmethod
-    def gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: Decimal) -> None:
-        """
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
-        this will also call collision_detection() with the provided blobs
-        """
-        blob1_location: point = point(blob1.x, blob1.y, blob1.z)
-        blob2_location: point = point(blob2.x, blob2.y, blob2.z)
-
-        d: distance = distance(blob1_location, blob2_location)
-
-        if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
-
-            BlobPhysics.collision_detection(blob1, blob2, d.d)
-
-            timescale: float = bg_vars.timescale * float(dt)
-
-            F1 = BlobPhysics.g * blob2.mass / d.d**3
-            F2 = BlobPhysics.g * blob1.mass / d.d**3
-
-            blob1.vx -= d.dx * F1 * timescale
-            blob1.vy -= d.dy * F1 * timescale
-            blob1.vz -= d.dz * F1 * timescale
-
-            blob2.vx += d.dx * F2 * timescale
-            blob2.vy += d.dy * F2 * timescale
-            blob2.vz += d.dz * F2 * timescale
 
         elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

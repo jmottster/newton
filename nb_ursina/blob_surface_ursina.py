@@ -551,6 +551,7 @@ class BlobCore(BlobRotator):
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
+            self.text_position = 13
 
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
@@ -564,7 +565,6 @@ class BlobCore(BlobRotator):
 
         for bit in range(1, len(mf.bit_masks)):
             self.hide(mf.bit_masks[bit])
-            # if self.blob_name == CENTER_BLOB_NAME:
             self.rotator_model.hide(mf.bit_masks[bit])
 
     @property
@@ -930,7 +930,7 @@ class BlobCore(BlobRotator):
                 shader=shd.unlit_shader,
             )
 
-            for bit in range(1, len(mf.bit_masks)):
+            for bit in range(0, len(mf.bit_masks)):
                 self.text_entity.hide(mf.bit_masks[bit])
 
             self.text = self.short_overlay_text()
@@ -1041,6 +1041,11 @@ class BlobCore(BlobRotator):
             self.text_entity.position += self.text_entity.my_up * (
                 (self.world_scale_x * self.text_position) / d
             )
+
+            if self.text_on and self.text_full_details:
+                self.text = self.full_overlay_text()
+
+                self.info_text.text = self.text
 
         if not self.trail_ready:
             from .blob_watcher_registry_ursina import (

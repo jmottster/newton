@@ -230,7 +230,7 @@ class BlobGlobalVars:
     background_scale: ClassVar[float] = BACKGROUND_SCALE
 
     grid_cells_per_au: ClassVar[float] = GRID_CELLS_PER_AU
-    grid_cell_size: ClassVar[int] = GRID_CELL_SIZE
+    grid_cell_size: ClassVar[float] = GRID_CELL_SIZE
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
 
@@ -332,9 +332,10 @@ class BlobGlobalVars:
             cls.min_moon_mass = cls.org_min_moon_mass * cls.blob_scale
             cls.max_moon_mass = cls.org_max_moon_mass * cls.blob_scale
 
-        cls.grid_cell_size = int(
-            cls.universe_size / (cls.universe_scale * cls.grid_cells_per_au)
+        cls.grid_cell_size = cls.universe_size / (
+            cls.universe_scale * cls.grid_cells_per_au
         )
+
         cls.grid_key_upper_bound = int(cls.universe_size / cls.grid_cell_size)
         cls.grid_key_check_bound = cls.grid_key_upper_bound - 1
 

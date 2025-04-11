@@ -112,7 +112,7 @@ class BlobUrsinaFactory:
     def __init__(self: Self):
 
         bg_vars.set_au_scale_factor(1.495978707 * 10**6)
-        bg_vars.set_universe_scale(100)
+        bg_vars.set_universe_scale(50)
         bg_vars.set_center_blob_scale(15)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
@@ -136,8 +136,8 @@ class BlobUrsinaFactory:
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)
         bg_vars.set_square_blob_plotter(False)
-        bg_vars.set_center_blob_escape(True)
-        bg_vars.set_wrap_if_no_escape(True)
+        bg_vars.set_center_blob_escape(False)
+        bg_vars.set_wrap_if_no_escape(False)
 
         bg_vars.print_info()
 
@@ -450,7 +450,10 @@ class BlobUrsinaFactory:
                     if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                         continue
                     # do the thing here
-                    blobs = pg[x][y][z]
+                    try:
+                        blobs = pg[x][y][z]
+                    except:
+                        continue
                     if blobs is not None:
 
                         for blob in blobs:

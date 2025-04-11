@@ -238,7 +238,6 @@ class BlobPlotter:
         self.plot_center_blob()
 
         planets: list[MassiveBlob] = []
-        moons: list[MassiveBlob] = []
 
         radius_min_max_halfway: float = (bg_vars.min_radius + bg_vars.max_radius) / 2
 
@@ -250,7 +249,7 @@ class BlobPlotter:
             radius_min_max_halfway + bg_vars.max_radius
         ) / 2
 
-        ############################################################################
+        # ---------------------------------------------------------------------------
 
         mass_min_max_halfway: float = (bg_vars.min_mass + bg_vars.max_mass) / 2
 
@@ -259,13 +258,14 @@ class BlobPlotter:
         mass_halfway_max_halfway = (mass_min_max_halfway + bg_vars.max_mass) / 2
 
         ############################################################################
-        ############################################################################
+
+        moons: list[MassiveBlob] = []
 
         moon_radius_min_max_halfway: float = (
             bg_vars.min_moon_radius + bg_vars.max_moon_radius
         ) / 2
 
-        ############################################################################
+        # ---------------------------------------------------------------------------
 
         moon_mass_min_max_halfway: float = (
             bg_vars.min_moon_mass + bg_vars.max_moon_mass
@@ -376,11 +376,24 @@ class BlobPlotter:
         self: Self, moons: list[MassiveBlob], planets: list[MassiveBlob]
     ) -> None:
 
+        min_distance: float = bg_vars.min_moon_radius * bg_vars.scale_up * 2
+        tries: int = 5
+
         for i in range(0, len(moons)):
 
+            tries = 5
             planet: MassiveBlob = planets[blob_random.randint(0, len(planets) - 1)]
 
-            planet.add_orbital(moons[i])
+            while tries > 0:
+                tries -= 1
+                planet.add_orbital(moons[i])
+                cleared = True
+                for y in range(0, i):
+                    if not bp.is_distance_cleared(moons[i], moons[y], min_distance):
+                        cleared = False
+                if cleared:
+                    tries = 0
+
             moons[i].update_pos_vel(
                 moons[i].x,
                 moons[i].y,
@@ -446,8 +459,12 @@ class BlobPlotter:
         checked: Dict[int, int] = {}
         pg: npt.NDArray = self.proximity_grid
         new_pg: npt.NDArray = None
+        check_edge: Callable[[MassiveBlob], None] = bp.edge_detection
 
-        def check_blobs_edge(
+        def swallow_edge(blob: MassiveBlob) -> None:
+            pass
+
+        def check_blobs_wrap(
             blob1: MassiveBlob,
             blobs: npt.NDArray,
             pos_offsets: Tuple[float, float, float],
@@ -469,9 +486,9 @@ class BlobPlotter:
                     blob2.y -= pos_offsets[1]
                     blob2.z -= pos_offsets[2]
 
-            bp.edge_detection(blob1)
+            check_edge(blob1)
 
-        def check_grid_edge(blob: MassiveBlob, this_dt: Decimal) -> None:
+        def check_grid_wrap(blob: MassiveBlob, this_dt: Decimal) -> None:
 
             gk: Tuple[int, int, int] = blob.grid_key()
 
@@ -512,14 +529,14 @@ class BlobPlotter:
                         # Skip the corners of the cube, worth risking the occasional miss for the performance boost
                         if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                             continue
-                        check_blobs_edge(
+                        check_blobs_wrap(
                             blob,
                             pg[x][y][z],
                             (x_pos_offset, y_pos_offset, z_pos_offset),
                             this_dt,
                         )
 
-        def check_blobs_escape(
+        def check_blobs_edge(
             blob1: MassiveBlob,
             blobs: npt.NDArray,
             this_dt: Decimal,
@@ -532,35 +549,38 @@ class BlobPlotter:
 
                     bp.gravity_collision(blob1, blob2, this_dt)
 
-        def check_grid_escape(blob: MassiveBlob, this_dt: Decimal) -> None:
+                check_edge(blob1)
+
+        def check_grid_edge(blob: MassiveBlob, this_dt: Decimal) -> None:
 
             gk: Tuple[int, int, int] = blob.grid_key()
 
             # Using the grid approach for optimization. Instead of every blob checking every blob,
             # every blob only checks the blobs in their own grid cell and the grid cells surrounding them.
 
-            for z_i_offset in range(-1, 2):
-                z = gk[2] + z_i_offset
-                if z < 0:
-                    z = 0
-                elif z > bg_vars.grid_key_check_bound:
-                    z = bg_vars.grid_key_check_bound
-                for x_i_offset in range(-1, 2):
-                    x = gk[0] + x_i_offset
-                    if x < 0:
-                        x = 0
-                    elif x > bg_vars.grid_key_check_bound:
-                        x = bg_vars.grid_key_check_bound
-                    for y_i_offset in range(-1, 2):
-                        y = gk[1] + y_i_offset
-                        if y < 0:
-                            y = 0
-                        elif y > bg_vars.grid_key_check_bound:
-                            y = bg_vars.grid_key_check_bound
+            for x_i_offset in range(-1, 2):
+                x = gk[0] + x_i_offset
+                if x < 0:
+                    continue
+                elif x > bg_vars.grid_key_check_bound:
+                    continue
+                for y_i_offset in range(-1, 2):
+                    y = gk[1] + y_i_offset
+                    if y < 0:
+                        continue
+                    elif y > bg_vars.grid_key_check_bound:
+                        continue
+                    for z_i_offset in range(-1, 2):
+                        z = gk[2] + z_i_offset
+                        if z < 0:
+                            continue
+                        elif z > bg_vars.grid_key_check_bound:
+                            continue
 
                         if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                             continue
-                        check_blobs_escape(
+
+                        check_blobs_edge(
                             blob,
                             pg[x][y][z],
                             this_dt,
@@ -571,9 +591,13 @@ class BlobPlotter:
         #     bg_vars.timescale_inc / bg_vars.timescale
         # )
         itr_dt: Decimal = Decimal(dt)
-        check_grid: Callable[[MassiveBlob, Decimal], None] = check_grid_escape
-        if not bg_vars.center_blob_escape:
-            check_grid = check_grid_edge
+
+        if bg_vars.center_blob_escape:
+            check_edge = swallow_edge
+
+        check_grid: Callable[[MassiveBlob, Decimal], None] = check_grid_edge
+        if not bg_vars.center_blob_escape and bg_vars.wrap_if_no_escape:
+            check_grid = check_grid_wrap
 
         for _ in range(iterations):
 
@@ -792,7 +816,7 @@ class BlobPlotter:
             # Set up vars for next iteration, move the "clock dial" another notch,
             # or make it longer by plot_radius_partition if we've gone around 360 degrees
 
-            if stagger_radius:
+            if blobs_left > 0 and stagger_radius:
                 plot_radius += plot_radius_partition + (
                     blob_random.random() * plot_radius_partition
                 )

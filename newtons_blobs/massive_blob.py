@@ -100,14 +100,13 @@ class MassiveBlob:
     """
 
     __slots__ = (
-        "scaled_universe_size_half_z",
+        "scaled_universe_size",
         "universe_size",
         "index",
         "name",
         "blob_surface",
         "_radius",
         "scaled_radius",
-        "orig_radius",
         "_mass",
         "x",
         "y",
@@ -141,7 +140,7 @@ class MassiveBlob:
         vz: float,
     ):
 
-        self.scaled_universe_size_half_z: float = (universe_size * bg_vars.scale_up) / 2
+        self.scaled_universe_size: float = universe_size * bg_vars.scale_up
         self.universe_size = universe_size
 
         self.index: int = index
@@ -149,7 +148,6 @@ class MassiveBlob:
         self.blob_surface: BlobSurface = blob_surface
         self._radius: float = None
         self.scaled_radius: float = None
-        self.orig_radius: Tuple[float, float, float] = None
         self.radius = blob_surface.radius
         self._mass: float = None
         self.mass = mass
@@ -179,11 +177,6 @@ class MassiveBlob:
         self._radius = radius
 
         self.scaled_radius = self._radius * bg_vars.scale_up
-        self.orig_radius = (
-            self.scaled_radius,
-            self.scaled_radius / 2,
-            self._radius,
-        )
 
         if self._radius != self.blob_surface.radius:
             self.blob_surface.radius = self._radius
@@ -263,7 +256,7 @@ class MassiveBlob:
         data["index"] = self.index
         data["barycenter_index"] = self.blob_surface.barycenter_index
         data["name"] = self.blob_surface.name
-        data["radius"] = self.orig_radius[2] / bg_vars.au_scale_factor
+        data["radius"] = self.radius / bg_vars.au_scale_factor
         data["color"] = self.blob_surface.color
         if getattr(self.blob_surface, "texture"):
             data["texture"] = self.blob_surface.texture
