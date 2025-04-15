@@ -50,6 +50,8 @@ class WindowHandler(DirectObject.DirectObject):
 
     def __init__(self: Self, last_size: urs.Vec2, display: "BlobDisplayUrsina"):
         self.last_size: urs.Vec2 = last_size
+        self.last_fullscreen: bool = urs.window.fullscreen
+        self.last_position: urs.Vec3 = None
         self.accept("window-event", self.possible_resize)
         self.display = display
         self.orig_fov: float = 90.0
@@ -89,8 +91,15 @@ class WindowHandler(DirectObject.DirectObject):
 
         if not urs.window.fullscreen:
             urs.window.windowed_size = arg.getProperties().getSize()
-            urs.window.windowed_position = arg.getProperties().getOrigin()
-            urs.window.setOrigin(arg.getProperties().getOrigin())
+            if not self.last_fullscreen:
+                urs.window.windowed_position = arg.getProperties().getOrigin()
+                urs.window.setOrigin(arg.getProperties().getOrigin())
+                self.last_position = arg.getProperties().getOrigin()
+            else:
+                if self.last_position is not None:
+                    urs.window.windowed_position = self.last_position
+                    urs.window.setOrigin(self.last_position)
+                    urs.window.position = self.last_position
             urs.window.setSize(arg.getProperties().getSize())
             try:
                 urs.camera.set_shader_input(
@@ -98,6 +107,9 @@ class WindowHandler(DirectObject.DirectObject):
                 )
             except:
                 pass  # not initialized yet
+            self.last_fullscreen = False
+        else:
+            self.last_fullscreen = True
 
 
 class BlobDisplayUrsina:

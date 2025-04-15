@@ -102,10 +102,6 @@ CENTER_BLOB_ESCAPE = True
 # whether to wrap objects at edge detection or bounce them, if escape is False
 WRAP_IF_NO_ESCAPE = True and not CENTER_BLOB_ESCAPE
 
-START_POS_ROTATE_X = False
-START_POS_ROTATE_Y = False
-START_POS_ROTATE_Z = False
-
 # Height and with of display (monitor)
 DISPLAY_SIZE_H = 1000
 DISPLAY_SIZE_W = 1000

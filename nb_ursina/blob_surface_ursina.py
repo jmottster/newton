@@ -695,7 +695,7 @@ class BlobCore(BlobRotator):
         orbital.ursina_blob.rotation_pos = self.rotation_pos
 
         orbit_distance: float = (
-            blob_random.random() * (self.scale_x * 10)
+            blob_random.random() * (self.scale_x * 15)
         ) + self.scale_x * 3
         move: urs.Vec3 = urs.Vec3(self.my_right.normalized() * orbit_distance)
 

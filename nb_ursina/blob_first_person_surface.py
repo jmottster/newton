@@ -86,7 +86,6 @@ class FirstPersonSurface:
             name="first_person_viewer",
             scale=bg_vars.first_person_scale,
             universe=self.universe,
-            start_y=radius,
             eternal=True,
             mass=bg_vars.min_mass,
             unlit=True,

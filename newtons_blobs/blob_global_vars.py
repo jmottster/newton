@@ -79,10 +79,6 @@ class BlobGlobalVars:
     BlobGlobalVars.grid_key_upper_bound: ClassVar[int] - the number of cells in each direction of the 3d proximity grid (see BlobPlotter.update_blobs())
     BlobGlobalVars.grid_key_check_bound: ClassVar[int] - The second to last grid position
 
-    BlobGlobalVars.start_pos_rotate_x: ClassVar[bool] - whether or not to swap y and z in the starting plot of blobs
-    BlobGlobalVars.start_pos_rotate_y: ClassVar[bool] - whether or not to swap x and z in the starting plot of blobs
-    BlobGlobalVars.start_pos_rotate_z: ClassVar[bool] - whether or not to swap x and y in the starting plot of blobs
-
     BlobGlobalVars.timescale: ClassVar[int] - number of seconds to pass with each frame
     BlobGlobalVars.orig_timescale: ClassVar[int] - number of seconds to pass with each frame, original value
     BlobGlobalVars.timescale_inc: ClassVar[int] - Amount to increment timescale when controls change it
@@ -148,15 +144,6 @@ class BlobGlobalVars:
 
     BlobGlobalVars.set_background_scale(background_scale: float) -> None
         Class method to set the scale of the background entity (which displays the space scene)
-
-    BlobGlobalVars.set_start_pos_rotate_x(start_pos_rotate_x: bool) -> None
-        Class method to set whether or not to swap y and z in the starting plot of blobs
-
-    BlobGlobalVars.set_start_pos_rotate_y(start_pos_rotate_y: bool) -> None
-        Class method to set whether or not to swap x and z in the starting plot of blobs
-
-    BlobGlobalVars.set_start_pos_rotate_z(start_pos_rotate_z: bool) -> None
-        Class method to set whether or not to swap x and y in the starting plot of blobs
 
     BlobGlobalVars.set_timescale(timescale: int) -> None
         Class method to set BlobGlobalVars.timescale
@@ -233,10 +220,6 @@ class BlobGlobalVars:
     grid_cell_size: ClassVar[float] = GRID_CELL_SIZE
     grid_key_upper_bound: ClassVar[int] = GRID_KEY_UPPER_BOUND
     grid_key_check_bound: ClassVar[int] = GRID_KEY_CHECK_BOUND
-
-    start_pos_rotate_x: ClassVar[bool] = START_POS_ROTATE_X
-    start_pos_rotate_y: ClassVar[bool] = START_POS_ROTATE_Y
-    start_pos_rotate_z: ClassVar[bool] = START_POS_ROTATE_Z
 
     timescale: ClassVar[int] = TIMESCALE
     orig_timescale: ClassVar[int] = TIMESCALE
@@ -394,21 +377,6 @@ class BlobGlobalVars:
     def set_background_scale(cls, background_scale: float) -> None:
         """Class method to set the scale of the background entity (which displays the space scene)"""
         cls.background_scale = background_scale
-
-    @classmethod
-    def set_start_pos_rotate_x(cls, start_pos_rotate_x: bool) -> None:
-        """Class method to set whether or not to swap y and z in the starting plot of blobs"""
-        cls.start_pos_rotate_x = start_pos_rotate_x
-
-    @classmethod
-    def set_start_pos_rotate_y(cls, start_pos_rotate_y: bool) -> None:
-        """Class method to set whether or not to swap x and z in the starting plot of blobs"""
-        cls.start_pos_rotate_y = start_pos_rotate_y
-
-    @classmethod
-    def set_start_pos_rotate_z(cls, start_pos_rotate_z: bool) -> None:
-        """Class method to set whether or not to swap x and y in the starting plot of blobs"""
-        cls.start_pos_rotate_z = start_pos_rotate_z
 
     @classmethod
     def set_timescale(cls, timescale: int) -> None:

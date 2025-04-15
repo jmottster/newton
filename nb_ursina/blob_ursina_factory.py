@@ -20,6 +20,7 @@ import ursina.shaders as shd  # type: ignore
 from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 from newtons_blobs import MassiveBlob
+from newtons_blobs import BlobVector as BVec3
 from newtons_blobs import BlobSurface
 from newtons_blobs import BlobDisplay
 from newtons_blobs import BlobUniverse
@@ -124,7 +125,7 @@ class BlobUrsinaFactory:
         bg_vars.set_grid_cells_per_au(0.5)
         # bg_vars.set_start_pos_rotate_y(True)
         # bg_vars.set_start_pos_rotate_z(True)
-        bg_vars.set_first_person_scale(bg_vars.max_radius * 1)
+        bg_vars.set_first_person_scale(bg_vars.max_radius * 0.75)
         bg_vars.set_background_scale(bg_vars.universe_size)
         if LOW_VRAM:
             bg_vars.set_background_scale(bg_vars.universe_size * 0.5)
@@ -136,7 +137,7 @@ class BlobUrsinaFactory:
         bg_vars.set_start_perfect_orbit(True)
         bg_vars.set_start_angular_chaos(False)
         bg_vars.set_square_blob_plotter(False)
-        bg_vars.set_center_blob_escape(False)
+        bg_vars.set_center_blob_escape(True)
         bg_vars.set_wrap_if_no_escape(False)
 
         bg_vars.print_info()
@@ -157,7 +158,7 @@ class BlobUrsinaFactory:
         )
 
         self.urs_display.first_person_surface = FirstPersonSurface(
-            self.start_distance,
+            bg_vars.first_person_scale,
             (0, 0, 0),
             self.urs_universe,
         )
@@ -172,12 +173,8 @@ class BlobUrsinaFactory:
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
             bg_vars.min_mass,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
+            BVec3(0, 0, 0),
+            BVec3(0, 0, 0),
         )
 
         self.default_start_pos: urs.Vec3 = urs.Vec3(
@@ -216,12 +213,8 @@ class BlobUrsinaFactory:
         urs.destroy(temp_ent)
 
         self.first_person_blob.update_pos_vel(
-            start_pos[0],
-            start_pos[1],
-            start_pos[2],
-            0,
-            0,
-            0,
+            BVec3(*start_pos),
+            BVec3(0, 0, 0),
         )
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:

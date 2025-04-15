@@ -110,7 +110,6 @@ class BlobFirstPersonUrsina(urs.Entity):
     def __init__(self: Self, **kwargs):
 
         self.temp_scale: float = kwargs["scale"]
-        self.start_y: float = kwargs["start_y"]
         self.flashlight_color: urs.Vec3 = urs.color.rgba(0.25, 0.25, 0.25, 0.25)
         if not bg_vars.textures_3d:
             self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
@@ -124,8 +123,9 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.parent = self
         urs.camera.rotation = (0, 0, 0)
         urs.camera.position = urs.Vec3(0, 0, 0)
+
         lens = urs.camera.lens
-        lens.setNear(0.06)
+        lens.setNear(700 / bg_vars.first_person_scale)
         if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
             lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
         self.radius: float = lens.getNear() * bg_vars.first_person_scale  # + 0.01

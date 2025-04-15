@@ -17,6 +17,7 @@ from .blob_global_vars import BlobGlobalVars as bg_vars
 from .blob_random import blob_random
 from .blob_plugin_factory import BlobPluginFactory
 from .massive_blob import MassiveBlob
+from .blob_vector import BlobVector as BVec3
 from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
@@ -68,6 +69,13 @@ class BlobPlotter:
         Iterates the blobs according z_axis keys, deletes the ones flagged as dead, calls draw() on the live ones, and repopulates
         the proximity_grid array according to new coordinates
 
+    get_next_proximity_queue() -> npt.NDArray
+        Used to switch proximity queues, so we can prepare one while using the existing one uninterrupted
+
+    populate_grid() -> None
+        Takes the  get_next_proximity_queue() and puts the current
+        self.blobs into it by blob.grid_key(), and assigns it to self.proximity_grid
+
     update_blobs() -> None
         Traverses the proximity grid to check blobs for collision and gravitational pull, and populates the z_axis dict
         The center blob is treated differently to ensure all blobs are checked against its gravitational pull rather than just
@@ -82,8 +90,8 @@ class BlobPlotter:
     plot_circular_grid() -> None
         Iterates through blobs and plots them in a circular grid configuration around the center blob
 
-    add_pos_vel(blob: MassiveBlob, x: float, y: float, z: float) -> None
-        Adds z,y,z to given blob, and configures velocity for orbit around center blob
+    add_pos_vel(blob: MassiveBlob, position: BVec3) -> None
+        Adds position to given blob, and configures velocity for orbit around center blob
 
     """
 
@@ -112,14 +120,25 @@ class BlobPlotter:
         self.blobs: npt.NDArray = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.blobs_swallowed: int = 0
         self.blobs_escaped: int = 0
-        self.proximity_grid: npt.NDArray = np.empty(
+        self.proximity_queue1: npt.NDArray = np.empty(
             [
                 int(bg_vars.grid_key_upper_bound),
                 int(bg_vars.grid_key_upper_bound),
                 int(bg_vars.grid_key_upper_bound),
             ],
-            dtype=MassiveBlob,
+            dtype=object,
         )
+        self.proximity_queue2: npt.NDArray = np.empty(
+            [
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+            ],
+            dtype=object,
+        )
+        self.proximity_grid: npt.NDArray = None
+        self.queue_index: int = 1
+
         self.num_moons: int = (NUM_BLOBS - 1) - bg_vars.num_planets
         self.square_grid: bool = bg_vars.square_blob_plotter
         self.start_perfect_orbit: bool = bg_vars.start_perfect_orbit
@@ -178,12 +197,8 @@ class BlobPlotter:
                     blob_pref.get("rotation_pos", None),  # Might not exist
                 ),
                 blob_pref["mass"],
-                blob_pref["x"],
-                blob_pref["y"],
-                blob_pref["z"],
-                blob_pref["vx"],
-                blob_pref["vy"],
-                blob_pref["vz"],
+                BVec3(blob_pref["x"], blob_pref["y"], blob_pref["z"]),
+                BVec3(blob_pref["vx"], blob_pref["vy"], blob_pref["vz"]),
             )
 
             self.blobs[blob_pref["index"]].blob_surface.barycenter_index = (
@@ -200,6 +215,7 @@ class BlobPlotter:
                     )
 
         self.blobs = np.delete(self.blobs, np.where(self.blobs == None)[0])
+        self.populate_grid()
 
     def start_over(self: Self, plot_blobs: bool = True) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
@@ -344,12 +360,8 @@ class BlobPlotter:
                     i, str(i), radius, mass, COLORS[color]
                 ),
                 mass,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
+                BVec3(0, 0, 0),
+                BVec3(0, 0, 0),
             )
 
             if moon:
@@ -395,12 +407,7 @@ class BlobPlotter:
                     tries = 0
 
             moons[i].update_pos_vel(
-                moons[i].x,
-                moons[i].y,
-                moons[i].z,
-                planet.vx + moons[i].vx,
-                planet.vy + moons[i].vy,
-                planet.vz + moons[i].vz,
+                moons[i].position, moons[i].velocity + planet.velocity
             )
             self.blob_factory.loading_screen_add_count()
 
@@ -414,16 +421,25 @@ class BlobPlotter:
         for blob in self.blobs:
             blob.draw()
 
-    def populate_grid(self: Self) -> None:
+    def get_next_proximity_queue(self: Self) -> npt.NDArray:
+        """Used to switch proximity queues, so we can prepare one while using the existing one uninterrupted"""
+        if self.queue_index == 2:
+            self.proximity_queue1.fill(None)
+            self.queue_index = 1
+            return self.proximity_queue1
 
-        self.proximity_grid = np.empty(
-            [
-                int(bg_vars.grid_key_upper_bound),
-                int(bg_vars.grid_key_upper_bound),
-                int(bg_vars.grid_key_upper_bound),
-            ],
-            dtype=MassiveBlob,
-        )
+        else:
+            self.proximity_queue2.fill(None)
+            self.queue_index = 2
+            return self.proximity_queue2
+
+    def populate_grid(self: Self) -> None:
+        """
+        Takes the  get_next_proximity_queue() and puts the current
+        self.blobs into it by blob.grid_key(), and assigns it to self.proximity_grid
+        """
+
+        self.proximity_grid = self.get_next_proximity_queue()
 
         for blob in self.blobs:
             grid_key = blob.grid_key()
@@ -457,7 +473,7 @@ class BlobPlotter:
         blobs within its proximity grid range
         """
         checked: Dict[int, int] = {}
-        pg: npt.NDArray = self.proximity_grid
+        pg: npt.NDArray = None
         new_pg: npt.NDArray = None
         check_edge: Callable[[MassiveBlob], None] = bp.edge_detection
 
@@ -469,6 +485,7 @@ class BlobPlotter:
             blobs: npt.NDArray,
             pos_offsets: Tuple[float, float, float],
             this_dt: Decimal,
+            offset: bool = False,
         ) -> None:
             if blobs is None:
                 return
@@ -476,15 +493,18 @@ class BlobPlotter:
             for blob2 in blobs:
                 if (id(blob2) != id(blob1)) and (checked.get(id(blob2)) is None):
 
-                    blob2.x += pos_offsets[0]
-                    blob2.y += pos_offsets[1]
-                    blob2.z += pos_offsets[2]
+                    if offset:
+                        blob2.x += pos_offsets[0]
+                        blob2.y += pos_offsets[1]
+                        blob2.z += pos_offsets[2]
+                        bp.gravity_collision(blob1, blob2, this_dt)
+                        blob2.x -= pos_offsets[0]
+                        blob2.y -= pos_offsets[1]
+                        blob2.z -= pos_offsets[2]
 
-                    bp.gravity_collision(blob1, blob2, this_dt)
+                    else:
 
-                    blob2.x -= pos_offsets[0]
-                    blob2.y -= pos_offsets[1]
-                    blob2.z -= pos_offsets[2]
+                        bp.gravity_collision(blob1, blob2, this_dt)
 
             check_edge(blob1)
 
@@ -495,46 +515,63 @@ class BlobPlotter:
             # Using the grid approach for optimization. Instead of every blob checking every blob,
             # every blob only checks the blobs in their own grid cell and the grid cells surrounding them.
 
-            z_pos_offset: float = 0
             x_pos_offset: float = 0
             y_pos_offset: float = 0
-            scaled_universe: float = bg_vars.universe_size * bg_vars.scale_up
-            for z_i_offset in range(-1, 2):
-                z = gk[2] + z_i_offset
-                if z > bg_vars.grid_key_check_bound:
-                    z = 0
-                    z_pos_offset = scaled_universe
-                elif z < 0:
-                    z_pos_offset = -scaled_universe
-                else:
-                    z_pos_offset = 0
-                for x_i_offset in range(-1, 2):
-                    x = gk[0] + x_i_offset
-                    if x > bg_vars.grid_key_check_bound:
-                        x = 0
-                        x_pos_offset = scaled_universe
-                    elif x < 0:
-                        x_pos_offset = -scaled_universe
-                    else:
-                        x_pos_offset = 0
-                    for y_i_offset in range(-1, 2):
-                        y = gk[1] + y_i_offset
-                        if y > bg_vars.grid_key_check_bound:
-                            y = 0
-                            y_pos_offset = scaled_universe
-                        elif y < 0:
-                            y_pos_offset = -scaled_universe
-                        else:
-                            y_pos_offset = 0
+            z_pos_offset: float = 0
+            scaled_universe: float = blob.scaled_universe_size
+
+            for x_i_offset in range(-1, 2):
+                x = gk[0] + x_i_offset
+
+                for y_i_offset in range(-1, 2):
+                    y = gk[1] + y_i_offset
+
+                    for z_i_offset in range(-1, 2):
+                        z = gk[2] + z_i_offset
+
                         # Skip the corners of the cube, worth risking the occasional miss for the performance boost
                         if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                             continue
-                        check_blobs_wrap(
-                            blob,
-                            pg[x][y][z],
-                            (x_pos_offset, y_pos_offset, z_pos_offset),
-                            this_dt,
-                        )
+
+                        try:
+                            check_blobs_wrap(
+                                blob,
+                                pg[x][y][z],
+                                (x_pos_offset, y_pos_offset, z_pos_offset),
+                                this_dt,
+                            )
+                        except:
+
+                            if x > bg_vars.grid_key_check_bound:
+                                x = 0
+                                x_pos_offset = scaled_universe
+                            elif x < 0:
+                                x_pos_offset = -scaled_universe
+
+                            if y > bg_vars.grid_key_check_bound:
+                                y = 0
+                                y_pos_offset = scaled_universe
+                            elif y < 0:
+                                y_pos_offset = -scaled_universe
+
+                            if z > bg_vars.grid_key_check_bound:
+                                z = 0
+                                z_pos_offset = scaled_universe
+                            elif z < 0:
+                                z_pos_offset = -scaled_universe
+
+                            check_blobs_wrap(
+                                blob,
+                                pg[x][y][z],
+                                (x_pos_offset, y_pos_offset, z_pos_offset),
+                                this_dt,
+                                True,
+                            )
+
+                            x_pos_offset = 0
+                            y_pos_offset = 0
+                            z_pos_offset = 0
+                            continue
 
         def check_blobs_edge(
             blob1: MassiveBlob,
@@ -549,7 +586,7 @@ class BlobPlotter:
 
                     bp.gravity_collision(blob1, blob2, this_dt)
 
-                check_edge(blob1)
+            check_edge(blob1)
 
         def check_grid_edge(blob: MassiveBlob, this_dt: Decimal) -> None:
 
@@ -560,31 +597,23 @@ class BlobPlotter:
 
             for x_i_offset in range(-1, 2):
                 x = gk[0] + x_i_offset
-                if x < 0:
-                    continue
-                elif x > bg_vars.grid_key_check_bound:
-                    continue
+
                 for y_i_offset in range(-1, 2):
                     y = gk[1] + y_i_offset
-                    if y < 0:
-                        continue
-                    elif y > bg_vars.grid_key_check_bound:
-                        continue
+
                     for z_i_offset in range(-1, 2):
                         z = gk[2] + z_i_offset
-                        if z < 0:
-                            continue
-                        elif z > bg_vars.grid_key_check_bound:
-                            continue
 
                         if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
                             continue
-
-                        check_blobs_edge(
-                            blob,
-                            pg[x][y][z],
-                            this_dt,
-                        )
+                        try:
+                            check_blobs_edge(
+                                blob,
+                                pg[x][y][z],
+                                this_dt,
+                            )
+                        except:
+                            continue
 
         iterations: int = 1  # round(bg_vars.timescale / bg_vars.timescale_inc)
         # itr_dt: Decimal = Decimal(dt) * Decimal(
@@ -601,24 +630,15 @@ class BlobPlotter:
 
         for _ in range(iterations):
 
-            del pg
             pg = self.proximity_grid
-            new_pg = np.empty(
-                [
-                    int(bg_vars.grid_key_upper_bound),
-                    int(bg_vars.grid_key_upper_bound),
-                    int(bg_vars.grid_key_upper_bound),
-                ],
-                dtype=MassiveBlob,
-            )
+            new_pg = self.get_next_proximity_queue()
 
             checked.clear()
 
             for i in range(1, len(self.blobs)):
                 bp.gravity_collision(self.blobs[0], self.blobs[i], itr_dt)
 
-            if not bg_vars.center_blob_escape:
-                bp.edge_detection(self.blobs[0])
+            check_edge(self.blobs[0])
 
             self.blobs[0].advance(itr_dt)
 
@@ -653,14 +673,15 @@ class BlobPlotter:
                             blob,
                         )
 
-            del self.proximity_grid
             self.proximity_grid = new_pg
 
     def plot_center_blob(self: Self) -> None:
         """Creates and places the center blob and adds it to self.blobs[0]"""
 
         # Set up the center blob, which will be the massive star all other blobs orbit
-        x, y, z = self.blob_factory.get_blob_universe().get_center_blob_start_pos()
+        position: BVec3 = BVec3(
+            *self.blob_factory.get_blob_universe().get_center_blob_start_pos()
+        )
 
         self.blobs[0] = MassiveBlob(
             self.universe_size_h,
@@ -674,12 +695,8 @@ class BlobPlotter:
                 CENTER_BLOB_COLOR,
             ),
             bg_vars.center_blob_mass,
-            x,
-            y,
-            z,
-            0,
-            0,
-            0,
+            position,
+            BVec3(0, 0, 0),
         )
 
         self.blobs[0].draw()
@@ -740,7 +757,7 @@ class BlobPlotter:
                 elif x < scaled_half_universe_w:
                     y -= blob_partition
 
-            self.add_pos_vel(planets[i], x, y, z)
+            self.add_pos_vel(planets[i], BVec3(x, y, z))
             self.blob_factory.loading_screen_add_count()
 
     def plot_circular_grid(self: Self, planets: list[MassiveBlob]) -> None:
@@ -842,21 +859,18 @@ class BlobPlotter:
                 plot_phi += pi_inc
                 plot_phi_offset += pi_inc
 
-            self.add_pos_vel(planets[i], x, y, z)
+            self.add_pos_vel(planets[i], BVec3(x, y, z))
             self.blob_factory.loading_screen_add_count()
 
         self.blob_factory.set_plot_radius(plot_radius)
 
-    def add_pos_vel(
-        self: Self, blob: MassiveBlob, x: float, y: float, z: float
-    ) -> None:
-        """Adds z,y,z to given blob, and configures velocity for orbit around center blob"""
+    def add_pos_vel(self: Self, blob: MassiveBlob, position: BVec3) -> None:
+        """Adds position to given blob, and configures velocity for orbit around center blob"""
         velocity: float = 0.0
         # Figure out velocity for this blob
-        dx = self.blobs[0].x - x
-        dy = self.blobs[0].y - y
-        dz = self.blobs[0].z - z
-        d = math.sqrt(dx**2 + dy**2 + dz**2)
+
+        diff: BVec3 = position.diff(self.blobs[0].position)
+        d: float = diff.mag()
 
         # get velocity for a perfect orbit around center blob
         velocity = math.sqrt(G * bg_vars.center_blob_mass / d)
@@ -865,8 +879,8 @@ class BlobPlotter:
             for _ in range(1, blob_random.randint(1, 2)):
                 velocity *= blob_random.randint(0, 1) + (blob_random.random())
 
-        theta = math.acos(dz / d)
-        phi = math.atan2(dy, dx)
+        theta = math.acos(diff.z / d)
+        phi = math.atan2(diff.y, diff.x)
 
         if self.start_angular_chaos:
             # Add some chaos to starting trajectory
@@ -875,28 +889,20 @@ class BlobPlotter:
         # turn 90 degrees from pointing center for beginning velocity (orbit)
         phi = phi - (math.pi * 0.5)
 
-        velocityx = velocity * math.sin(theta) * math.cos(phi)
-        velocityy = velocity * math.sin(theta) * math.sin(phi)
-        velocityz = velocity * math.cos(theta)
+        add_velocity: BVec3 = (
+            BVec3(
+                math.sin(theta) * math.cos(phi),
+                math.sin(theta) * math.sin(phi),
+                math.cos(theta),
+            )
+            * velocity
+        )
 
         # Phew, let's instantiate this puppy . . .
         blob.update_pos_vel(
-            x,
-            y,
-            z,
-            velocityx + blob.vx,
-            velocityy + blob.vy,
-            velocityz + blob.vz,
+            position,
+            blob.velocity + add_velocity,
         )
-
-        if bg_vars.start_pos_rotate_x:
-            blob.rotate_x()
-
-        if bg_vars.start_pos_rotate_y:
-            blob.rotate_y()
-
-        if bg_vars.start_pos_rotate_z:
-            blob.rotate_z()
 
         blob.draw()
 

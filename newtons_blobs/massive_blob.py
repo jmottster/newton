@@ -17,6 +17,7 @@ import numpy.typing as npt
 from .globals import *
 from .blob_global_vars import BlobGlobalVars as bg_vars
 from .blob_surface import BlobSurface
+from .blob_vector import BlobVector as BVec3
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -75,10 +76,6 @@ class MassiveBlob:
     draw() -> None
         Tells the instance to call draw on the BlobSurface instance
 
-    fake_blob_z() -> None
-        Called by __init__(), advance(), update_pos_vel(), adjusts radius size to to show perspective
-        (closer=bigger/further=smaller), a 3d effect according the the z position
-
     advance(dt: float) -> None
         Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)
 
@@ -87,15 +84,6 @@ class MassiveBlob:
 
     update_pos_vel(x: float, y: float, z: float, vx: float, vy: float, vz: float) -> None
         direct way to update position and velocity values
-
-    rotate_x() -> None
-        For starting position, swap y and z to get a different angle of viewing
-
-    rotate_y() -> None
-        For starting position, swap x and z to get a different angle of viewing
-
-    rotate_z() -> None
-        For starting position, swap x and y to get a different angle of viewing
 
     """
 
@@ -108,12 +96,8 @@ class MassiveBlob:
         "_radius",
         "scaled_radius",
         "_mass",
-        "x",
-        "y",
-        "z",
-        "vx",
-        "vy",
-        "vz",
+        "position",
+        "velocity",
         "_dead",
         "_swallowed",
         "escaped",
@@ -132,12 +116,8 @@ class MassiveBlob:
         name: str,
         blob_surface: BlobSurface,
         mass: float,
-        x: float,
-        y: float,
-        z: float,
-        vx: float,
-        vy: float,
-        vz: float,
+        position: BVec3,
+        velocity: BVec3,
     ):
 
         self.scaled_universe_size: float = universe_size * bg_vars.scale_up
@@ -151,20 +131,77 @@ class MassiveBlob:
         self.radius = blob_surface.radius
         self._mass: float = None
         self.mass = mass
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
 
-        self.vx: float = vx  # x velocity per frame
-        self.vy: float = vy  # y velocity per frame
-        self.vz: float = vz  # z velocity per frame
+        self.position: BVec3 = position
+        self.velocity: BVec3 = velocity
+
         self._dead: bool = False
         self._swallowed: bool = False
         self.escaped: bool = False
         self.pause: bool = False
-        self.pos_log: deque[npt.NDArray] = deque(
-            [np.array([x, y, z], dtype=float), np.array([x, y, z], dtype=float)]
-        )
+        # self.pos_log: deque[npt.NDArray] = deque(
+        #     [np.array([x, y, z], dtype=float), np.array([x, y, z], dtype=float)]
+        # )
+
+    @property
+    def x(self: Self) -> float:
+        """Returns x coordinate of 3D position"""
+        return self.position.values[0]
+
+    @x.setter
+    def x(self: Self, value: float) -> None:
+        """Sets x coordinate of 3D position"""
+        self.position.values[0] = value
+
+    @property
+    def y(self: Self) -> float:
+        """Returns y coordinate of 3D position"""
+        return self.position.values[1]
+
+    @y.setter
+    def y(self: Self, value: float) -> None:
+        """Sets y coordinate of 3D position"""
+        self.position.values[1] = value
+
+    @property
+    def z(self: Self) -> float:
+        """Returns z coordinate of 3D position"""
+        return self.position.values[2]
+
+    @z.setter
+    def z(self: Self, value: float) -> None:
+        """Sets z coordinate of 3D position"""
+        self.position.values[2] = value
+
+    @property
+    def vx(self: Self) -> float:
+        """Returns vx length of 3D velocity (meters/sec)"""
+        return self.velocity.values[0]
+
+    @vx.setter
+    def vx(self: Self, value: float) -> None:
+        """Sets vx length of 3D velocity (meters/sec)"""
+        self.velocity.values[0] = value
+
+    @property
+    def vy(self: Self) -> float:
+        """Returns vy length of 3D velocity (meters/sec)"""
+        return self.velocity.values[1]
+
+    @vy.setter
+    def vy(self: Self, value: float) -> None:
+        """Sets vy length of 3D velocity (meters/sec)"""
+        self.velocity.values[1] = value
+
+    @property
+    def vz(self: Self) -> float:
+        """Returns vz length of 3D velocity (meters/sec)"""
+        return self.velocity.values[2]
+
+    @vz.setter
+    def vz(self: Self, value: float) -> None:
+        """Sets vz length of 3D velocity (meters/sec)"""
+        self.velocity.values[2] = value
 
     @property
     def radius(self: Self) -> float:
@@ -245,11 +282,9 @@ class MassiveBlob:
 
         vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
 
-        x = orbital.blob_surface.position[0] * bg_vars.scale_up
-        y = orbital.blob_surface.position[1] * bg_vars.scale_up
-        z = orbital.blob_surface.position[2] * bg_vars.scale_up
-
-        orbital.update_pos_vel(x, y, z, vel[0], vel[1], vel[2])
+        orbital.update_pos_vel(
+            BVec3(*orbital.blob_surface.position) * bg_vars.scale_up, BVec3(*vel)
+        )
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
@@ -292,18 +327,12 @@ class MassiveBlob:
         y = int(alt_pos[1] / bg_vars.grid_cell_size)
         z = int(alt_pos[2] / bg_vars.grid_cell_size)
 
-        # if x <= 0:
-        #     x = 1
         if x > bg_vars.grid_key_check_bound:
             x = bg_vars.grid_key_check_bound
 
-        # if y <= 0:
-        #     y = 1
         if y > bg_vars.grid_key_check_bound:
             y = bg_vars.grid_key_check_bound
 
-        # if z <= 0:
-        #     z = 1
         if z > bg_vars.grid_key_check_bound:
             z = bg_vars.grid_key_check_bound
 
@@ -335,14 +364,8 @@ class MassiveBlob:
 
         timescale: float = float(Decimal(bg_vars.timescale) * dt)
 
-        # Advance x by velocity (one frame, with TIMESCALE elapsed time)
-        self.x += self.vx * timescale
-
-        # Advance y by velocity (one frame, with TIMESCALE elapsed time)
-        self.y += self.vy * timescale
-
-        # Advance z by velocity (one frame, with TIMESCALE elapsed time)
-        self.z += self.vz * timescale
+        # Advance position by velocity (one frame, with TIMESCALE elapsed time)
+        self.position += self.velocity * timescale
 
         # self.pos_log.append(
         #     np.array(
@@ -361,31 +384,7 @@ class MassiveBlob:
         self.blob_surface.destroy()
         # self.blob_surface = None
 
-    def update_pos_vel(
-        self: Self, x: float, y: float, z: float, vx: float, vy: float, vz: float
-    ) -> None:
+    def update_pos_vel(self: Self, position: BVec3, velocity: BVec3) -> None:
         """direct way to update position and velocity values"""
-        self.x = x
-        self.y = y
-        self.z = z
-        self.vx = vx
-        self.vy = vy
-        self.vz = vz
-
-    def rotate_x(self: Self) -> None:
-        """For starting position, swap y and z to get a different angle of viewing"""
-        self.y, self.z = self.z, self.y
-
-        self.vy, self.vz = self.vz, self.vy
-
-    def rotate_y(self: Self) -> None:
-        """For starting position, swap x and z to get a different angle of viewing"""
-        self.x, self.z = self.z, self.x
-
-        self.vx, self.vz = self.vz, self.vx
-
-    def rotate_z(self: Self) -> None:
-        """For starting position, swap x and y to get a different angle of viewing"""
-        self.x, self.y = self.y, self.x
-
-        self.vx, self.vy = self.vy, self.vx
+        self.position = position
+        self.velocity = velocity

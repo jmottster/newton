@@ -14,6 +14,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .massive_blob import MassiveBlob
+from .blob_vector import BlobVector as BVec3
 from .globals import *
 from .blob_global_vars import BlobGlobalVars as bg_vars
 
@@ -237,12 +238,10 @@ class BlobPhysics:
         or closer, True if further than distance
         """
 
+        blob_distance: float = blob1.position.distance(blob2.position)
+
         dd: float = blob1.scaled_radius + blob2.scaled_radius + distance
-        if (
-            abs(blob2.x - blob1.x) <= dd
-            and abs(blob2.y - blob1.y) <= dd
-            and abs(blob2.z - blob1.z) <= dd
-        ):
+        if blob_distance <= dd:
             return False
 
         return True
@@ -260,15 +259,13 @@ class BlobPhysics:
             return
 
         if d == 0:
-            dx = blob2.x - blob1.x
-            dy = blob2.y - blob1.y
-            dz = blob2.z - blob1.z
-            d = math.sqrt((dx**2) + (dy**2) + (dz**2))
 
-        diff: float = dd - d
+            d = blob1.position.distance(blob2.position)
 
         # Check if the two blobs are touching
         if d <= dd:
+
+            diff: float = dd - d
 
             ux1: float = blob1.vx
             uy1: float = blob1.vy
@@ -341,27 +338,20 @@ class BlobPhysics:
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         this will also call collision_detection() with the provided blobs
         """
-        blob1_location: point = point(blob1.x, blob1.y, blob1.z)
-        blob2_location: point = point(blob2.x, blob2.y, blob2.z)
 
-        d: distance = distance(blob1_location, blob2_location)
+        diff: BVec3 = blob2.position.diff(blob1.position)
 
-        if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
+        d: float = diff.mag()
+
+        if d < BlobPhysics.GRAVITATIONAL_RANGE:
 
             timescale: float = bg_vars.timescale * float(dt)
 
-            BlobPhysics.collision_detection(blob1, blob2, d.d)
+            BlobPhysics.collision_detection(blob1, blob2, d)
 
-            F1 = BlobPhysics.g * blob2.mass / d.d**3
-            F2 = BlobPhysics.g * blob1.mass / d.d**3
+            blob1.velocity -= diff * (BlobPhysics.g * blob2.mass * timescale / d**3)
 
-            blob1.vx -= d.dx * F1 * timescale
-            blob1.vy -= d.dy * F1 * timescale
-            blob1.vz -= d.dz * F1 * timescale
-
-            blob2.vx += d.dx * F2 * timescale
-            blob2.vy += d.dy * F2 * timescale
-            blob2.vz += d.dz * F2 * timescale
+            blob2.velocity += diff * (BlobPhysics.g * blob1.mass * timescale / d**3)
 
         elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

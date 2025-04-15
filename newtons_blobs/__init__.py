@@ -35,3 +35,4 @@ from .blob_display import BlobDisplay
 from .blob_plugin_factory import BlobPluginFactory
 from .savable_loadable_prefs import SavableLoadablePrefs
 from .blob_random import blob_random
+from .blob_vector import BlobVector
