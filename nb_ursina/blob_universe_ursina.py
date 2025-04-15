@@ -135,7 +135,7 @@ class BlobUniverseUrsina:
         self.universe.setPos(urs.scene, (0, 0, 0))
 
         self.universe.setColorScaleOff()
-        self.universe.setColorScale((1, 1, 1, 1))
+        self.universe.setColorScale((0.95, 0.95, 0.95, 1))
         self.universe.setScale(urs.scene, scale)
 
         if self.texture is not None:
@@ -151,9 +151,9 @@ class BlobUniverseUrsina:
                     self.base_dir.joinpath("textures").joinpath(self.texture)
                 ),
             )
-            self.universe.setShaderAuto(
-                BitMask32.allOn() & ~BitMask32.bit(Shader.bit_AutoShaderShadow)
-            )
+            # self.universe.setShaderAuto(
+            #     BitMask32.allOn() & ~BitMask32.bit(Shader.bit_AutoShaderShadow)
+            # )
 
         self.universe.setLightOff(True)
         for bit in range(0, len(mf.bit_masks)):

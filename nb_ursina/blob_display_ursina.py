@@ -265,15 +265,15 @@ class BlobDisplayUrsina:
 
         BlobDisplayUrsina.filters.setMSAA(4)
 
-        BlobDisplayUrsina.filters.setHighDynamicRange()
-        BlobDisplayUrsina.filters.setExposureAdjust(0.8)
+        # BlobDisplayUrsina.filters.setHighDynamicRange()
+        # BlobDisplayUrsina.filters.setExposureAdjust(0.8)
 
         BlobDisplayUrsina.filters.setBloom(
             blend=(1, 1, 1, 1),
             mintrigger=3.3,
             maxtrigger=10,
             size="large",
-            intensity=10,
+            intensity=25,
             desat=0,
         )
 

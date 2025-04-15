@@ -27,36 +27,6 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-class point:
-    def __init__(self: Self, x: float, y: float, z: float):
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
-
-
-class distance:
-    def __init__(self: Self, point1: point, point2: point) -> None:
-
-        self.dx: float = point1.x - point2.x
-        self.dy: float = point1.y - point2.y
-        self.dz: float = point1.z - point2.z
-        self.d: float = math.sqrt((self.dx**2 + self.dy**2 + self.dz**2))
-
-
-class position_marker:
-    def __init__(self: Self, pos: point, vel: point, time_step: float = 1) -> None:
-
-        self.pos = pos
-        self.vel = vel
-        self.time_step = time_step
-
-    def move(self: Self) -> None:
-
-        self.pos.x += self.vel.x * self.time_step
-        self.pos.y += self.vel.y * self.time_step
-        self.pos.z += self.vel.z * self.time_step
-
-
 class BlobPhysics:
     """
     A static class used to provide physics methods for MassiveBlobs
@@ -92,21 +62,10 @@ class BlobPhysics:
         Checks to see if blob1 is colliding with blob2, and adjusts velocity of each
         according to Newton's Laws
 
-    partial_step(pos: point, vel: point, time_step: float = 1) -> point
-        Will add vel to pos, time_step times and return the new point
-
-    gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob) -> None
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
-        uses the Euler method with trig
-
     gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
         this will also call collision_detection() with the provided blobs
 
-    jjm_gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float, num_steps: int = 5) -> None
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other.
-        Uses the Jason Mott method, which runs several steps (num_steps) to get to the final timescale step,
-        thus making it more accurate than a straight line to the final step would be.
     """
 
     g: float = G
@@ -259,7 +218,6 @@ class BlobPhysics:
             return
 
         if d == 0:
-
             d = blob1.position.distance(blob2.position)
 
         # Check if the two blobs are touching
@@ -324,15 +282,6 @@ class BlobPhysics:
             blob2.vx, blob2.vy, blob2.vz = vx2, vy2, vz2
 
     @staticmethod
-    def partial_step(pos: point, vel: point, time_step: float = 1) -> point:
-        """Will add vel to pos, time_step times and return the new point"""
-        return point(
-            pos.x + vel.x * time_step,
-            pos.y + vel.y * time_step,
-            pos.z + vel.z * time_step,
-        )
-
-    @staticmethod
     def gravity_collision(blob1: MassiveBlob, blob2: MassiveBlob, dt: Decimal) -> None:
         """
         Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
@@ -352,107 +301,6 @@ class BlobPhysics:
             blob1.velocity -= diff * (BlobPhysics.g * blob2.mass * timescale / d**3)
 
             blob2.velocity += diff * (BlobPhysics.g * blob1.mass * timescale / d**3)
-
-        elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
-            # If out of Sun's gravitational range, kill it
-            blob2.dead = True
-            blob2.escaped = True
-
-    @staticmethod
-    def gravitational_pull(blob1: MassiveBlob, blob2: MassiveBlob, dt: float) -> None:
-        """
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other
-        """
-        timescale: float = bg_vars.timescale * dt
-        dx = blob1.x - blob2.x
-        dy = blob1.y - blob2.y
-        dz = blob1.z - blob2.z
-        # dd = (blob1.scaled_radius * 0.90) + blob2.scaled_radius
-        d = math.sqrt((dx**2) + (dy**2) + (dz**2))
-
-        if d < BlobPhysics.GRAVITATIONAL_RANGE:
-            F = BlobPhysics.g * blob1.mass * blob2.mass / d**2
-
-            theta = math.acos(dz / d)
-            phi = math.atan2(dy, dx)
-
-            fdx = F * math.sin(theta) * math.cos(phi)
-            fdy = F * math.sin(theta) * math.sin(phi)
-            fdz = F * math.cos(theta)
-
-            blob1.vx -= fdx / blob1.mass * timescale
-            blob1.vy -= fdy / blob1.mass * timescale
-            blob1.vz -= fdz / blob1.mass * timescale
-
-            blob2.vx += fdx / blob2.mass * timescale
-            blob2.vy += fdy / blob2.mass * timescale
-            blob2.vz += fdz / blob2.mass * timescale
-
-        elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
-            # If out of Sun's gravitational range, kill it
-            blob2.dead = True
-            blob2.escaped = True
-
-    @staticmethod
-    def jjm_gravitational_pull(
-        blob1: MassiveBlob, blob2: MassiveBlob, dt: float, num_steps: int = 5
-    ) -> None:
-        """
-        Changes velocity of blob1 and blob2 in relation to gravitational pull with each other.
-        Uses the Jason Mott method, which runs several steps (num_steps) to get to the final timescale step,
-        thus making it more accurate than a straight line to the final step would be.
-        """
-        blob1_location: position_marker = position_marker(
-            point(blob1.x, blob1.y, blob1.z), point(0, 0, 0)
-        )
-        blob2_location: position_marker = position_marker(
-            point(blob2.x, blob2.y, blob2.z), point(0, 0, 0)
-        )
-        d: distance = distance(blob1_location.pos, blob2_location.pos)
-
-        if d.d < BlobPhysics.GRAVITATIONAL_RANGE:
-
-            last_step: int = num_steps - 1
-            timescale: float = bg_vars.timescale * dt / num_steps
-
-            blob1_location.time_step = timescale
-            blob2_location.time_step = timescale
-
-            F: float = 0.0
-            F1: float = 0.0
-            F2: float = 0.0
-
-            GM: float = BlobPhysics.g * blob1.mass * blob2.mass
-
-            for i in range(0, num_steps):
-
-                F = GM / d.d**3
-
-                F1 = F / blob1.mass
-                F2 = F / blob2.mass
-
-                blob1_location.vel.x -= d.dx * F1 * timescale
-                blob1_location.vel.y -= d.dy * F1 * timescale
-                blob1_location.vel.z -= d.dz * F1 * timescale
-
-                blob2_location.vel.x += d.dx * F2 * timescale
-                blob2_location.vel.y += d.dy * F2 * timescale
-                blob2_location.vel.z += d.dz * F2 * timescale
-
-                if i < last_step:
-
-                    blob1_location.move()
-                    blob2_location.move()
-
-                    d = distance(blob1_location.pos, blob2_location.pos)
-
-            blob1.vx += blob1_location.vel.x
-            blob1.vy += blob1_location.vel.y
-            blob1.vz += blob1_location.vel.z
-
-            blob2.vx += blob2_location.vel.x
-            blob2.vy += blob2_location.vel.y
-            blob2.vz += blob2_location.vel.z
 
         elif bg_vars.center_blob_escape and blob1.name == CENTER_BLOB_NAME:
             # If out of Sun's gravitational range, kill it

@@ -210,7 +210,7 @@ class BlobWatcher(urs.Entity):
         far = bg_vars.max_radius * 50
         lens.setNearFar(
             500 / self.nearby_light.getSx(),
-            far / self.nearby_light.getSx(),
+            far,
         )
         lens.setFov(90)
         # self.nearby_light.node().showFrustum()

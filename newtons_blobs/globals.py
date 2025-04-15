@@ -20,7 +20,7 @@ __status__ = "In Progress"
 VERSION = __version__
 
 # No need to ever change these
-G = 6.67428 * 10**-11  # Gravitational constant
+G = 6.67430 * 10**-11  # Gravitational constant
 
 # Sizes in Meters
 AU = 1.495978707 * 10**11  # 1 Astronomical Unit

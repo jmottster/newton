@@ -787,7 +787,7 @@ class BlobCore(BlobRotator):
         far = self.scale_x * 50
         lens.setNearFar(
             500 / self.light_node.getSx(),
-            far / self.light_node.getSx(),
+            far,
         )
         lens.setFov(90)
 
