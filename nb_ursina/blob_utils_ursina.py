@@ -30,24 +30,37 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-class MathFunctions:
+class LightUtils:
     """
-    Static class to hold math related helper functions
+    Static class to hold lighting related helper functions
 
-    Attributes
-    ----------
+    Static Attributes
+    -----------------
     camera_mask_counter : int use to keep track of how many bit_masks you've used
 
     bit_masks: list a list of available bit masks to use in lights and cameras
 
-    Methods
-    -------
-    distance(point1: PanVec3, point2: PanVec3) -> float
-        returns the distance between the two points
+    Static Methods
+    --------------
+    get_center_light_index() -> int
+        Returns the index dedicated to the mask for the center light
+
+    get_center_light_bitmask() -> BitMask32
+        Returns the bit mask dedicated to the center light
+
+    get_next_index() -> int
+        Returns the next available index, not used by any other light
+
+    return_index(index: int) -> None
+        Releases an index for use by get_next_index()
+
+    reset() -> None
+        Resets the index queue, only call if you're sure none are being used
 
     """
 
     camera_mask_counter: int = 0
+    returned_indexes: List[int] = []
     bit_masks: list = [
         BitMask32(1),
         BitMask32(2),
@@ -59,6 +72,58 @@ class MathFunctions:
         # BitMask32(128),
     ]
 
+    @classmethod
+    def get_center_light_index(cls) -> int:
+        """Returns the index dedicated to the mask for the center light"""
+        return 0
+
+    @classmethod
+    def get_center_light_bitmask(cls) -> BitMask32:
+        """Returns the bit mask dedicated to the center light"""
+        return cls.bit_masks[cls.get_center_light_index()]
+
+    @classmethod
+    def get_next_index(cls) -> int:
+        """Returns the next available index, not used by any other light"""
+        if len(cls.returned_indexes) > 0:
+            return cls.returned_indexes.pop()
+
+        cls.camera_mask_counter += 1
+        return cls.camera_mask_counter
+
+    @classmethod
+    def return_index(cls, index: int) -> None:
+        """Releases an index for use by get_next_index()"""
+        cls.returned_indexes.append(index)
+
+    @classmethod
+    def reset(cls) -> None:
+        """Resets the index queue, only call if you're sure none are being used"""
+        cls.camera_mask_counter = 0
+        cls.returned_indexes.clear()
+
+
+class MathFunctions:
+    """
+    Static class to hold math related helper functions
+
+    Static Methods
+    -------
+    distance(point1: PanVec3, point2: PanVec3) -> float
+        returns the distance between the two points
+
+    sample_gradient(list_of_values: List[urs.Color], t: float) -> urs.Color
+        distribute list_of_values equally on a line and get the interpolated value at t (0-1)
+
+    lerp_color(a: urs.Color, b: urs.Color, t: float) -> urs.Color
+        Performs the lerp function on each element of the two color vectors,
+        returning the lerped combination of them
+
+    lerp(a: float, b: float, t: float) -> float
+        Returns the lerp of a and b using t
+
+    """
+
     @staticmethod
     def distance(point1: PanVec3, point2: PanVec3) -> float:
         """returns the distance between the two points"""
@@ -67,7 +132,7 @@ class MathFunctions:
 
     @staticmethod
     def sample_gradient(list_of_values: List[urs.Color], t: float) -> urs.Color:
-        """distribute list_of_values equally on a line and get the interpolated value at t (0-1)."""
+        """distribute list_of_values equally on a line and get the interpolated value at t (0-1)"""
         l = len(list_of_values) - 1
         if l == 0:
             return list_of_values[0]
@@ -88,12 +153,17 @@ class MathFunctions:
 
     @staticmethod
     def lerp_color(a: urs.Color, b: urs.Color, t: float) -> urs.Color:
+        """
+        Performs the lerp function on each element of the two color vectors,
+        returning the lerped combination of them
+        """
 
         col = [MathFunctions.lerp(e[0], e[1], t) for e in zip(a, b)]
         return urs.Color(col[0], col[1], col[2], col[3])
 
     @staticmethod
     def lerp(a: float, b: float, t: float) -> float:
+        """Returns the lerp of a and b using t"""
         return a + (b - a) * t
 
 

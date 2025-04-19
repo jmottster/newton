@@ -403,15 +403,13 @@ class BlobRotator(urs.Entity):
             self.rotator_model.setTransparency(TransparencyAttrib.M_none)
             if self.color is not None:
                 self.rotator_model.setColorScaleOff()
-                self.rotator_model.setColorScale(self.color)
+                if self.blob_name == CENTER_BLOB_NAME:
+                    self.rotator_model.setColorScale((2, 2, 2, 1))
+                else:
+                    self.rotator_model.setColorScale((1, 1, 1, 1))
+                self.rotator_model.setColor(self.color)
             self.rotator_model.setMaterial(self.blob_material, 1)
 
-            self.rotator_model.setTexture(
-                PlanetMaterial.texture_stage,
-                urs.application.base.loader.loadTexture(
-                    self.base_dir.joinpath("textures").joinpath(self.texture_name)
-                ),
-            )
             if self.glow_map_name is not None:
                 self.rotator_model.setTexture(
                     PlanetMaterial.texture_stage_glow,
@@ -419,6 +417,13 @@ class BlobRotator(urs.Entity):
                         self.base_dir.joinpath("textures").joinpath(self.glow_map_name)
                     ),
                 )
+            self.rotator_model.setTexture(
+                PlanetMaterial.texture_stage,
+                urs.application.base.loader.loadTexture(
+                    self.base_dir.joinpath("textures").joinpath(self.texture_name)
+                ),
+            )
+
             self.rotator_model.reparentTo(urs.scene)
 
             if self.ring_texture is not None:
@@ -430,8 +435,6 @@ class BlobRotator(urs.Entity):
                     self.rotator_model.setShaderAuto(
                         BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
                     )
-            else:
-                self.rotator_model.setShaderAuto()
 
             if self.rotation_speed is None:
                 self.rotation_speed = (blob_random.random() * 29.00) + 1

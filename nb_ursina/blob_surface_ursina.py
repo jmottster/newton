@@ -32,7 +32,7 @@ from newtons_blobs import blob_random
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_textures import *
-from .blob_utils_ursina import MathFunctions as mf
+from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 from .fps import FPS
 from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial, BlobLine
@@ -90,7 +90,6 @@ class TrailRenderer(urs.Entity):
         "_t",
         "_t2",
         "min_spacing",
-        "update_step",
         "thickness",
         "_barycenter_blob",
         "check_barycenter_dist",
@@ -133,37 +132,34 @@ class TrailRenderer(urs.Entity):
             setattr(self, key, value)
 
         self.segments: int = segments
+        self.orig_segments: int = self.segments
         self.orbit_arc: float = math.pi * 1.25
         self.pos_overlap: int = segments
         self._t: float = 0
 
         self.min_spacing: float = min_spacing
-        self.update_step: float = 0
+        self.spacing_check: int = self.orig_segments
+        self.space_check_multiplier: int = 1
         self.thickness: int = 4
         self._barycenter_blob: BlobCore = None
         self.barycenter_blob = barycenter_blob
         self.check_barycenter_dist: float = 2
         if self.is_moon:
             self.thickness = 3
-            self.min_spacing = bg_vars.min_moon_radius
-            self.update_step = 0
+            self.min_spacing = bg_vars.min_moon_radius / self.parent.scale_x
+            self.space_check_multiplier = 8
             self.segments = 250
             self.pos_overlap = segments
-
-        self.orig_segments: int = self.segments
 
         self.points: deque[urs.Vec3] = deque(
             [urs.Vec3(0, 0, 0) for _ in range(0, self.segments)]
         )
         self.color_gradient: List[urs.Color] = [urs.color.clear, self.color, self.color]
-        self.color_test: List[urs.Color] = [urs.color.black, self.color]
+        self.color_test: List[urs.Color] = [urs.color.red, urs.color.yellow]
         self.colors: List = [urs.Color]
         self.build_trail_gradient()
 
-        self.spacing_check: int = self.orig_segments
-        self.last_point_distances: deque[urs.Vec3] = deque(
-            [self.min_spacing for _ in range(0, self.spacing_check)]
-        )
+        self.last_point_distances: deque[urs.Vec3] = deque([0])
 
         self.line_renderer = urs.Entity(
             name=self.parent.blob_name,
@@ -180,11 +176,9 @@ class TrailRenderer(urs.Entity):
         self.line_renderer.setScale(urs.scene, self.parent.getScale(urs.scene))
 
         self.line_renderer.setTransparency(TransparencyAttrib.M_alpha)
-        # self.line_renderer.setDepthWrite(False)
-        # self.line_renderer.setDepthOffset(-1)
         self.line_renderer.setLightOff()
-        for bit in range(1, len(mf.bit_masks)):
-            self.line_renderer.hide(mf.bit_masks[bit])
+        for bit in range(1, len(lu.bit_masks)):
+            self.line_renderer.hide(lu.bit_masks[bit])
 
         if self.is_moon:
             self.enabled = False
@@ -213,51 +207,37 @@ class TrailRenderer(urs.Entity):
 
         self.line_renderer.setPos(urs.scene, self.barycenter_blob.getPos(urs.scene))
 
-        self._t += FPS.dt
-
-        if not FPS.paused and (self._t >= self.update_step):
+        if not FPS.paused:
 
             if len(self.last_point_distances) >= self.spacing_check:
                 self.calibrate_segments()
 
-            self.last_point_distances.append(
-                mf.distance(self.points[-2], self.points[-1])
+            self.last_point_distances[-1] = mf.distance(
+                self.points[-2], self.points[-1]
             )
 
             if self.last_point_distances[-1] >= self.min_spacing:
 
-                self.points.popleft()
-                self.points.append(self.getPos(self.line_renderer))
-
-                self.pos_overlap = 0
-                end: int = self.segments - 1
-                while (
-                    self.pos_overlap < end
-                    and self.points[self.pos_overlap]
-                    == self.points[self.pos_overlap + 1]
-                ):
-                    self.pos_overlap += 1
-
-                if self.pos_overlap > 0:
+                if len(self.points) == self.segments:
+                    self.points.popleft()
+                    self.points.append(self.getPos(self.line_renderer))
+                    self.last_point_distances.append(0)
+                else:
+                    self.points.append(self.getPos(self.line_renderer))
+                    self.last_point_distances.append(0)
                     self.build_trail_gradient()
-
             else:
+
                 self.points[-1] = self.getPos(self.line_renderer)
 
-            self._t = 0
-        else:
-            self.points[-1] = self.getPos(self.line_renderer)
-
-        self.line_renderer.model.generate()
+            self.line_renderer.model.generate()
 
     def build_trail_gradient(self: Self) -> None:
         """Constructs the color gradient for the trail using colors in self.color_gradient"""
 
         self.colors.clear()
 
-        length = self.segments - self.pos_overlap
-        for _ in range(self.pos_overlap):
-            self.colors.append(mf.sample_gradient(self.color_gradient, 0))
+        length = len(self.points)
         for i in range(length):
             self.colors.append(mf.sample_gradient(self.color_gradient, i / length))
 
@@ -279,8 +259,6 @@ class TrailRenderer(urs.Entity):
         if BlobSurfaceUrsina.center_blob is None:
             return
 
-        avg_length: float = 0.0
-
         r = mf.distance(
             self.getPos(self.line_renderer),
             self.line_renderer.getPos(self.line_renderer),
@@ -289,45 +267,34 @@ class TrailRenderer(urs.Entity):
         self.min_spacing = r * self.orbit_arc / self.orig_segments
 
         if new:
-            for i in range(0, self.segments):
+
+            for i in range(0, len(self.points)):
                 self.points[i] = self.getPos(self.line_renderer)
-            avg_length = self.min_spacing
-        else:
-            avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
-        self.last_point_distances.clear()
+            while len(self.points) > 3:
+                self.points.popleft()
 
-        if avg_length <= self.min_spacing:
-            avg_length = self.min_spacing
-            self.segments = self.orig_segments
-        else:
-            arc = r * (math.asin(avg_length / (r * 2)) * 2)
-            self.segments = round(r * self.orbit_arc / arc)
-
-        if new:
             self.spacing_check = self.segments
         else:
-            self.spacing_check = self.segments * 2
 
-        if len(self.points) != self.segments:
+            avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
-            if len(self.points) > self.segments:
-                while len(self.points) > self.segments:
-                    self.points.popleft()
+            if avg_length <= self.min_spacing:
+                avg_length = self.min_spacing
+                self.segments = self.orig_segments
+            else:
+                arc = r * (math.asin(avg_length / (r * 2)) * 2)
+                self.segments = round(r * self.orbit_arc / arc)
 
-            elif len(self.points) < self.segments:
-                while len(self.points) < self.segments:
-                    self.points.appendleft(self.points[0])
+            self.spacing_check = self.segments * self.space_check_multiplier
 
-            self.pos_overlap = 0
-            end: int = self.segments - 1
-            while (
-                self.pos_overlap < end
-                and self.points[self.pos_overlap] == self.points[self.pos_overlap + 1]
-            ):
-                self.pos_overlap += 1
+        self.last_point_distances.clear()
+        self.last_point_distances.append(0)
 
-            self.build_trail_gradient()
+        while len(self.points) > self.segments:
+            self.points.popleft()
+
+        self.build_trail_gradient()
 
     def on_enable(self: Self) -> None:
         """
@@ -479,7 +446,8 @@ class BlobCore(BlobRotator):
         self.percent_mass: int = None
         self.trail_color: urs.Color = kwargs.get("trail_color")
         self.light_node: NodePath = None
-        self.light_bit_mask: int = None
+        self.light_bit_mask: BitMask32 = None
+        self.light_bit_mask_index: int = None
         self.light_scale: float = None
 
         super().__init__(
@@ -563,9 +531,9 @@ class BlobCore(BlobRotator):
         self.swallowed_by_blob: BlobCore = None
         self.collisions: deque[urs.Vec3] = deque([])
 
-        for bit in range(1, len(mf.bit_masks)):
-            self.hide(mf.bit_masks[bit])
-            self.rotator_model.hide(mf.bit_masks[bit])
+        for bit in range(1, len(lu.bit_masks)):
+            self.hide(lu.bit_masks[bit])
+            self.rotator_model.hide(lu.bit_masks[bit])
 
     @property
     def barycenter_blob(self: Self) -> "BlobCore":
@@ -669,7 +637,7 @@ class BlobCore(BlobRotator):
 
             if not self.rotator_model.hasLight(self.barycenter_blob.light_node):
                 self.rotator_model.clearLight()
-                self.rotator_model.hide(mf.bit_masks[0])
+                self.rotator_model.hide(lu.get_center_light_bitmask())
 
                 self.rotator_model.setLight(self.barycenter_blob.light_node)
                 self.rotator_model.show(
@@ -679,10 +647,10 @@ class BlobCore(BlobRotator):
             if not self.rotator_model.hasLight(self.center_light):
                 self.rotator_model.clearLight()
                 self.rotator_model.setLight(self.center_light)
-                self.rotator_model.show(mf.bit_masks[0])
-                for bit in range(1, len(mf.bit_masks)):
-                    self.hide(mf.bit_masks[bit])
-                    self.rotator_model.hide(mf.bit_masks[bit])
+                self.rotator_model.show(lu.get_center_light_bitmask())
+                for bit in range(1, len(lu.bit_masks)):
+                    self.hide(lu.bit_masks[bit])
+                    self.rotator_model.hide(lu.bit_masks[bit])
 
     def begin_disintegration(self: Self) -> None:
         """Instantiates the dust cloud object"""
@@ -735,8 +703,8 @@ class BlobCore(BlobRotator):
 
         self.light_node.setScale(urs.scene, bg_vars.center_blob_radius * 30)
 
-        self.light_bit_mask = mf.bit_masks[0]
-        self.light_node.node().setCameraMask(mf.bit_masks[0])
+        self.light_bit_mask = lu.bit_masks[lu.get_center_light_index()]
+        self.light_node.node().setCameraMask(self.light_bit_mask)
 
         lens = self.light_node.node().getLens()
         far = bg_vars.au_scale_factor * 4 * bg_vars.num_planets
@@ -745,14 +713,18 @@ class BlobCore(BlobRotator):
             far,
         )
 
-        self.setLightOff(1)
-        self.rotator_model.setLightOff(1)
-        self.light_node.setLightOff(1)
-        BlobSurfaceUrsina.universe_node.setLightOff(1)
-        self.hide(mf.bit_masks[0])
-        self.rotator_model.hide(mf.bit_masks[0])
-        self.light_node.hide(mf.bit_masks[0])
-        BlobSurfaceUrsina.universe_node.hide(mf.bit_masks[0])
+        # self.setLightOff()
+        # self.rotator_model.setLightOff()
+        # self.light_node.setLightOff()
+        # BlobSurfaceUrsina.universe_node.setLightOff()
+        # BlobSurfaceUrsina.universe_node.hide(lu.bit_masks[0])
+
+        self.rotator_model.setLight(self.light_node)
+        self.show(lu.get_center_light_bitmask())
+        self.rotator_model.show(lu.get_center_light_bitmask())
+        # self.light_node.hide(lu.get_center_light_bitmask())
+
+        # self.rotator_model.setShaderAuto()
 
     def create_spotlight(self: Self) -> None:
         """
@@ -779,8 +751,9 @@ class BlobCore(BlobRotator):
         self.light_scale = bg_vars.center_blob_radius * 30
 
         self.light_node.setScale(urs.scene, self.light_scale)
-        mf.camera_mask_counter += 1
-        self.light_bit_mask = mf.bit_masks[mf.camera_mask_counter]
+
+        self.light_bit_mask_index = lu.get_next_index()
+        self.light_bit_mask = lu.bit_masks[self.light_bit_mask_index]
         self.light_node.node().setCameraMask(self.light_bit_mask)
 
         lens = self.light_node.node().getLens()
@@ -797,8 +770,8 @@ class BlobCore(BlobRotator):
         self.rotator_model.setShaderAuto(
             BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
         )
-        self.hide(mf.bit_masks[0])
-        self.rotator_model.hide(mf.bit_masks[0])
+        self.hide(lu.get_center_light_bitmask())
+        self.rotator_model.hide(lu.get_center_light_bitmask())
         self.rotator_model.setLight(self.light_node)
         self.rotator_model.show(self.light_bit_mask)
 
@@ -821,8 +794,8 @@ class BlobCore(BlobRotator):
         self.rotator_model.setShaderAuto(
             BitMask32.allOff() | BitMask32.bit(Shader.bit_AutoShaderShadow)
         )
-        self.hide(mf.bit_masks[0])
-        self.rotator_model.hide(mf.bit_masks[0])
+        self.hide(lu.get_center_light_bitmask())
+        self.rotator_model.hide(lu.get_center_light_bitmask())
         self.rotator_model.setLight(self.light_node)
         self.rotator_model.show(self.light_node.node().getCameraMask())
 
@@ -844,7 +817,7 @@ class BlobCore(BlobRotator):
             self.light_node = None
 
             self.rotator_model.setLight(self.center_light)
-            self.rotator_model.show(mf.bit_masks[0])
+            self.rotator_model.show(lu.get_center_light_bitmask())
 
     def update_spotlight(self: Self) -> None:
         """
@@ -881,10 +854,12 @@ class BlobCore(BlobRotator):
             del self.light_node
 
             self.light_node = None
-            mf.camera_mask_counter -= 1
+            lu.return_index(self.light_bit_mask_index)
+            self.light_bit_mask = None
+            self.light_bit_mask_index = None
 
             self.rotator_model.setLight(self.center_light)
-            self.rotator_model.show(mf.bit_masks[0])
+            self.rotator_model.show(lu.get_center_light_bitmask())
 
     def create_trail(self: Self, barycenter_blob: "BlobCore" = None) -> None:
         """
@@ -897,7 +872,7 @@ class BlobCore(BlobRotator):
 
         self.trail = TrailRenderer(
             segments=250,
-            min_spacing=bg_vars.max_radius,
+            min_spacing=bg_vars.max_radius / self.scale_x,
             parent=self,
             color=self.trail_color,
             barycenter_blob=barycenter_blob,
@@ -929,9 +904,10 @@ class BlobCore(BlobRotator):
                 unlit=True,
                 shader=shd.unlit_shader,
             )
+            self.text_entity.setLightOff()
 
-            for bit in range(0, len(mf.bit_masks)):
-                self.text_entity.hide(mf.bit_masks[bit])
+            for bit in range(0, len(lu.bit_masks)):
+                self.text_entity.hide(lu.bit_masks[bit])
 
             self.text = self.short_overlay_text()
 
@@ -947,9 +923,17 @@ class BlobCore(BlobRotator):
                 origin=(0, 0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
-                color=urs.color.rgba(0.8, 0.8, 0.8, 1),
+                # color=urs.color.rgba(0.7, 0.7, 0.7, 1),
                 enabled=False,
+                # unlit=True,
+                # shader=shd.unlit_shader,
             )
+            self.info_text.setColorScaleOff()
+            self.info_text.setColorScale((0.75, 0.75, 0.75, 1))
+            self.info_text.setColor((1, 1, 1, 1))
+            self.info_text.setLightOff(1)
+            for bit in range(0, len(lu.bit_masks)):
+                self.info_text.hide(lu.bit_masks[bit])
 
         self.text_entity.enabled = True
         self.info_text.enabled = True
@@ -1363,7 +1347,7 @@ class BlobSurfaceUrsina:
             enabled: bool = not bg_vars.black_hole_mode
             glow_map_name = "glow_maps/8k_sun-glow_map.jpg"
 
-            urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
+            urs_color = urs.color.rgba(3, 3, 3, 1)
             self.texture = "suns/8k_sun.jpg"
             self.ring_texture = ""
 
@@ -1399,7 +1383,7 @@ class BlobSurfaceUrsina:
 
         else:
 
-            glow_map_name = "glow_maps/no_glow_map.png"
+            glow_map_name = None  # "glow_maps/no_glow_map.png"
 
             if not bg_vars.textures_3d:
                 self.texture = None

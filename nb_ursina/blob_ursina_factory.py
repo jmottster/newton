@@ -36,7 +36,7 @@ from .blob_surface_ursina import BlobCore, BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
 from .fps import FPS
 from .ursina_fix import BlobText
-from .blob_utils_ursina import MathFunctions as mf
+from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -291,7 +291,7 @@ class BlobUrsinaFactory:
 
         BlobSurfaceUrsina.num_rings = 1
 
-        mf.camera_mask_counter = 0
+        lu.reset()
 
         if num_blobs > 0:
 

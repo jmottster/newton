@@ -24,7 +24,7 @@ from newtons_blobs import BlobGlobalVars as bg_vars
 
 from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_universe_ursina import BlobUniverseUrsina
-from .blob_utils_ursina import TempMessage, MathFunctions as mf
+from .blob_utils_ursina import TempMessage, MathFunctions as mf, LightUtils as lu
 from .fps import FPS
 from .ursina_fix import PlanetMaterial, BlobNodePathFactory
 
@@ -160,9 +160,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             color=self.gimbal_color,
         )
         self.gimbal.setDepthTest(False)
-        self.gimbal.setLightOff(1)
-        for bit in range(0, len(mf.bit_masks)):
-            self.gimbal.hide(mf.bit_masks[bit])
+        self.gimbal.setLightOff()
+        for bit in range(0, len(lu.bit_masks)):
+            self.gimbal.hide(lu.bit_masks[bit])
 
         self.gimbal_offset: float = PanVec3.forward() * 1
         self.gimbal_offset += PanVec3(PanVec3.down() * 0.2)

@@ -27,7 +27,7 @@ from newtons_blobs.globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
 
 from .blob_surface_ursina import BlobCore
-from .blob_utils_ursina import MathFunctions as mf
+from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 from .fps import FPS
 
 __author__ = "Jason Mott"
@@ -161,7 +161,7 @@ class BlobWatcher(urs.Entity):
         self.num_moons: int = int(NUM_BLOBS - 1) - bg_vars.num_planets
         self.num_planets: int = bg_vars.num_planets
         self.planet_index_offset: int = self.num_moons + 1
-        self.proximity: float = bg_vars.au_scale_factor * 2
+        self.proximity: float = bg_vars.au_scale_factor * 1
 
         self.planets: npt.NDArray = np.empty([self.num_planets], dtype=BlobCore)
         self.moons: npt.NDArray = np.empty([self.num_moons], dtype=BlobCore)
@@ -202,8 +202,7 @@ class BlobWatcher(urs.Entity):
         light_scale: float = bg_vars.center_blob_radius * 30
 
         self.nearby_light.setScale(urs.scene, light_scale)
-        mf.camera_mask_counter += 1
-        light_bit_mask = mf.bit_masks[mf.camera_mask_counter]
+        light_bit_mask = lu.bit_masks[lu.get_next_index()]
         self.nearby_light.node().setCameraMask(light_bit_mask)
 
         lens = self.nearby_light.node().getLens()
@@ -252,7 +251,7 @@ class BlobWatcher(urs.Entity):
         if key == "t":
             if self.is_ready():
                 self.trail_on = not self.trail_on
-                self._t = 0
+                self._t = self.update_step
 
     def update(self: Self) -> None:
         """
@@ -262,32 +261,28 @@ class BlobWatcher(urs.Entity):
 
         self._t += FPS.dt
         if self._t >= self.update_step:
+
+            if not self.is_ready():
+                return
+
             this_nearest_planet: int = -1
 
-            if self.is_ready() and not self.trail_on:
+            this_nearest_planet = self.find_nearest_planet()
+            if this_nearest_planet != self.nearest_planet:
 
-                this_nearest_planet = self.find_nearest_planet()
-                if (
-                    this_nearest_planet >= 0
-                    and this_nearest_planet != self.nearest_planet
-                ):
-                    self.planets[self.nearest_planet].unset_spotlight()
+                self.planets[self.nearest_planet].unset_spotlight()
+                self.nearest_planet = -1
+
+                if this_nearest_planet >= 0:
                     self.nearest_planet = this_nearest_planet
                     self.planets[self.nearest_planet].set_spotlight(self.nearby_light)
+
+            if not self.trail_on:
 
                 for blob in self.moons:
                     blob.check_light_source()
 
-            elif self.trail_on:
-
-                this_nearest_planet = self.find_nearest_planet()
-                if (
-                    this_nearest_planet >= 0
-                    and this_nearest_planet != self.nearest_planet
-                ):
-                    self.planets[self.nearest_planet].unset_spotlight()
-                    self.nearest_planet = this_nearest_planet
-                    self.planets[self.nearest_planet].set_spotlight(self.nearby_light)
+            else:
 
                 barycenter: BlobCore = self.first_person_viewer.follow_entity
 
@@ -301,7 +296,7 @@ class BlobWatcher(urs.Entity):
                     ):
                         barycenter = None
 
-                if barycenter is None:
+                if barycenter is None and self.nearest_planet >= 0:
                     barycenter = self.planets[self.nearest_planet]
 
                 for blob in self.moons:

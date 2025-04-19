@@ -26,7 +26,7 @@ from .blob_textures import (
 
 from .ursina_fix import PlanetMaterial
 
-from .blob_utils_ursina import MathFunctions as mf
+from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2024"
@@ -118,13 +118,8 @@ class BlobUniverseUrsina:
             except:
                 texture_index = None
 
-        glow_map: str = "glow_maps/background_no_glow_map.png"
-        if LOW_VRAM:
-            glow_map = "glow_maps/background_no_glow_map-small.png"
-
         if not bg_vars.textures_3d:
             self.texture = None
-            glow_map = None
 
         self.universe = urs.application.base.loader.loadModel(
             self.base_dir.joinpath("models").joinpath("background_sphere.obj")
@@ -135,29 +130,21 @@ class BlobUniverseUrsina:
         self.universe.setPos(urs.scene, (0, 0, 0))
 
         self.universe.setColorScaleOff()
-        self.universe.setColorScale((0.95, 0.95, 0.95, 1))
+        self.universe.setColorScale((1, 1, 1, 1))
+        self.universe.setColor((0.65, 0.65, 0.65, 1))
         self.universe.setScale(urs.scene, scale)
 
         if self.texture is not None:
-            self.universe.setTexture(
-                PlanetMaterial.texture_stage_glow,
-                urs.application.base.loader.loadTexture(
-                    self.base_dir.joinpath("textures").joinpath(glow_map)
-                ),
-            )
             self.universe.setTexture(
                 PlanetMaterial.texture_stage,
                 urs.application.base.loader.loadTexture(
                     self.base_dir.joinpath("textures").joinpath(self.texture)
                 ),
             )
-            # self.universe.setShaderAuto(
-            #     BitMask32.allOn() & ~BitMask32.bit(Shader.bit_AutoShaderShadow)
-            # )
 
-        self.universe.setLightOff(True)
-        for bit in range(0, len(mf.bit_masks)):
-            self.universe.hide(mf.bit_masks[bit])
+        self.universe.setLightOff()
+        for bit in range(0, len(lu.bit_masks)):
+            self.universe.hide(lu.bit_masks[bit])
 
         if texture_index is not None:
             self.universe.setHpr(BLOB_BACKGROUND_ROTATION[texture_index])

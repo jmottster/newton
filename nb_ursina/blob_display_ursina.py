@@ -265,16 +265,16 @@ class BlobDisplayUrsina:
 
         BlobDisplayUrsina.filters.setMSAA(4)
 
-        # BlobDisplayUrsina.filters.setHighDynamicRange()
-        # BlobDisplayUrsina.filters.setExposureAdjust(0.8)
+        BlobDisplayUrsina.filters.setHighDynamicRange()
+        BlobDisplayUrsina.filters.setExposureAdjust(0.8)
 
         BlobDisplayUrsina.filters.setBloom(
             blend=(1, 1, 1, 1),
-            mintrigger=3.3,
-            maxtrigger=10,
-            size="large",
+            mintrigger=3,
+            maxtrigger=15,
             intensity=25,
-            desat=0,
+            desat=-0.3,
+            size=3,
         )
 
         self.first_person_surface: FirstPersonSurface = None  # set by BlobUrsinaFactory
