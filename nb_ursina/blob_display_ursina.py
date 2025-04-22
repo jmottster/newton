@@ -177,9 +177,6 @@ class BlobDisplayUrsina:
     is_fullscreen() -> bool:
         Whether or not the display is in fullscreen mode (False if in windowed mode)
 
-    fill(color: Tuple[int, int, int]) -> None
-        Fill the entire area wit a particular color to prepare for drawing another screen
-
     temp_message(text: str, pos: Tuple[float, float], msg_key: str) -> None
         Sends the given message to the center of the screen for 30 seconds
 
@@ -187,9 +184,6 @@ class BlobDisplayUrsina:
         Print the proved text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
-
-    draw_universe(universe: BlobUniverse) -> None
-        Draw the universe area inside the display area (note that universe may be larger than display)
 
     update() -> None
         Draw the prepared frame to the screen/window
@@ -269,11 +263,11 @@ class BlobDisplayUrsina:
         BlobDisplayUrsina.filters.setExposureAdjust(0.8)
 
         BlobDisplayUrsina.filters.setBloom(
-            blend=(1, 1, 1, 1),
-            mintrigger=3,
+            blend=(0.1, 0.1, 0.1, 1),
+            mintrigger=1.2,
             maxtrigger=15,
-            intensity=25,
-            desat=-0.3,
+            intensity=50,
+            desat=0,
             size=3,
         )
 
@@ -492,10 +486,6 @@ class BlobDisplayUrsina:
         """Whether or not the display is in fullscreen mode (False if in windowed mode)"""
         return urs.window.fullscreen
 
-    def fill(self: Self, color: Tuple[int, int, int]) -> None:
-        """Fill the entire area wit a particular color to prepare for drawing another screen"""
-        pass
-
     def temp_message(
         self: Self, text: str, pos: Tuple[float, float], msg_key: str
     ) -> None:
@@ -542,10 +532,6 @@ class BlobDisplayUrsina:
 
         if text_entity_entity.get_text() != text:
             text_entity_entity.set_text(text, pos, orientation)
-
-    def draw_universe(self: Self, universe: BlobUniverse) -> None:
-        """Draw the universe area inside the display area (note that universe may be larger than display)"""
-        pass
 
     def update(self: Self) -> None:
         """Draw the prepared frame to the screen/window"""

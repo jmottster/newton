@@ -106,6 +106,10 @@ class BlobLine(p3d.NodePath):
             if value is None:
                 setattr(self, name, [])
 
+        self.setShaderOff()
+        self.setLightOff()
+        self.setTransparency(p3d.TransparencyAttrib.M_alpha)
+
         self.geomNode: p3d.GeomNode = None
         self.geom: p3d.Geom = None
         self.data: p3d.GeomVertexData = None

@@ -125,9 +125,11 @@ class BlobFirstPersonUrsina(urs.Entity):
         urs.camera.position = urs.Vec3(0, 0, 0)
 
         lens = urs.camera.lens
-        lens.setNear(700 / bg_vars.first_person_scale)
-        if lens.getFar() < (bg_vars.background_scale / bg_vars.first_person_scale):
-            lens.setFar(bg_vars.background_scale / bg_vars.first_person_scale)
+        lens.setNear(0.09)
+        if lens.getFar() < (
+            bg_vars.background_scale * 1.2 / bg_vars.first_person_scale
+        ):
+            lens.setFar(bg_vars.background_scale * 1.2 / bg_vars.first_person_scale)
         self.radius: float = lens.getNear() * bg_vars.first_person_scale  # + 0.01
 
         urs.camera.ui.position = (0, 0, 0)
@@ -142,9 +144,8 @@ class BlobFirstPersonUrsina(urs.Entity):
         )
         self.center_cursor.setHpr(urs.scene, (0, 0, 45))
 
-        self.gimbal_color: PanVec4 = PanVec4(0.5, 0.5, 0.5, 0.59)
+        self.gimbal_color: PanVec4 = PanVec4(1, 1, 1, 0.5)
         self.gimbal_texture: str = "suns/8k_sun.jpg"
-        self.gimbal_glow_map: str = "glow_maps/8k_sun-glow_map.jpg"
         if not bg_vars.textures_3d:
             self.gimbal_color = urs.color.rgba32(
                 CENTER_BLOB_COLOR[0], CENTER_BLOB_COLOR[1], CENTER_BLOB_COLOR[2], 150
@@ -156,9 +157,9 @@ class BlobFirstPersonUrsina(urs.Entity):
             parent=urs.scene,
             scale=PanVec3(0.03, 0.03, 0.03) * self.temp_scale,
             texture=self.gimbal_texture,
-            glow_map=self.gimbal_glow_map,
             color=self.gimbal_color,
         )
+        self.gimbal.setShaderOff()
         self.gimbal.setDepthTest(False)
         self.gimbal.setLightOff()
         for bit in range(0, len(lu.bit_masks)):
@@ -170,14 +171,20 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.gimbal_arrow: urs.Entity = urs.Entity(
             parent=self.gimbal,
             model="arrow",
-            color=urs.color.rgb32(179, 0, 27),
             scale=(1.9, 4, 2),
             position=(PanVec3.forward() * 0.95),
             unlit=True,
-            shader=shd.unlit_shader,
             eternal=kwargs["eternal"],
         )
         self.gimbal_arrow.setHpr(self.gimbal_arrow, (90, 0, 0))
+
+        self.gimbal_arrow.setColorScaleOff()
+        self.gimbal_arrow.setColorScale((1, 1, 1, 1))
+        self.gimbal_arrow.setColor((179 / 255, 0, 27 / 255, 1))
+        self.gimbal_arrow.setShaderOff()
+        self.gimbal_arrow.setLightOff(1)
+        for bit in range(0, len(lu.bit_masks)):
+            self.gimbal_arrow.hide(lu.bit_masks[bit])
 
         self.gimbal_ring: urs.Entity = None
 
@@ -186,7 +193,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         )
         self.ambient_light.setColor(self.flashlight_color)
         self.flashlight: urs.Entity = urs.Entity(
-            parent=self.gimbal,
+            parent=urs.scene,
             position=(0, 0, 0),
             color=self.flashlight_color,
             eternal=kwargs["eternal"],
@@ -205,11 +212,13 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.speed_inc: float = self.max_speed / 50
 
         self.min_roll_speed: float = 35
-        self.max_roll_speed: float = 90
+        self.max_roll_speed: float = 900
 
         self.orig_roll_speed: float = (self.min_roll_speed + self.max_roll_speed) / 2
         self.roll_speed: float = self.orig_roll_speed
-        self.roll_speed_inc: float = self.max_roll_speed / 50
+        self.roll_speed_inc: float = (
+            self.max_roll_speed * self.speed_inc / self.max_speed
+        )  #     self.max_roll_speed * 0.25
 
         self.direction: urs.Vec3 = None
         self._position: urs.Vec3 = urs.Vec3(0, 0, 0)
@@ -331,7 +340,6 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.node_factory.set_texture(
                 self.gimbal,
                 self.gimbal_texture,
-                self.gimbal_glow_map,
             )
 
         if (
@@ -344,12 +352,16 @@ class BlobFirstPersonUrsina(urs.Entity):
                 color=self.gimbal_color,
                 texture=self.follow_entity.ring_texture,
                 unlit=True,
-                shader=shd.unlit_shader,
             )
+
             self.gimbal_ring.model = urs.application.base.loader.loadModel(
                 self.base_dir.joinpath("models").joinpath("rings.obj")
             )
-            self.gimbal_ring.setTransparency(TransparencyAttrib.M_dual)
+            self.gimbal_ring.model.setTransparency(TransparencyAttrib.M_alpha)
+            self.gimbal_ring.model.setShaderOff()
+            self.gimbal_ring.model.setLightOff(1)
+            for bit in range(0, len(lu.bit_masks)):
+                self.gimbal_ring.model.hide(lu.bit_masks[bit])
 
     def stop_following(self: Self) -> None:
         """
@@ -364,7 +376,6 @@ class BlobFirstPersonUrsina(urs.Entity):
             self.node_factory.set_texture(
                 self.gimbal,
                 self.gimbal_texture,
-                self.gimbal_glow_map,
             )
 
             if self.gimbal_ring is not None:

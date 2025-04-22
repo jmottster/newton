@@ -442,12 +442,7 @@ class BlobRunner:
     def render_frame(self: Self) -> None:
         """Calls all the draw methods to display a frame on the screen/monitor"""
 
-        self.display.fill(BACKGROUND_COLOR)
-        self.universe.fill(BACKGROUND_COLOR)
-
         self.blob_plotter.draw_blobs()
-
-        self.display.draw_universe(self.universe)
 
         self.draw_stats(self.message)
         if self.message_counter > 0:

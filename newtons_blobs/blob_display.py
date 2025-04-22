@@ -75,16 +75,10 @@ class BlobDisplay(Protocol):
     is_fullscreen() -> bool:
         Whether of not the display is in fullscreen mode (False if in windowed mode)
 
-    fill(color: Tuple[int, int, int]) -> None
-        Fill the entire area wit a particular color to prepare for drawing another screen
-
     blit_text(text: str, pos: Tuple[float, float], orientation: Tuple[int, int]) -> None
         Print the proved text to the screen a the provided coordinates. orientation helps to give hints
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
-
-    draw_universe(universe: BlobUniverse) -> None
-        Draw the universe area inside the display area (note that universe may be larger than display)
 
     update() -> None
         Draw the prepared frame to the screen/window
@@ -176,10 +170,6 @@ class BlobDisplay(Protocol):
         """Whether of not the display is in fullscreen mode (False if in windowed mode)"""
         pass
 
-    def fill(self: Self, color: Tuple[int, int, int]) -> None:
-        """Fill the entire area wit a particular color to prepare for drawing another screen"""
-        pass
-
     def blit_text(
         self: Self, text: str, pos: Tuple[float, float], orientation: Tuple[int, int]
     ) -> None:
@@ -188,10 +178,6 @@ class BlobDisplay(Protocol):
         on how to offset the size of the text itself (so, for example, it doesn't go offscreen). Use the
         class vars for x/y orientation hints, e.g. (BlobDisplay.TEXT_LEFT, BlobDisplay.TEXT_BOTTOM)
         """
-        pass
-
-    def draw_universe(self: Self, universe: BlobUniverse) -> None:
-        """Draw the universe area inside the display area (note that universe may be larger than display)"""
         pass
 
     def update(self: Self) -> None:

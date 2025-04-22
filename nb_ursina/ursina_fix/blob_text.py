@@ -135,7 +135,7 @@ class BlobText(urs.Entity):
         self.size: float = BlobText.size
         self.parent: urs.Entity = urs.camera.ui
 
-        self.setColorScaleOff()
+        # self.setColorScaleOff()
         self.shader: str = None
         self.text_nodes: List[NodePath] = []
         self.images: List[ursEntity] = []
@@ -561,7 +561,12 @@ class BlobText(urs.Entity):
         if self._background is not None:
             urs.destroy(self._background)
 
-        self._background = urs.Entity(parent=self, y=0.01)
+        self._background = urs.Entity(
+            parent=self,
+            y=0.01,
+            unlit=True,
+            shader=None,
+        )
 
         tup_padding: Tuple[float, float]
 

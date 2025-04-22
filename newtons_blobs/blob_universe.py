@@ -48,9 +48,6 @@ class BlobUniverse(Protocol):
     get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
         Returns a tuple of offset values from center to given x,y,z
 
-    fill(self: Self, color: Tuple[int, int, int]) -> None
-        Fill the entire area wit a particular color to prepare for drawing another screen
-
     clear() -> None
         Used to delete and properly clean up blobs (for a start over, for example)
 
@@ -86,10 +83,6 @@ class BlobUniverse(Protocol):
         self: Self, x: float, y: float, z: float
     ) -> Tuple[float, float, float]:
         """Returns a tuple of offset values from center to given x,y,z"""
-        pass
-
-    def fill(self: Self, color: Tuple[int, int, int]) -> None:
-        """Fill the entire area wit a particular color to prepare for drawing another screen"""
         pass
 
     def clear(self: Self) -> None:

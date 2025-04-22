@@ -69,9 +69,6 @@ class BlobUniverseUrsina:
     get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
         Returns a tuple of offset values from center to given x,y,z
 
-    fill(color: Tuple[int, int, int]) -> None
-        Fill the entire area wit a particular color to prepare for drawing another screen
-
     clear() -> None
         Used to delete and properly clean up blobs (for a start over, for example)
 
@@ -182,10 +179,6 @@ class BlobUniverseUrsina:
         center_x, center_y, center_z = self.get_center_blob_start_pos()
 
         return (center_x - x, center_y - y, center_z - z)
-
-    def fill(self: Self, color: Tuple[int, int, int]) -> None:
-        """Fill the entire area wit a particular color to prepare for drawing another screen"""
-        pass
 
     def clear(self: Self) -> None:
         """Used to delete and properly clean up blobs (for a start over, for example)"""

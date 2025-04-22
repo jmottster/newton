@@ -112,7 +112,7 @@ class BlobUrsinaFactory:
 
     def __init__(self: Self):
 
-        bg_vars.set_au_scale_factor(1.495978707 * 10**6)
+        bg_vars.set_au_scale_factor(1.495978707 * 10**5)
         bg_vars.set_universe_scale(50)
         bg_vars.set_center_blob_scale(15)
         bg_vars.set_scale_center_blob_mass_with_size(True)
@@ -123,8 +123,6 @@ class BlobUrsinaFactory:
         bg_vars.set_blob_scale(15)
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(0.5)
-        # bg_vars.set_start_pos_rotate_y(True)
-        # bg_vars.set_start_pos_rotate_z(True)
         bg_vars.set_first_person_scale(bg_vars.max_radius * 0.75)
         bg_vars.set_background_scale(bg_vars.universe_size)
         if LOW_VRAM:

@@ -165,19 +165,20 @@ class TrailRenderer(urs.Entity):
             name=self.parent.blob_name,
             parent=urs.scene,
             model=BlobLine(
+                parent=self.line_renderer,
                 name=self.parent.blob_name,
                 vertices=self.points,  # type: ignore
                 colors=self.colors,
                 thickness=self.thickness,
             ),
             unlit=True,
-            shader=shd.unlit_shader,
         )
+        self.line_renderer.setShaderOff()
         self.line_renderer.setScale(urs.scene, self.parent.getScale(urs.scene))
 
         self.line_renderer.setTransparency(TransparencyAttrib.M_alpha)
         self.line_renderer.setLightOff()
-        for bit in range(1, len(lu.bit_masks)):
+        for bit in range(0, len(lu.bit_masks)):
             self.line_renderer.hide(lu.bit_masks[bit])
 
         if self.is_moon:
@@ -900,10 +901,11 @@ class BlobCore(BlobRotator):
         if self.text_entity is None:
             self.text_entity = BlobRotator(
                 scale=self.scale,  # type: ignore
-                color=urs.color.rgba(0.5, 0.5, 0.5, 1),
+                color=urs.color.rgba(1, 1, 1, 0.9),
                 unlit=True,
-                shader=shd.unlit_shader,
             )
+
+            self.text_entity.setShaderOff()
             self.text_entity.setLightOff()
 
             for bit in range(0, len(lu.bit_masks)):
@@ -923,14 +925,14 @@ class BlobCore(BlobRotator):
                 origin=(0, 0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
-                # color=urs.color.rgba(0.7, 0.7, 0.7, 1),
+                color=urs.color.rgba(1, 1, 1, 0.9),
                 enabled=False,
-                # unlit=True,
-                # shader=shd.unlit_shader,
+                unlit=True,
             )
-            self.info_text.setColorScaleOff()
-            self.info_text.setColorScale((0.75, 0.75, 0.75, 1))
-            self.info_text.setColor((1, 1, 1, 1))
+            # self.info_text.setColorScaleOff()
+            # self.info_text.setColorScale((1, 1, 1, 1))
+            # self.info_text.setColor((1, 1, 1, 1))
+            # self.info_text.setShaderOff()
             self.info_text.setLightOff(1)
             for bit in range(0, len(lu.bit_masks)):
                 self.info_text.hide(lu.bit_masks[bit])
@@ -1298,7 +1300,9 @@ class BlobSurfaceUrsina:
         self._rotation_pos: Tuple[float, float, float] = None
         self._position: Tuple[float, float, float] = (0, 0, 0)
         self._barycenter_index: int = 0
-        self.trail_color: urs.Color = urs.color.rgba32(25, 100, 150, 255)
+        self.trail_color: urs.Color = urs.color.rgba(
+            25 / 255, 100 / 255, 150 / 255, 0.9
+        )
         self._swallowed: bool = False
 
         BlobSurfaceUrsina.universe_node = self.universe.universe
@@ -1347,7 +1351,7 @@ class BlobSurfaceUrsina:
             enabled: bool = not bg_vars.black_hole_mode
             glow_map_name = "glow_maps/8k_sun-glow_map.jpg"
 
-            urs_color = urs.color.rgba(3, 3, 3, 1)
+            urs_color = urs.color.rgba(1.2, 1.2, 1.2, 1)
             self.texture = "suns/8k_sun.jpg"
             self.ring_texture = ""
 
@@ -1375,8 +1379,8 @@ class BlobSurfaceUrsina:
                 trail_color=self.trail_color,
                 collider="sphere",
                 enabled=enabled,
-                unlit=True,
-                shader=shd.unlit_shader,
+                # unlit=True,
+                # shader=shd.unlit_shader,
             )
             self.ursina_blob.create_light()
             BlobSurfaceUrsina.center_blob = self.ursina_blob

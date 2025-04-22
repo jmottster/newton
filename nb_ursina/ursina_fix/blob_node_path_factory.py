@@ -71,12 +71,13 @@ class BlobNodePathFactory:
             self.base_dir.joinpath("models").joinpath(model)
         )
         node_path.reparentTo(parent)
-        node_path.setTransparency(TransparencyAttrib.M_dual)
+        node_path.setTransparency(TransparencyAttrib.M_alpha)
         if scale is not None:
             node_path.setScale(parent, scale)
         if color is not None:
             node_path.setColorScaleOff()
-            node_path.setColorScale(color)
+            node_path.setColorScale((0.9, 0.9, 0.9, 0.9))
+            node_path.setColor(color)
 
         if glow_map is not None:
             node_path.setTexture(
