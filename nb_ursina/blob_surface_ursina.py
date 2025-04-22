@@ -714,18 +714,9 @@ class BlobCore(BlobRotator):
             far,
         )
 
-        # self.setLightOff()
-        # self.rotator_model.setLightOff()
-        # self.light_node.setLightOff()
-        # BlobSurfaceUrsina.universe_node.setLightOff()
-        # BlobSurfaceUrsina.universe_node.hide(lu.bit_masks[0])
-
         self.rotator_model.setLight(self.light_node)
         self.show(lu.get_center_light_bitmask())
         self.rotator_model.show(lu.get_center_light_bitmask())
-        # self.light_node.hide(lu.get_center_light_bitmask())
-
-        # self.rotator_model.setShaderAuto()
 
     def create_spotlight(self: Self) -> None:
         """
@@ -830,7 +821,6 @@ class BlobCore(BlobRotator):
         ).normalized()
 
         distance = self.scale_x * 40
-        # distance = bg_vars.max_radius * 30
 
         pos = self.rotator_model.getPos(urs.scene) + urs.Vec3(direction * distance)
         self.light_node.setPos(urs.scene, pos)
@@ -921,7 +911,6 @@ class BlobCore(BlobRotator):
                 parent=self.text_entity,
                 font=DISPLAY_FONT,
                 size=(STAT_FONT_SIZE * 0.1),
-                # resolution=(100 * (STAT_FONT_SIZE * 0.1)),
                 origin=(0, 0, -0.5),
                 position=(0, 0, 0),
                 scale=(0.1, 0.1, 0.1),
@@ -929,10 +918,7 @@ class BlobCore(BlobRotator):
                 enabled=False,
                 unlit=True,
             )
-            # self.info_text.setColorScaleOff()
-            # self.info_text.setColorScale((1, 1, 1, 1))
-            # self.info_text.setColor((1, 1, 1, 1))
-            # self.info_text.setShaderOff()
+
             self.info_text.setLightOff(1)
             for bit in range(0, len(lu.bit_masks)):
                 self.info_text.hide(lu.bit_masks[bit])
@@ -1351,7 +1337,7 @@ class BlobSurfaceUrsina:
             enabled: bool = not bg_vars.black_hole_mode
             glow_map_name = "glow_maps/8k_sun-glow_map.jpg"
 
-            urs_color = urs.color.rgba(1.2, 1.2, 1.2, 1)
+            urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
             self.texture = "suns/8k_sun.jpg"
             self.ring_texture = ""
 

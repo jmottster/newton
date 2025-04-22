@@ -265,10 +265,10 @@ class BlobDisplayUrsina:
         BlobDisplayUrsina.filters.setBloom(
             blend=(0.1, 0.1, 0.1, 1),
             mintrigger=1.2,
-            maxtrigger=15,
-            intensity=50,
-            desat=0,
-            size=3,
+            maxtrigger=2,
+            intensity=25,
+            desat=-0.5,
+            size="large",
         )
 
         self.first_person_surface: FirstPersonSurface = None  # set by BlobUrsinaFactory
