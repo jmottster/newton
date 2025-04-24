@@ -200,7 +200,7 @@ class BlobLoadingScreenUrsina(urs.Entity):
         self.text_entity_loading: BlobText = BlobText(
             parent=self,
             font=DISPLAY_FONT,
-            size=(STAT_FONT_SIZE / 100),
+            size=(STAT_FONT_SIZE),
             scale=6,
             text=self.bar_message,
             origin=(0, 0, 0),

@@ -127,7 +127,7 @@ class BlobText(urs.Entity):
         start_tag: str = start_tag,
         end_tag: str = end_tag,
         ignore: bool = True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(ignore=ignore)
 
@@ -563,7 +563,7 @@ class BlobText(urs.Entity):
 
         self._background = urs.Entity(
             parent=self,
-            y=0.01,
+            y=0.06,
             unlit=True,
             shader=None,
         )
@@ -583,7 +583,7 @@ class BlobText(urs.Entity):
 
         self.background.z -= self.origin_z * self.height
 
-        self.background.model = createBlobQuad(radius=radius, scale=(w, 0.1, h))
+        self.background.model = createBlobQuad(radius=radius, scale=(w, 0, h))
         self.background.color = color
 
     def appear(self: Self, speed: float = 0.025) -> urs.Sequence:

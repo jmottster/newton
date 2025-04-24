@@ -214,7 +214,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.min_roll_speed: float = 35
         self.max_roll_speed: float = 900
 
-        self.orig_roll_speed: float = self.max_roll_speed * 0.4
+        self.orig_roll_speed: float = self.max_roll_speed * 0.3
         self.roll_speed: float = self.orig_roll_speed
         self.roll_speed_inc: float = (
             self.max_roll_speed * self.speed_inc / self.max_speed

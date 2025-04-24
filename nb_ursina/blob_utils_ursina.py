@@ -231,7 +231,7 @@ class FPSDisplay:
     def __init__(self: Self):
 
         self.font = DISPLAY_FONT
-        self.font_size = STAT_FONT_SIZE / 100
+        self.font_size = STAT_FONT_SIZE
         self.text = BlobText(
             font=self.font,
             size=self.font_size,
@@ -338,8 +338,8 @@ class TempMessage(urs.Entity):
 
         self.temp_text: BlobText = BlobText(
             font=DISPLAY_FONT,
-            size=(STAT_FONT_SIZE / 100),
-            resolution=100 * (STAT_FONT_SIZE / 100),
+            size=(STAT_FONT_SIZE),
+            resolution=100 * (STAT_FONT_SIZE),
             parent=FontUtils.get_text_parent(),
             scale=0.1,
             color=urs.color.rgb32(255, 255, 255),
@@ -448,7 +448,7 @@ class StatText(urs.Entity):
         self.text: str = kwargs["text"]
         self.pos: urs.Vec3 = kwargs["pos"]
         self.orientation: Tuple[int, int] = kwargs["orientation"]
-        self.text_size: float = STAT_FONT_SIZE / 100
+        self.text_size: float = STAT_FONT_SIZE
 
         super().__init__()
 

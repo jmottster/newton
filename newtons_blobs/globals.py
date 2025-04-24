@@ -180,5 +180,5 @@ BACKGROUND_COLOR = (0, 21, 36)  # screen background color
 DISPLAY_FONT = "newtons_blobs/font/Rushfordclean-rgz89.otf"
 WINDOW_ICON = "newtons_blobs/img/newton_icon.ico"
 WINDOW_TITLE = "Newton's Blobs"
-STAT_FONT_SIZE = round(24)
-BLOB_FONT_SIZE = round(16)
+STAT_FONT_SIZE = 0.24
+BLOB_FONT_SIZE = 0.16

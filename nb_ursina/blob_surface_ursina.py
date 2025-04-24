@@ -514,14 +514,15 @@ class BlobCore(BlobRotator):
         self.info_text: BlobText = None
         self.text: str = None
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
-        self.text_position: float = 11
+        self.text_position_pad: float = self.text_scale[0] - 0.02
         self.is_gas: bool = self.percent_radius > 50
         self.is_rocky: bool = self.percent_radius < 50
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
-            self.text_position = 13
+            self.text_position_pad = self.text_scale[0] - 0.03
 
+        self.text_position: float = self.scale_x / self.text_position_pad
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
         self.text_on: bool = False
@@ -890,7 +891,7 @@ class BlobCore(BlobRotator):
 
         if self.text_entity is None:
             self.text_entity = BlobRotator(
-                scale=self.scale,  # type: ignore
+                scale=self.text_scale,
                 color=urs.color.rgba(1, 1, 1, 0.9),
                 unlit=True,
             )
@@ -910,10 +911,9 @@ class BlobCore(BlobRotator):
                 text=self.text,
                 parent=self.text_entity,
                 font=DISPLAY_FONT,
-                size=(STAT_FONT_SIZE * 0.1),
+                size=(STAT_FONT_SIZE),
                 origin=(0, 0, -0.5),
                 position=(0, 0, 0),
-                scale=(0.1, 0.1, 0.1),
                 color=urs.color.rgba(1, 1, 1, 0.9),
                 enabled=False,
                 unlit=True,
@@ -944,7 +944,6 @@ class BlobCore(BlobRotator):
                     BACKGROUND_COLOR[0], BACKGROUND_COLOR[1], BACKGROUND_COLOR[2]
                 ),
             )
-            self.info_text._background.y = 0.5
 
     def destroy_text_overlay(self: Self) -> None:
         """
@@ -1010,8 +1009,8 @@ class BlobCore(BlobRotator):
             d = mf.distance(self.text_entity.world_position, urs.camera.world_position)
 
             self.text_entity.scale = self.text_scale * d
-            self.text_entity.position += self.text_entity.my_up * (
-                (self.world_scale_x * self.text_position) / d
+            self.text_entity.position += (self.text_entity.my_up) * (
+                self.text_position / d
             )
 
             if self.text_on and self.text_full_details:
@@ -1098,6 +1097,8 @@ class BlobCore(BlobRotator):
             else:
                 self.scale = urs.Vec3(self.radius)
 
+            self.text_position = self.scale_x / self.text_position_pad
+
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
             if round(self.scale_x) == round(self.radius):  # type: ignore
@@ -1116,6 +1117,8 @@ class BlobCore(BlobRotator):
                 self.scale = urs.Vec3(self.radius * size_factor)
             else:
                 self.scale = urs.Vec3(self.radius)
+
+            self.text_position = self.scale_x / self.text_position_pad
 
     def on_disable(self: Self) -> None:
         """
