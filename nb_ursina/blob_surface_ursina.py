@@ -504,9 +504,14 @@ class BlobCore(BlobRotator):
             if key in kwargs:
                 setattr(self, key, kwargs[key])
                 del kwargs[key]
+
+        self.spotlight_dist_factor: float = 40
+        self.text_scale_pad: float = None
+
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        self.spotlight_distance: float = self.scale_x * self.spotlight_dist_factor
         self._barycenter_blob: BlobCore = None
         self.trail: TrailRenderer = None
         self.trail_ready: bool = False
@@ -514,15 +519,15 @@ class BlobCore(BlobRotator):
         self.info_text: BlobText = None
         self.text: str = None
         self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
-        self.text_position_pad: float = self.text_scale[0] - 0.02
+        self.text_scale_pad = self.text_scale[0] - 0.02
         self.is_gas: bool = self.percent_radius > 50
         self.is_rocky: bool = self.percent_radius < 50
 
         if self.is_moon:
             self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
-            self.text_position_pad = self.text_scale[0] - 0.03
+            self.text_scale_pad = self.text_scale[0] - 0.03
 
-        self.text_position: float = self.scale_x / self.text_position_pad
+        self.text_position: float = self.scale_x / self.text_scale_pad
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
         self.text_on: bool = False
@@ -563,6 +568,11 @@ class BlobCore(BlobRotator):
             x_size = True
 
         super(BlobCore, type(self)).radius.fset(self, radius)  # type: ignore
+
+        if self.text_scale_pad is not None:
+            self.text_position = self.scale_x / self.text_scale_pad
+            self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
+
         if not self.is_moon:
             self.percent_radius = round(
                 (
@@ -821,9 +831,9 @@ class BlobCore(BlobRotator):
             self.center_light.getPos(urs.scene) - self.rotator_model.getPos(urs.scene)
         ).normalized()
 
-        distance = self.scale_x * 40
-
-        pos = self.rotator_model.getPos(urs.scene) + urs.Vec3(direction * distance)
+        pos = self.rotator_model.getPos(urs.scene) + urs.Vec3(
+            direction * self.spotlight_distance
+        )
         self.light_node.setPos(urs.scene, pos)
         self.light_node.lookAt(
             self.rotator_model, BlobSurfaceUrsina.center_blob.world_up
@@ -976,7 +986,7 @@ class BlobCore(BlobRotator):
             if self.collision_cloud is not None and self.swallowed_by_blob is not None:
 
                 self.collision_cloud.start(self.swallowed_by_blob)
-                self.collision_cloud.setScale(urs.scene, self.radius)
+                self.collision_cloud.setScale(urs.scene, self.scale_x)
 
                 angle_pos = PanVec3(
                     self.getPos(self.swallowed_by_blob)
@@ -1097,7 +1107,8 @@ class BlobCore(BlobRotator):
             else:
                 self.scale = urs.Vec3(self.radius)
 
-            self.text_position = self.scale_x / self.text_position_pad
+            self.text_position = self.scale_x / self.text_scale_pad
+            self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
 
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
@@ -1118,7 +1129,8 @@ class BlobCore(BlobRotator):
             else:
                 self.scale = urs.Vec3(self.radius)
 
-            self.text_position = self.scale_x / self.text_position_pad
+            self.text_position = self.scale_x / self.text_scale_pad
+            self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
 
     def on_disable(self: Self) -> None:
         """
