@@ -293,6 +293,8 @@ class MassiveBlob:
         data["name"] = self.blob_surface.name
         data["radius"] = self.radius / bg_vars.au_scale_factor
         data["color"] = self.blob_surface.color
+        if getattr(self.blob_surface, "trail_color"):
+            data["trail_color"] = self.blob_surface.trail_color
         if getattr(self.blob_surface, "texture"):
             data["texture"] = self.blob_surface.texture
         if getattr(self.blob_surface, "ring_texture"):

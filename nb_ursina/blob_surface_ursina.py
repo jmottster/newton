@@ -1248,6 +1248,7 @@ class BlobSurfaceUrsina:
         "_position",
         "color",
         "trail_color",
+        "urs_trail_color",
         "universe",
         "_texture",
         "ring_texture",
@@ -1275,6 +1276,7 @@ class BlobSurfaceUrsina:
         mass: float,
         color: Tuple[int, int, int],
         universe: BlobUniverse,
+        trail_color: Tuple[float, float, float, float] = None,
         texture: str = None,
         ring_texture: str = None,
         ring_scale: float = None,
@@ -1301,16 +1303,23 @@ class BlobSurfaceUrsina:
         self._rotation_pos: Tuple[float, float, float] = None
         self._position: Tuple[float, float, float] = (0, 0, 0)
         self._barycenter_index: int = 0
-        self.trail_color: urs.Color = urs.color.rgba(
-            25 / 255, 100 / 255, 150 / 255, 0.9
-        )
+        self.trail_color: Tuple[float, float, float, float] = trail_color
         self._swallowed: bool = False
 
         BlobSurfaceUrsina.universe_node = self.universe.universe
 
         urs_color: urs.Color = urs.color.rgba32(
-            self.color[0], self.color[1], self.color[2], 255
+            self.color[0], self.color[1], self.color[1], 255
         )
+
+        self.urs_trail_color: urs.Color = None
+
+        if self.trail_color is None:
+            self.trail_color = BLOB_TRAIL_COLOR[
+                blob_random.randint(0, len(BLOB_TRAIL_COLOR) - 1)
+            ]
+
+        self.urs_trail_color = urs.color.rgba(*self.trail_color)
 
         if bg_vars.textures_3d:
 
@@ -1377,7 +1386,7 @@ class BlobSurfaceUrsina:
                 rotation_speed=self.rotation_speed,
                 rotation_pos=self.rotation_pos,
                 color=urs_color,
-                trail_color=self.trail_color,
+                trail_color=self.urs_trail_color,
                 collider="sphere",
                 enabled=enabled,
                 # unlit=True,

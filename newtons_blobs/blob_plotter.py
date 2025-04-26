@@ -190,6 +190,7 @@ class BlobPlotter:
                     blob_pref["radius"] * bg_vars.au_scale_factor,
                     blob_pref["mass"],
                     tuple(blob_pref["color"]),  # type: ignore
+                    blob_pref.get("trail_color", None),  # Might not exist
                     blob_pref.get("texture", None),  # Might not exist
                     blob_pref.get("ring_texture", None),  # Might not exist
                     blob_pref.get("ring_scale", None),  # Might not exist

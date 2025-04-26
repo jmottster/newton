@@ -88,6 +88,7 @@ class BlobSurface(Protocol):
     radius: float
     mass: float
     color: Tuple[int, int, int]
+    trail_color: Tuple[float, float, float, float]
     universe: BlobUniverse
     texture: str = None
     ring_texture: str = None
