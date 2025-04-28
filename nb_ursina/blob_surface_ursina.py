@@ -784,7 +784,7 @@ class BlobCore(BlobRotator):
         poor shadowing by the point light from center blob.
         """
 
-        if self.light_node is not None:
+        if self.light_node is not None or LOW_VRAM:
             return
 
         self.clearLight(self.center_light)
