@@ -140,7 +140,7 @@ class TrailRenderer(urs.Entity):
         self.min_spacing: float = min_spacing
         self.spacing_check: int = self.orig_segments
         self.space_check_multiplier: int = 1
-        self.thickness: int = 4
+        self.thickness: int = 5
         self._barycenter_blob: BlobCore = None
         self.barycenter_blob = barycenter_blob
         self.check_barycenter_dist: float = 2

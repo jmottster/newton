@@ -93,7 +93,7 @@ class BlobLine(p3d.NodePath):
         self.vertices: List[Vec3] = vertices
         self.colors: Color = colors
         self.color_attribute_index: int = -1
-        self.thickness: float = thickness
+        self.thickness = thickness
         self.render_points_in_3d: bool = render_points_in_3d
         self.static_mode: p3d.UsageHint = p3d.Geom.UHDynamic
         self._generated_vertices: List[Vec3] = None
@@ -116,7 +116,7 @@ class BlobLine(p3d.NodePath):
         self.prim: p3d.GeomLinestrips = None
 
         if self.vertices is not None and len(self.vertices) > 0:
-            self.geomNode = p3d.GeomNode("mesh_geom")
+            self.geomNode = p3d.GeomNode(f"mesh_geom_{self.name}")
             self.attachNewNode(self.geomNode)
             self.data = self.setup_data()
             self.prim = self.setup_prim()
@@ -286,4 +286,5 @@ class BlobLine(p3d.NodePath):
     @thickness.setter
     def thickness(self, value) -> None:
         """Sets the thickness attribute"""
-        self.setRenderModeThickness(value)
+        self.setRenderModePerspective(False, 1)
+        self.setRenderModeThickness(value, 1)
