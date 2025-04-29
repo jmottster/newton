@@ -929,7 +929,7 @@ class BlobCore(BlobRotator):
                 unlit=True,
             )
 
-            self.info_text.setLightOff(1)
+            self.info_text.setLightOff()
             for bit in range(0, len(lu.bit_masks)):
                 self.info_text.hide(lu.bit_masks[bit])
 

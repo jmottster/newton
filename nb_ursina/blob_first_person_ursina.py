@@ -182,7 +182,7 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.gimbal_arrow.setColorScale((1, 1, 1, 1))
         self.gimbal_arrow.setColor((179 / 255, 0, 27 / 255, 1))
         self.gimbal_arrow.setShaderOff()
-        self.gimbal_arrow.setLightOff(1)
+        self.gimbal_arrow.setLightOff()
         for bit in range(0, len(lu.bit_masks)):
             self.gimbal_arrow.hide(lu.bit_masks[bit])
 
@@ -358,7 +358,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
             self.gimbal_ring.model.setTransparency(TransparencyAttrib.M_alpha)
             self.gimbal_ring.model.setShaderOff()
-            self.gimbal_ring.model.setLightOff(1)
+            self.gimbal_ring.model.setLightOff()
             for bit in range(0, len(lu.bit_masks)):
                 self.gimbal_ring.model.hide(lu.bit_masks[bit])
 
