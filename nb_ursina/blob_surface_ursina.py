@@ -1358,15 +1358,15 @@ class BlobSurfaceUrsina:
 
         if color == CENTER_BLOB_COLOR:
 
-            enabled: bool = not bg_vars.black_hole_mode
             glow_map_name = "glow_maps/8k_sun-glow_map.jpg"
 
             urs_color = urs.color.rgba(1.1, 1.1, 1.1, 1)
             self.texture = "suns/8k_sun.jpg"
             self.ring_texture = ""
 
-            if not enabled:
+            if bg_vars.black_hole_mode:
                 urs_color = urs.color.rgba(0, 0, 0, 0)
+                self.texture = "glow_maps/background_no_glow_map-small.png"
 
             if not bg_vars.textures_3d:
                 urs_color = urs.color.rgb32(
@@ -1388,7 +1388,6 @@ class BlobSurfaceUrsina:
                 color=urs_color,
                 trail_color=self.urs_trail_color,
                 collider="sphere",
-                enabled=enabled,
                 # unlit=True,
                 # shader=shd.unlit_shader,
             )

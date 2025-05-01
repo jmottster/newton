@@ -350,6 +350,9 @@ class BlobGlobalVars:
     def set_black_hole_mode(cls, black_hole_mode: bool) -> None:
         """Class method to set whether or not center blob is invisible and mass will not scale"""
         cls.black_hole_mode = black_hole_mode
+        if cls.black_hole_mode:
+            cls.center_blob_mass = B_MASS
+            cls.org_center_blob_mass = cls.center_blob_mass
 
     @classmethod
     def set_scale_blob_mass_with_size(cls, scale_blob_mass_with_size: bool) -> None:
