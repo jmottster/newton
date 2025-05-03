@@ -5,15 +5,14 @@
 **_Explore randomly generated solar systems with planets and moons!_**
 
 <img align="right" src="./resources/atari_logo.png" style="margin: 10px;" /> 
-This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.
-
-
-Alpha release 0.1.9! Featuring time rewind. Reverse time in 90 day increments all the way to the beginning of the simulation session. Use the left and right arrow keys to select how far back to go, then press the "M" key to make it so!
-
-This simulation has full movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!
+This is a small project just for me to learn and experiment. In spite of a life long interest in physics, I've never brought it to my programming skills. This is my playground for doing so. I am not a physicist though, so don't hold this to that standard! Feedback and/or help building this out is always welcome.<br/>
+<br/>
+Featuring time rewind. Reverse time in 90 day increments all the way to the beginning of the simulation session. Use the left and right arrow keys to select how far back to go, then press the "M" key to make it so!<br/>
+<br/>
+This simulation has full 3D first person movement control -- you have forward, backward, up, down, right, left, as well as full 360 rotation with pitch, yaw, and roll! As blobs orbit, go anywhere you want to view them from any angle. Turn on orbit trails to better track blobs, enlarge blobs to a scaled up size to better find/track them. Pause and click on a blob to get its name, size, and position. Pause and click on a blob to change your inertial frame of reference to it when you unpause! Much more to come in the future!<br/>
+<br/>
 
 To toggle auto save and load, just press the 3 key. To pause, press the spacebar. **See below for full explanation and instructions.**
-
 
 #### Installation
 

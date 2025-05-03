@@ -82,16 +82,18 @@ class FirstPersonSurface:
         rotation_pos: Tuple[float, float, float] = None,
     ):
         self.universe: BlobUniverseUrsina = cast(BlobUniverseUrsina, universe)
+        self._mass: float = bg_vars.min_moon_mass
+        self._radius: float = bg_vars.first_person_scale
         self.first_person_viewer: BlobFirstPersonUrsina = BlobFirstPersonUrsina(
             name="first_person_viewer",
             scale=bg_vars.first_person_scale,
             universe=self.universe,
             eternal=True,
-            mass=bg_vars.min_mass,
+            mass=self.mass,
             unlit=True,
             shader=shd.unlit_shader,
         )
-        self._radius: float = radius
+
         self.color: Tuple[int, int, int] = color
 
     @property
@@ -104,6 +106,16 @@ class FirstPersonSurface:
             return self.first_person_viewer.radius
         else:
             return self._radius
+
+    @property
+    def mass(self: Self) -> float:
+        """Returns the mass of the blob"""
+        return self._mass
+
+    @mass.setter
+    def mass(self: Self, mass: float) -> None:
+        """Sets the mass of the blob"""
+        self._mass = mass
 
     def get_position(self: Self) -> urs.Vec3:
         """returns the x,y,z position of this blob"""

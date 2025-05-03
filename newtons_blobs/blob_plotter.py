@@ -769,7 +769,7 @@ class BlobPlotter:
 
         orbiting_blobs: int = len(planets)
         blobs_per_ring: int = 10
-        if self.num_moons > 1:
+        if self.num_moons > orbiting_blobs:
             blobs_per_ring = bg_vars.num_planets + 1
 
         # Iterators for circular grid placement, blobs will be placed in ever
