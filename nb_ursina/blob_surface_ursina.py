@@ -643,7 +643,7 @@ class BlobCore(BlobRotator):
             self._barycenter_blob is not None
             and self._barycenter_blob.blob_name != CENTER_BLOB_NAME
             and mf.distance(self._barycenter_blob.position, self.position)
-            < (self._barycenter_blob.scale_x * 50)
+            < self.spotlight_distance
             and self._barycenter_blob.light_node is not None
         ):
 
