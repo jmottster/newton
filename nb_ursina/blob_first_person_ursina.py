@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 An Entity (Ursina) class that holds the first person view,
 position and rotation control via keyboard and mouse
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from pathlib import Path
@@ -29,7 +29,7 @@ from .fps import FPS
 from .ursina_fix import PlanetMaterial, BlobNodePathFactory
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

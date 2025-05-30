@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 A class that implements an interface for a plugin object for providing
 a graphics/drawing library to this simulator using Ursina
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from typing import Any, Dict, Tuple, Self, cast
@@ -39,7 +39,7 @@ from .ursina_fix import BlobText
 from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

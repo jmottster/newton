@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A Protocol class used to define the interface for objects that BlobSaveLoad can, well, save and load
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from typing import Any, Dict, Protocol, Self
@@ -11,7 +11,7 @@ from typing import Any, Dict, Protocol, Self
 from .globals import *
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

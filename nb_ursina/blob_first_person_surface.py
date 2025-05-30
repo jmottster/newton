@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A class used to represent an object that draws the first person view Entity
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from typing import Tuple, Self, cast
@@ -19,7 +19,7 @@ from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_first_person_ursina import BlobFirstPersonUrsina
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

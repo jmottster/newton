@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A static class used to provide physics methods for MassiveBlobs
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 import math
@@ -19,7 +19,7 @@ from .globals import *
 from .blob_global_vars import BlobGlobalVars as bg_vars
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

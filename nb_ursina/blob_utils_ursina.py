@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A collection of utility classes
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 import math
@@ -22,7 +22,7 @@ from .ursina_fix import BlobText
 
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

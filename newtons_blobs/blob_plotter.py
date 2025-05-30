@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class file for setting up initial positions and velocities of blobs and maintaining them
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from typing import Any, Callable, Dict, Tuple, Self
@@ -21,7 +21,7 @@ from .blob_vector import BlobVector as BVec3
 from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

@@ -5,7 +5,7 @@ A singleton class (accessed via a class instance) that tracks viewer position in
 coordinates interactions. Currently handles moon trails (only on around closest planet, and only if within 2 AU),
 and shadow spotlight (only on for nearest planet, unless a ring planet)
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from typing import ClassVar, Self
@@ -31,7 +31,7 @@ from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 from .fps import FPS
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class to create the base Ursina Entity for a blob (and helper classes)
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from pathlib import Path
@@ -30,7 +30,7 @@ from nb_ursina.fps import FPS
 from .blob_materials import PlanetMaterial
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

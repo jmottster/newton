@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class to represent an object that holds and controls a drawing area for the universe of blobs
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from pathlib import Path
@@ -29,7 +29,7 @@ from .ursina_fix import PlanetMaterial
 from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

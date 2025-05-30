@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class file for the physics attributes of blobs that will interact with each other (like planets and stars)
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 from decimal import *
@@ -20,7 +20,7 @@ from .blob_surface import BlobSurface
 from .blob_vector import BlobVector as BVec3
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 A static wrapper class for generating random numbers. This makes it easy to globally
 change the implementation
 
-by Jason Mott, copyright 2024
+by Jason Mott, copyright 2025
 """
 
 import secrets
@@ -13,7 +13,7 @@ import numpy as np
 from .globals import *
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2024"
+__copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"
