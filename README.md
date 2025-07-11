@@ -1,6 +1,6 @@
 # Newton's Blobs
 
-### Version 0.2.0 Alpha Prototype 3D
+### Version 0.2.1 Alpha Prototype 3D
 
 **_Explore randomly generated solar systems with planets and moons!_**
 
@@ -21,9 +21,9 @@ Two ways, the easy way and the nerdy way . . .
 ###### The easy way (Windows 10 and Ubuntu 24.04 only)
 
 1. Download Ubuntu 24.04 executable here:
-   1. [Ubuntu Release 0.2.0](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.0/newton3D.bin)
+   1. [Ubuntu Release 0.2.1](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.1/newton3D.bin)
 2. Download Windows 10 executable here:
-   1. [Windows Release 0.2.0](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.0/newton3D.exe)
+   1. [Windows Release 0.2.1](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.1/newton3D.exe)
 3. Save where you want to store it
 4. You may need to whitelist the executable with your malware protection software
 5. These may work on other versions of Windows and Ubuntu, but haven't been tested for it
@@ -44,9 +44,9 @@ Two ways, the easy way and the nerdy way . . .
 
 #### Instructions
 
-This is a space-level gravity and collision simulator that randomly generates solar systems with 5 planets and 35 moons randomly distributed among them. Each iteration is unique, no two generated solar systems are ever the same. You can explore and navigate through space from a first person perspective, controlled with keyboard and mouse just like a first person shooter game. At the center is a sun size/mass blob, and orbiting it are randomly created Earth to Jupiter size/mass blobs, and they have moon (Enceladus to Ganymede size/mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated (otherwise the space between them would be unbearably huge) but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Enceladus sized. Time is sped up to about 24 hours per second, and is adjustable via up and down arrow keys.
+This is a space-level gravity and collision simulator that randomly generates solar systems with 5 planets and 35 moons randomly distributed among them. Each iteration is unique, no two generated solar systems are ever the same. You can explore and navigate through space from a first person perspective, controlled with keyboard and mouse just like a first person shooter game. At the center is a sun size/mass blob, and orbiting it are randomly created Earth to Jupiter size/mass blobs, and they have moon (Enceladus to Ganymede size/mass) blobs orbiting them. This simulation uses real space level values for distance, mass, velocity, and acceleration. The size of the blobs are exaggerated (otherwise the space between them would be unbearably huge) but the orbiting blob sizes and masses are properly proportional to each other from Sun sized to Earth sized to Enceladus sized. Time is sped up to about 12 hours per second, and is adjustable via up and down arrow keys.
 
-A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.0/controls_quick_reference.pdf).
+A PDF version of the following quick reference for controls can be downloaded [here](https://github.com/jmottster/newton/releases/download/Release%2Fv0.2.1/controls_quick_reference.pdf).
 
 <img src="./newtons_blobs/img/controls.png"/>
 
