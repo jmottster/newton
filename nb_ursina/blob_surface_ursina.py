@@ -147,7 +147,7 @@ class TrailRenderer(urs.Entity):
         if self.is_moon:
             self.thickness = 3
             self.min_spacing = bg_vars.min_moon_radius / self.parent.scale_x
-            self.space_check_multiplier = 8
+            self.space_check_multiplier = 4
             self.segments = 250
             self.pos_overlap = segments
 
@@ -1113,18 +1113,10 @@ class BlobCore(BlobRotator):
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
 
             if round(self.scale_x) == round(self.radius):  # type: ignore
-                size_factor: float = 10
-                if hasattr(self.barycenter_blob, "is_rocky") or hasattr(
-                    self.barycenter_blob, "is_gas"
-                ):
-                    if self.barycenter_blob.is_rocky:
-                        size_factor = (
-                            3 * (self.barycenter_blob.percent_radius / 25)
-                        ) + 1.5
-                    else:
-                        size_factor = (
-                            2 * ((self.barycenter_blob.percent_radius - 75) / 25)
-                        ) + 7
+                size_factor: float = bg_vars.enlarge_moon_factor * (
+                    self.barycenter_blob.radius / bg_vars.max_radius
+                )
+
                 self.scale = urs.Vec3(self.radius * size_factor)
             else:
                 self.scale = urs.Vec3(self.radius)

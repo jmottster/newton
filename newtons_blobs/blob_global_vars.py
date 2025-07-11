@@ -71,6 +71,8 @@ class BlobGlobalVars:
     BlobGlobalVars.org_min_moon_mass: ClassVar[float] - Original minimum mass (in kg) of moon blobs, doesn't change
     BlobGlobalVars.org_max_moon_mass: ClassVar[float] - Original maximum mass (in kg) of moon blobs, doesn't change
 
+    BlobGlobalVars.enlarge_moon_factor: ClassVar[float] - the multiple by which a moon should be enlarged in enlarged mode (pressing "U")
+
     BlobGlobalVars.first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
     BlobGlobalVars.background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
 
@@ -212,6 +214,8 @@ class BlobGlobalVars:
     org_max_mass: ClassVar[float] = max_mass
     org_min_moon_mass: ClassVar[float] = min_moon_mass
     org_max_moon_mass: ClassVar[float] = max_moon_mass
+
+    enlarge_moon_factor: ClassVar[float] = (max_radius / max_moon_radius) * 0.85
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
     background_scale: ClassVar[float] = BACKGROUND_SCALE

@@ -128,9 +128,9 @@ class BlobUrsinaFactory:
         bg_vars.set_background_scale(bg_vars.universe_size)
         if LOW_VRAM:
             bg_vars.set_background_scale(bg_vars.universe_size * 1)
-        bg_vars.set_timescale(DAYS * 1)
-        bg_vars.set_orig_timescale(DAYS * 1)
-        bg_vars.set_timescale_inc(HOURS * 6)
+        bg_vars.set_timescale(HOURS * 12)
+        bg_vars.set_orig_timescale(HOURS * 12)
+        bg_vars.set_timescale_inc(HOURS * 3)
         bg_vars.set_num_planets(5)
         bg_vars.set_textures_3d(True)
         bg_vars.set_start_perfect_orbit(True)

@@ -620,7 +620,7 @@ class BlobPlotter:
         # itr_dt: Decimal = Decimal(dt) * Decimal(
         #     bg_vars.timescale_inc / bg_vars.timescale
         # )
-        itr_dt: Decimal = Decimal(dt)
+        itr_dt: Decimal = Decimal(dt) / Decimal(iterations)
 
         if bg_vars.center_blob_escape:
             check_edge = swallow_edge
