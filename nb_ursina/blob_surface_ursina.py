@@ -913,16 +913,18 @@ class BlobCore(BlobRotator):
                 self.text_entity.hide(lu.bit_masks[bit])
 
             self.text = self.short_overlay_text()
+            origin: Tuple[float, float, float] = (0, 0, -0.5)
 
             if self.text_on and self.text_full_details:
                 self.text = self.full_overlay_text()
+                origin = (-0.5, 0, -0.5)
 
             self.info_text = BlobText(
                 text=self.text,
                 parent=self.text_entity,
                 font=DISPLAY_FONT,
                 size=(STAT_FONT_SIZE),
-                origin=(0, 0, -0.5),
+                origin=origin,
                 position=(0, 0, 0),
                 color=urs.color.rgba(1, 1, 1, 0.9),
                 enabled=False,
@@ -941,11 +943,15 @@ class BlobCore(BlobRotator):
         """This is for when text changes, it will ensure the background size updates accordingly"""
         if self.info_text is not None:
 
+            origin: Tuple[float, float, float] = (0, 0, -0.5)
+
             self.text = self.short_overlay_text()
 
             if self.text_on and self.text_full_details:
                 self.text = self.full_overlay_text()
+                origin = (-0.5, 0, -0.5)
 
+            self.info_text.origin = origin
             self.info_text.text = self.text
             self.info_text.create_background(
                 self.info_text.size * 0.5,
@@ -970,7 +976,7 @@ class BlobCore(BlobRotator):
 
     def full_overlay_text(self: Self) -> str:
         """creates info text with full details"""
-        return f"{self.blob_name}: mass: {float(self.mass)} ({self.percent_mass}%) radius: {round(self.scale_x,2)} ({self.percent_radius}%) x: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+        return f"{self.blob_name} \nmass: {float(self.mass)} ({self.percent_mass}%) \nradius: {round(self.scale_x,2)} ({self.percent_radius}%) \nx: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
     def short_overlay_text(self: Self) -> str:
         """creates info text with just name"""
