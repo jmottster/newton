@@ -8,7 +8,7 @@ by Jason Mott, copyright 2025
 """
 
 from pathlib import Path
-from typing import Self
+from typing import Self, Tuple
 
 from panda3d.core import Vec3 as PanVec3  # type: ignore
 from panda3d.core import Vec4 as PanVec4  # type: ignore
@@ -209,9 +209,9 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.speed: float = self.orig_speed
         self.speed_inc: float = self.max_speed / 50
 
-        self.min_roll_speed: float = 25
-        self.max_roll_speed: float = 900
-        self.clamp_max_roll_speed: float = 180
+        self.min_roll_speed: float = 30
+        self.max_roll_speed: float = 700
+        self.clamp_max_roll_speed: float = 130
 
         self.orig_roll_speed: float = (
             self.min_roll_speed + self.clamp_max_roll_speed
@@ -285,6 +285,18 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         if self.universe is not None:
             self.universe.universe.setPos(self, (0, 0, 0))
+
+    @property
+    def rotation_pos(self: Self) -> Tuple[float, float, float]:
+        """The x,y,z axis rotation positions in degrees relative to urs.scene"""
+        z, x, y = self.getHpr(urs.scene)
+        return (x, y, z)
+
+    @rotation_pos.setter
+    def rotation_pos(self: Self, rotation: Tuple[float, float, float]) -> None:
+        """Sets the x,y,z axis rotation positions in degrees relative to urs.scene"""
+        x, y, z = rotation
+        self.setHpr(urs.scene, (z, x, y))
 
     @property
     def colliding(self: Self) -> bool:

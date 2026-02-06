@@ -54,8 +54,14 @@ class BlobUrsinaFactory:
 
     Methods
     -------
-    def setup_start_pos() -> None
-        Configures the starting position of the first person viewer
+    setup_start_pos_rand(center_pos: urs.Vec3) -> None
+        Configures the starting position of the first person viewer at a random spot self.start_distance from center_pos
+
+    setup_start_pos(
+        view_pos: Tuple[float, float, float],
+        view_rot: Tuple[float, float, float],
+    ) -> None:
+        Configures the starting position of the first person viewer at a specific spot and rotation
 
     get_prefs(data: dict) -> None
         A dict will be sent to this method. so the implementor can load the dict up with attributes that are desired to be saved (if saving is turned on)
@@ -77,7 +83,10 @@ class BlobUrsinaFactory:
                      ring_texture: str = None,
                      ring_scale: float = None,
                      rotation_speed : float = None,
-                     rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+                     rotation_pos: Tuple[int, int, int] = None,
+                     view_pos: Tuple[float, float, float] = None,
+                     view_rot: Tuple[float, float, float] = None,
+                     view_follow_pos: Tuple[float, float, float] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -97,8 +106,10 @@ class BlobUrsinaFactory:
         Call this to close out the current loading screen. You must call this
         if you want to the loading screen to go away, or before starting a new
         one.
-     set_plot_radius(plot_radius: float) -> None
+
+    set_plot_radius(plot_radius: float) -> None
         Set the radius of where the farthest blob from the center is
+
     get_blob_universe() -> BlobUniverse
         Returns a single instance of a Universe object, intended to be the area that is drawn on.
         Can be larger than the display area, which represents the area shown on one's monitor
@@ -128,8 +139,8 @@ class BlobUrsinaFactory:
         bg_vars.set_background_scale(bg_vars.universe_size)
         if LOW_VRAM:
             bg_vars.set_background_scale(bg_vars.universe_size * 1)
-        bg_vars.set_timescale(HOURS * 12)
-        bg_vars.set_orig_timescale(HOURS * 12)
+        bg_vars.set_timescale(HOURS * 3)
+        bg_vars.set_orig_timescale(HOURS * 3)
         bg_vars.set_timescale_inc(HOURS * 3)
         bg_vars.set_num_planets(5)
         bg_vars.set_textures_3d(True)
@@ -176,7 +187,7 @@ class BlobUrsinaFactory:
             BVec3(0, 0, 0),
         )
 
-        self.default_start_pos: urs.Vec3 = urs.Vec3(
+        self.default_center_pos: urs.Vec3 = urs.Vec3(
             urs.Vec3(self.urs_universe.get_center_blob_start_pos()) * bg_vars.scale_down
         )
 
@@ -186,8 +197,8 @@ class BlobUrsinaFactory:
 
         self.urs_display.update()
 
-    def setup_start_pos(self: Self, center_pos: urs.Vec3) -> None:
-        """Configures the starting position of the first person viewer"""
+    def setup_start_pos_rand(self: Self, center_pos: urs.Vec3) -> None:
+        """Configures the starting position of the first person viewer at a random spot self.start_distance from center_pos"""
 
         temp_ent = urs.Entity(position=center_pos, shader=shd.unlit_shader, unlit=True)
 
@@ -216,6 +227,28 @@ class BlobUrsinaFactory:
             BVec3(0, 0, 0),
         )
 
+    def setup_start_pos(
+        self: Self,
+        view_pos: Tuple[float, float, float],
+        view_rot: Tuple[float, float, float],
+    ) -> None:
+        """Configures the starting position of the first person viewer at a specific spot and rotation"""
+
+        # start_pos = center_pos + urs.Vec3((0, -self.start_distance, 0))
+
+        self.urs_display.first_person_surface.draw(view_pos)
+
+        self.urs_display.first_person_surface.first_person_viewer.rotation_pos = (
+            view_rot
+        )
+
+        self.urs_display.first_person_surface.first_person_viewer.setup_lock()
+
+        self.first_person_blob.update_pos_vel(
+            BVec3(*view_pos),
+            BVec3(0, 0, 0),
+        )
+
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
         A dict will be sent to this method. so the implementor can load the dict up with
@@ -228,6 +261,35 @@ class BlobUrsinaFactory:
         data["blob_scale"] = bg_vars.blob_scale
         data["scale_blob_mass_with_size"] = bg_vars.scale_blob_mass_with_size
         data["background_texture"] = self.urs_universe.texture
+        data["view_pos"] = tuple(
+            self.urs_display.first_person_surface.first_person_viewer.position
+        )
+        data["view_rot"] = tuple(
+            self.urs_display.first_person_surface.first_person_viewer.rotation_pos
+        )
+
+        data["view_follow_index"] = None
+
+        data["view_speed"] = (
+            self.urs_display.first_person_surface.first_person_viewer.speed
+        )
+
+        data["view_roll_speed"] = (
+            self.urs_display.first_person_surface.first_person_viewer.roll_speed
+        )
+
+        if (
+            self.urs_display.first_person_surface.first_person_viewer.follow_entity
+            is not None
+        ):
+            if hasattr(
+                self.urs_display.first_person_surface.first_person_viewer.follow_entity,
+                "index",
+            ):
+                data["view_follow_index"] = getattr(
+                    self.urs_display.first_person_surface.first_person_viewer.follow_entity,
+                    "index",
+                )
 
     def set_prefs(self: Self, data: Dict[str, Any]) -> None:
         """
@@ -256,13 +318,6 @@ class BlobUrsinaFactory:
             bg_vars.background_scale, data.get("background_texture")
         )
 
-        self.setup_start_pos(
-            urs.Vec3(
-                data["blobs"][0]["x"], data["blobs"][0]["y"], data["blobs"][0]["z"]
-            )
-            * bg_vars.scale_down
-        )
-
         if data["paused"]:
             self.urs_display.paused = True
 
@@ -274,6 +329,16 @@ class BlobUrsinaFactory:
                 (data["fullscreen_save_w"], data["fullscreen_save_h"]),
                 BlobDisplay.RESIZABLE,
             )
+
+        if data.get("view_speed", None) is not None:
+            self.urs_display.first_person_surface.first_person_viewer.speed = data[
+                "view_speed"
+            ]
+
+        if data.get("view_roll_speed", None) is not None:
+            self.urs_display.first_person_surface.first_person_viewer.roll_speed = data[
+                "view_roll_speed"
+            ]
 
     def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
@@ -311,6 +376,9 @@ class BlobUrsinaFactory:
         ring_scale: float = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
+        view_pos: Tuple[float, float, float] = None,
+        view_rot: Tuple[float, float, float] = None,
+        view_follow_pos: Tuple[float, float, float] = None,
     ) -> BlobSurface:
         """
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
@@ -339,9 +407,21 @@ class BlobUrsinaFactory:
 
         self.loading_screen_add_count()
 
+        if view_follow_pos is not None:
+            self.urs_display.entity_follow = True
+            new_blob.position = view_follow_pos
+            self.urs_display.first_person_surface.first_person_viewer.start_following(
+                new_blob.ursina_blob
+            )
+
         if self.loading_screen_is_at_max():
             blob_registry.purge_none_elements()
-            self.setup_start_pos(self.default_start_pos)
+
+            if view_pos is not None:
+                self.setup_start_pos(view_pos, view_rot)
+            else:
+                self.setup_start_pos_rand(self.default_center_pos)
+
             self.loading_screen_end(False)
 
         return cast(
@@ -401,7 +481,7 @@ class BlobUrsinaFactory:
     def set_plot_radius(self: Self, plot_radius: float) -> None:
         """Set the radius of where the farthest blob from the center is"""
         self.start_distance = (plot_radius + AU) * bg_vars.scale_down
-        self.setup_start_pos(self.default_start_pos)
+        self.setup_start_pos_rand(self.default_center_pos)
 
     def get_blob_universe(self: Self) -> BlobUniverse:
         """

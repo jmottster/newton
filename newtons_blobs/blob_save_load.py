@@ -87,7 +87,7 @@ class BlobSaveLoad:
         """Rename a session series of files (session_num-session_save_itr.json to new_session_num-session_save_itr.json)"""
         y = 0
         while home_path_plus_exists((".newton",), f"{session_num}-{y}.json"):
-            home_path_plus((".newton",), f"{session_num}-{y}.json").rename(
+            home_path_plus((".newton",), f"{session_num}-{y}.json").replace(
                 home_path_plus((".newton",), f"{new_session_num}-{y}.json", False)
             )
             y += 1

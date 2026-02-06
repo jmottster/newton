@@ -6,7 +6,7 @@ A Protocol class used to represent an object that draws a blob, with a distincti
 by Jason Mott, copyright 2025
 """
 
-from typing import Tuple, Self, Protocol
+from typing import List, Tuple, Self, Protocol
 
 from .blob_universe import BlobUniverse
 from .globals import *
@@ -52,6 +52,10 @@ class BlobSurface(Protocol):
         The x,y,z position for this blob
     barycenter_index : int
         The index of the blob that this blob orbits (used for moon blobs)
+    swallowed: bool = False
+        Whether or not this blob has been swallowed by another blob
+    blobs_combined: List[str]
+        A list of blob names that have been swallowed by this blob
 
     Methods
     -------
@@ -98,6 +102,7 @@ class BlobSurface(Protocol):
     position: Tuple[float, float, float] = None
     barycenter_index: int = None
     swallowed: bool = False
+    blobs_combined: List[str]
 
     def set_barycenter(self: Self, blob: "BlobSurface") -> None:
         """Sets the blob that this blob orbits (used for moon blobs)"""

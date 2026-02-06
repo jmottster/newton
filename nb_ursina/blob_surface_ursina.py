@@ -351,6 +351,12 @@ class BlobCore(BlobRotator):
     swallowed_by(blob: "BlobSurface") -> None
         Tells this blob what other blob is swallowing it
 
+    blobs_combined_add(blobs_combined: str) -> None
+        dd one blob name to the blobs_combined list
+
+    blobs_combined_extend(blobs_combined: List[str]) -> None
+        Add a list of blob names to the blobs_combined list
+
     check_light_source() -> None
         Checks if the barycenter blob has its own light and uses that if so.
         Otherwise it will use the center blob light
@@ -533,6 +539,7 @@ class BlobCore(BlobRotator):
         self.text_on: bool = False
         self.text_full_details: bool = True
         self._swallowed: bool = False
+        self._blobs_combined: List[str] = []
         self.collision_cloud: coll_cloud = None
         self.collision_cleanup_timer: float = 1.5
         self.swallowed_by_blob: BlobCore = None
@@ -633,6 +640,32 @@ class BlobCore(BlobRotator):
     def swallowed_by(self: Self, blob: "BlobCore") -> None:
         """Tells this blob what other blob is swallowing it"""
         self.swallowed_by_blob = blob
+        self.swallowed_by_blob.blobs_combined_add(self.blob_name)
+        if len(self._blobs_combined) > 0:
+            self.swallowed_by_blob.blobs_combined_extend(self._blobs_combined)
+        planet_only = self.swallowed_by_blob.planet_text_only
+        self.swallowed_by_blob.input("b")
+        self.swallowed_by_blob.input("b")
+        if planet_only:
+            self.swallowed_by_blob.input("n")
+
+    @property
+    def blobs_combined(self: Self) -> List[str]:
+        """A list of blob names that have been swallowed by this blob"""
+        return self._blobs_combined
+
+    @blobs_combined.setter
+    def blobs_combined(self: Self, blobs_combined: List[str]) -> None:
+        """A list of blob names that have been swallowed by this blob"""
+        self._blobs_combined = blobs_combined
+
+    def blobs_combined_add(self: Self, blobs_combined: str) -> None:
+        """Add one blob name to the blobs_combined list"""
+        self._blobs_combined.append(blobs_combined)
+
+    def blobs_combined_extend(self: Self, blobs_combined: List[str]) -> None:
+        """Add a list of blob names to the blobs_combined list"""
+        self._blobs_combined.extend(blobs_combined)
 
     def check_light_source(self: Self) -> None:
         """
@@ -976,11 +1009,17 @@ class BlobCore(BlobRotator):
 
     def full_overlay_text(self: Self) -> str:
         """creates info text with full details"""
-        return f"{self.blob_name} \nmass: {float(self.mass)} ({self.percent_mass}%) \nradius: {round(self.scale_x,2)} ({self.percent_radius}%) \nx: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
+        combined = ""
+        if len(self.blobs_combined) > 0:
+            combined = str(self.blobs_combined)
+        return f"{self.blob_name}{" "+combined} \nmass: {float(self.mass)} ({self.percent_mass}%) \nradius: {round(self.scale_x,2)} ({self.percent_radius}%) \nx: {round(self.position[0])} y: {round(self.position[1])} z: {round(self.position[2])}"
 
     def short_overlay_text(self: Self) -> str:
         """creates info text with just name"""
-        return f"{self.blob_name}"
+        combined = ""
+        if len(self.blobs_combined) > 0:
+            combined = str(self.blobs_combined)
+        return f"{self.blob_name}{" "+combined}"
 
     def update(self: Self) -> None:
         """Called by Ursina engine once per frame"""
@@ -1546,6 +1585,16 @@ class BlobSurfaceUrsina:
         """Tells this blob what other blob is swallowing it"""
         blob_u: BlobSurfaceUrsina = cast(BlobSurfaceUrsina, blob)
         self.ursina_blob.swallowed_by(blob_u.ursina_blob)
+
+    @property
+    def blobs_combined(self: Self) -> List[str]:
+        """A list of blob names that have been swallowed by this blob"""
+        return self.ursina_blob._blobs_combined
+
+    @blobs_combined.setter
+    def blobs_combined(self: Self, blobs_combined: List[str]) -> None:
+        """A list of blob names that have been swallowed by this blob"""
+        self.ursina_blob._blobs_combined = blobs_combined
 
     def set_barycenter(self: Self, blob: BlobSurface) -> None:
         """Sets the blob that this blob orbits (used for moon blobs)"""

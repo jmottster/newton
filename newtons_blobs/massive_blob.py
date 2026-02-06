@@ -8,7 +8,7 @@ by Jason Mott, copyright 2025
 
 from decimal import *
 from collections import deque
-from typing import Any, ClassVar, Dict, Tuple, Self
+from typing import Any, ClassVar, Dict, List, Tuple, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -258,6 +258,16 @@ class MassiveBlob:
         self.blob_surface.swallowed_by(blob.blob_surface)
 
     @property
+    def blobs_combined(self: Self) -> List[str]:
+        """A list of blob names that have been swallowed by this blob"""
+        return self.blob_surface.blobs_combined
+
+    @blobs_combined.setter
+    def blobs_combined(self: Self, blobs_combined: List[str]) -> None:
+        """A list of blob names that have been swallowed by this blob"""
+        self.blob_surface.blobs_combined = blobs_combined
+
+    @property
     def dead(self: Self) -> bool:
         """Returns bool indicating if this is a dead blob"""
         if self.swallowed or self.escaped:
@@ -305,6 +315,8 @@ class MassiveBlob:
             data["rotation_speed"] = self.blob_surface.rotation_speed
         if getattr(self.blob_surface, "rotation_pos"):
             data["rotation_pos"] = self.blob_surface.rotation_pos
+        if getattr(self.blob_surface, "blobs_combined"):
+            data["blobs_combined"] = self.blob_surface.blobs_combined
         data["mass"] = self.mass
         data["x"] = self.x
         data["y"] = self.y

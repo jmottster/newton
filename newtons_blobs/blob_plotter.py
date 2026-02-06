@@ -178,8 +178,28 @@ class BlobPlotter:
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         bp.set_gravitational_range(bg_vars.universe_size * bg_vars.scale_up)
 
+        view_pos: Tuple[float, float, float] = None
+        view_rot: Tuple[float, float, float] = None
+        view_follow_pos: Tuple[float, float, float] = None
+        view_follow_index: int = -1
+        if data.get("view_pos", None) is not None:
+            view_pos = tuple(data["view_pos"])
+            view_rot = tuple(data["view_rot"])
+        if data.get("view_follow_index") is not None:
+            view_follow_index = int(data["view_follow_index"])
+
         i = 0
         for blob_pref in data["blobs"]:
+            if view_follow_index == int(blob_pref["index"]):
+                view_follow_pos = tuple(
+                    (
+                        blob_pref["x"] * bg_vars.scale_down,
+                        blob_pref["y"] * bg_vars.scale_down,
+                        blob_pref["z"] * bg_vars.scale_down,
+                    )
+                )
+            else:
+                view_follow_pos = None
             self.blobs[blob_pref["index"]] = MassiveBlob(
                 self.universe_size_h,
                 blob_pref["index"],
@@ -196,11 +216,19 @@ class BlobPlotter:
                     blob_pref.get("ring_scale", None),  # Might not exist
                     blob_pref.get("rotation_speed", None),  # Might not exist
                     blob_pref.get("rotation_pos", None),  # Might not exist
+                    view_pos,  # Might not exist
+                    view_rot,  # Might not exist
+                    view_follow_pos,  # Might not exist
                 ),
                 blob_pref["mass"],
                 BVec3(blob_pref["x"], blob_pref["y"], blob_pref["z"]),
                 BVec3(blob_pref["vx"], blob_pref["vy"], blob_pref["vz"]),
             )
+
+            if blob_pref.get("blobs_combined", None) is not None:
+                self.blobs[blob_pref["index"]].blobs_combined = blob_pref[
+                    "blobs_combined"
+                ]
 
             self.blobs[blob_pref["index"]].blob_surface.barycenter_index = (
                 blob_pref.get("barycenter_index", 0)
@@ -330,6 +358,10 @@ class BlobPlotter:
                         blob_random.random()
                         * (bg_vars.max_mass - mass_halfway_max_halfway)
                     ) + mass_halfway_max_halfway
+
+                # For debugging/testing
+                # radius = bg_vars.min_radius
+                # mass = bg_vars.max_mass * 1.25
             else:
                 moon = True
                 radius = round(

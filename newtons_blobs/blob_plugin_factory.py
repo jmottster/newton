@@ -52,7 +52,10 @@ class BlobPluginFactory(Protocol):
                      ring_texture: str = None,
                      ring_scale: float = None,
                      rotation_speed : float = None,
-                     rotation_pos: Tuple[int, int, int] = None) -> BlobSurface
+                     rotation_pos: Tuple[int, int, int] = None,
+                     view_pos: Tuple[float, float, float] = None,
+                     view_rot: Tuple[float, float, float] = None,
+                     view_follow_pos: Tuple[float, float, float] = None) -> BlobSurface
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
         as implementation is not known at runtime
 
@@ -121,6 +124,9 @@ class BlobPluginFactory(Protocol):
         ring_scale: float = None,
         rotation_speed: float = None,
         rotation_pos: Tuple[int, int, int] = None,
+        view_pos: Tuple[float, float, float] = None,
+        view_rot: Tuple[float, float, float] = None,
+        view_follow_pos: Tuple[float, float, float] = None,
     ) -> BlobSurface:
         """
         Factory method for instantiating instances of an implementor of the BlobSurface interface,
