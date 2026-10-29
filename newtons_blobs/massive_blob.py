@@ -70,7 +70,7 @@ class MassiveBlob:
     get_prefs(data: dict) -> None
         Loads the provided dict with all the necessary key/value pairs to save the state of the instance.
 
-    grid_key() -> Tuple[int]
+    gen_grid_key() -> Tuple[int]
         Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)
 
     draw() -> None
@@ -88,7 +88,7 @@ class MassiveBlob:
     """
 
     __slots__ = (
-        "scaled_universe_size",
+        "scaled_up_universe_size",
         "universe_size",
         "index",
         "name",
@@ -96,18 +96,23 @@ class MassiveBlob:
         "_radius",
         "scaled_radius",
         "_mass",
-        "position",
+        "_position",
         "velocity",
+        "acceleration",
+        "pre_elapsed_time",
         "_dead",
+        "_grid_key",
+        "_grid_key_chgd",
         "_swallowed",
         "escaped",
         "pause",
         "pos_log",
+        "warn",
     )
 
-    center_blob_x: ClassVar[float] = bg_vars.universe_size_w / 2
-    center_blob_y: ClassVar[float] = bg_vars.universe_size_h / 2
-    center_blob_z: ClassVar[float] = bg_vars.universe_size_d / 2
+    center_blob_x: ClassVar[float] = bg_vars.universe_size / 2
+    center_blob_y: ClassVar[float] = bg_vars.universe_size / 2
+    center_blob_z: ClassVar[float] = bg_vars.universe_size / 2
 
     def __init__(
         self: Self,
@@ -120,7 +125,7 @@ class MassiveBlob:
         velocity: BVec3,
     ):
 
-        self.scaled_universe_size: float = universe_size * bg_vars.scale_up
+        self.scaled_up_universe_size: float = universe_size * bg_vars.scale_up
         self.universe_size = universe_size
 
         self.index: int = index
@@ -128,20 +133,25 @@ class MassiveBlob:
         self.blob_surface: BlobSurface = blob_surface
         self._radius: float = None
         self.scaled_radius: float = None
-        self.radius = blob_surface.radius
+        if blob_surface is not None:
+            self.radius = blob_surface.radius
+        else:
+            self._radius = 0
+            self.scaled_radius = 0
         self._mass: float = None
         self.mass = mass
 
-        self.position: BVec3 = position
+        self._position: BVec3 = position
         self.velocity: BVec3 = velocity
+        self.acceleration: BVec3 = BVec3()
+        self.pre_elapsed_time: float = 0.0
 
+        self._grid_key: Tuple[int, int, int] = self.gen_grid_key()
+        self._grid_key_chgd: bool = False
         self._dead: bool = False
         self._swallowed: bool = False
         self.escaped: bool = False
         self.pause: bool = False
-        # self.pos_log: deque[npt.NDArray] = deque(
-        #     [np.array([x, y, z], dtype=float), np.array([x, y, z], dtype=float)]
-        # )
 
     @property
     def x(self: Self) -> float:
@@ -202,6 +212,45 @@ class MassiveBlob:
     def vz(self: Self, value: float) -> None:
         """Sets vz length of 3D velocity (meters/sec)"""
         self.velocity.values[2] = value
+
+    @property
+    def ax(self: Self) -> float:
+        """Returns ax length of 3D acceleration (meters/sec)"""
+        return self.acceleration.values[0]
+
+    @ax.setter
+    def ax(self: Self, value: float) -> None:
+        """Sets ax length of 3D acceleration (meters/sec)"""
+        self.acceleration.values[0] = value
+
+    @property
+    def ay(self: Self) -> float:
+        """Returns ay length of 3D acceleration (meters/sec)"""
+        return self.acceleration.values[1]
+
+    @ay.setter
+    def ay(self: Self, value: float) -> None:
+        """Sets ay length of 3D acceleration (meters/sec)"""
+        self.acceleration.values[1] = value
+
+    @property
+    def az(self: Self) -> float:
+        """Returns az length of 3D acceleration (meters/sec)"""
+        return self.acceleration.values[2]
+
+    @az.setter
+    def az(self: Self, value: float) -> None:
+        """Sets az length of 3D acceleration (meters/sec)"""
+        self.acceleration.values[2] = value
+
+    @property
+    def position(self: Self) -> BVec3:
+        return self._position
+
+    @position.setter
+    def position(self: Self, position: BVec3) -> None:
+        self._position = position
+        self.grid_key = self.gen_grid_key()
 
     @property
     def radius(self: Self) -> float:
@@ -268,6 +317,22 @@ class MassiveBlob:
         self.blob_surface.blobs_combined = blobs_combined
 
     @property
+    def grid_key(self: Self) -> Tuple[int, int, int]:
+        return self._grid_key
+
+    @grid_key.setter
+    def grid_key(self: Self, grid_key: Tuple[int, int, int]) -> None:
+        if self._grid_key != grid_key:
+            self._grid_key_chgd = True
+            self._grid_key = grid_key
+        else:
+            self._grid_key_chgd = False
+
+    @property
+    def grid_key_chgd(self: Self) -> bool:
+        return self._grid_key_chgd
+
+    @property
     def dead(self: Self) -> bool:
         """Returns bool indicating if this is a dead blob"""
         if self.swallowed or self.escaped:
@@ -288,9 +353,9 @@ class MassiveBlob:
     def add_orbital(self: Self, orbital: "MassiveBlob") -> None:
         """Positions the provided blob around this blob (randomly) and sets the velocity accordingly"""
 
-        vel: Tuple[float, float, float] = None
-
-        vel = self.blob_surface.set_orbital_pos_vel(orbital.blob_surface)
+        vel: Tuple[float, float, float] = self.blob_surface.set_orbital_pos_vel(
+            orbital.blob_surface
+        )
 
         orbital.update_pos_vel(
             BVec3(*orbital.blob_surface.position) * bg_vars.scale_up, BVec3(*vel)
@@ -325,7 +390,7 @@ class MassiveBlob:
         data["vy"] = self.vy
         data["vz"] = self.vz
 
-    def grid_key(
+    def gen_grid_key(
         self: Self, alt_pos: Tuple[float, float, float] = None
     ) -> Tuple[int, int, int]:
         """Returns an x,y,z tuple indicating this blob's position in the proximity grid (not the display screen)"""
@@ -376,27 +441,22 @@ class MassiveBlob:
     def advance(self: Self, dt: Decimal) -> None:
         """Applies velocity to blob, changing its x,y coordinates for next frame draw using dt (delta time)"""
 
-        timescale: float = float(Decimal(bg_vars.timescale) * dt)
+        elapsed_time: float = bg_vars.timescale * float(dt) - self.pre_elapsed_time
 
-        # Advance position by velocity (one frame, with TIMESCALE elapsed time)
-        self.position += self.velocity * timescale
-
-        # self.pos_log.append(
-        #     np.array(
-        #         [
-        #             self.x * bg_vars.scale_down,
-        #             self.y * bg_vars.scale_down,
-        #             self.z * bg_vars.scale_down,
-        #         ],
-        #         dtype=float,
-        #     )
-        # )
-        # self.pos_log.popleft()
+        # Convert acceleration to velocity delta for elapsed time
+        velocity_delta: BVec3 = self.acceleration * elapsed_time
+        # Advance position by velocity + (velocity_delta converted to average velocity over elapsed time) over elapsed time
+        self.position += (self.velocity + velocity_delta / 2) * elapsed_time
+        # Add velocity delta
+        self.velocity += velocity_delta
+        # Acceleration applied, clear it
+        self.acceleration.clear()
+        self.pre_elapsed_time = 0.0
 
     def destroy(self: Self) -> None:
         """Call when no longer needed, so it can clean up and disappear"""
         self.blob_surface.destroy()
-        # self.blob_surface = None
+        self.blob_surface = None
 
     def update_pos_vel(self: Self, position: BVec3, velocity: BVec3) -> None:
         """direct way to update position and velocity values"""

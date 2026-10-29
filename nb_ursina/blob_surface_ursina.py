@@ -7,7 +7,7 @@ by Jason Mott, copyright 2025
 """
 
 import math
-from typing import ClassVar, List, Tuple, Self, cast
+from typing import ClassVar, Dict, List, Tuple, Self, cast
 from collections import deque
 
 from panda3d.core import (  # type: ignore
@@ -36,7 +36,7 @@ from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 from .fps import FPS
 from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial, BlobLine
-from .blob_collision_cloud import BlobCollisionCloud as coll_cloud
+from .blob_collision_cloud import BlobCollisionCloud as CollCloud
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2025"
@@ -84,19 +84,20 @@ class TrailRenderer(urs.Entity):
 
     """
 
-    __slots__ = (
-        "segments",
-        "points",
-        "_t",
-        "_t2",
-        "min_spacing",
-        "thickness",
-        "_barycenter_blob",
-        "check_barycenter_dist",
-        "line_renderer",
-        "pos_overlap",
-        "orbit_arc",
-    )
+    # __slots__ = (
+    #     "segments",
+    #     "points",
+    #     "_t",
+    #     "_t2",
+    #     "min_spacing",
+    #     "thickness",
+    #     "_barycenter_blob",
+    #     "check_barycenter_dist",
+    #     "line_renderer",
+    #     "pos_overlap",
+    #     "orbit_arc",
+    #     "enabled",
+    # )
 
     def __init__(
         self: Self,
@@ -172,6 +173,7 @@ class TrailRenderer(urs.Entity):
                 thickness=self.thickness,
             ),
             unlit=True,
+            add_to_scene_entities=False,
         )
         self.line_renderer.setShaderOff()
         self.line_renderer.setScale(urs.scene, self.parent.getScale(urs.scene))
@@ -219,14 +221,10 @@ class TrailRenderer(urs.Entity):
 
             if self.last_point_distances[-1] >= self.min_spacing:
 
-                if len(self.points) == self.segments:
-                    self.points.popleft()
-                    self.points.append(self.getPos(self.line_renderer))
-                    self.last_point_distances.append(0)
-                else:
-                    self.points.append(self.getPos(self.line_renderer))
-                    self.last_point_distances.append(0)
-                    self.build_trail_gradient()
+                self.points.popleft()
+                self.points.append(self.getPos(self.line_renderer))
+                self.last_point_distances.append(0)
+
             else:
 
                 self.points[-1] = self.getPos(self.line_renderer)
@@ -238,13 +236,14 @@ class TrailRenderer(urs.Entity):
 
         self.colors.clear()
 
-        length = len(self.points)
-        for i in range(length):
-            self.colors.append(mf.sample_gradient(self.color_gradient, i / length))
+        for i in range(self.segments):
+            self.colors.append(
+                mf.sample_gradient(self.color_gradient, i / self.segments)
+            )
 
         # For testing purposes
         # color = 0
-        # for i in range(length):
+        # for i in range(self.segments):
         #     if i % 2:
         #         color = 1
         #     else:
@@ -272,16 +271,12 @@ class TrailRenderer(urs.Entity):
             for i in range(0, len(self.points)):
                 self.points[i] = self.getPos(self.line_renderer)
 
-            while len(self.points) > 3:
-                self.points.popleft()
-
             self.spacing_check = self.segments
         else:
 
             avg_length = sum(self.last_point_distances) / len(self.last_point_distances)
 
             if avg_length <= self.min_spacing:
-                avg_length = self.min_spacing
                 self.segments = self.orig_segments
             else:
                 arc = r * (math.asin(avg_length / (r * 2)) * 2)
@@ -294,6 +289,9 @@ class TrailRenderer(urs.Entity):
 
         while len(self.points) > self.segments:
             self.points.popleft()
+
+        while len(self.points) < self.segments:
+            self.points.append(self.getPos(self.line_renderer))
 
         self.build_trail_gradient()
 
@@ -321,16 +319,19 @@ class TrailRenderer(urs.Entity):
 
     def on_destroy(self: Self) -> None:
         """Called by Ursina when this Entity is destroyed"""
+
+        self.points.clear()
+        self.points = None
+        self.last_point_distances.clear()
+        self.last_point_distances = None
+
+        self.barycenter_blob = None
+
         self.line_renderer.enabled = False
         self.line_renderer.model.clear()
         self.line_renderer.model.removeNode()
 
-        self.points.clear()
-        self.points = None
-
         urs.destroy(self.line_renderer)
-
-        self.barycenter_blob = None
 
 
 class BlobCore(BlobRotator):
@@ -351,8 +352,8 @@ class BlobCore(BlobRotator):
     swallowed_by(blob: "BlobSurface") -> None
         Tells this blob what other blob is swallowing it
 
-    blobs_combined_add(blobs_combined: str) -> None
-        dd one blob name to the blobs_combined list
+    blobs_combined_add(blob_name: str) -> None
+        add one blob name to the blobs_combined list
 
     blobs_combined_extend(blobs_combined: List[str]) -> None
         Add a list of blob names to the blobs_combined list
@@ -469,6 +470,7 @@ class BlobCore(BlobRotator):
             ring_texture=kwargs.get("ring_texture"),
             ring_scale=kwargs.get("ring_scale"),
             scale=kwargs.get("scale"),
+            center_blob=kwargs.get("center_blob"),
             center_light=kwargs.get("center_light"),
             color=kwargs.get("color"),
         )
@@ -494,6 +496,7 @@ class BlobCore(BlobRotator):
             "glow_map_name",
             "ring_texture",
             "scale",
+            "center_blob",
             "center_light",
             "color",
         ):
@@ -512,7 +515,7 @@ class BlobCore(BlobRotator):
                 del kwargs[key]
 
         self.spotlight_dist_factor: float = 40
-        self.text_scale_pad: float = None
+        self.text_scale_pos: float = None
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -524,23 +527,22 @@ class BlobCore(BlobRotator):
         self.text_entity: urs.Entity = None
         self.info_text: BlobText = None
         self.text: str = None
-        self.text_scale: urs.Vec3 = urs.Vec3(0.1, 0.1, 0.1)
-        self.text_scale_pad = self.text_scale[0] - 0.02
+        self.text_scale: urs.Vec3 = urs.Vec3(0.13, 0.13, 0.13)
+        self.text_scale_pos = 1.5
         self.is_gas: bool = self.percent_radius > 50
         self.is_rocky: bool = self.percent_radius < 50
 
         if self.is_moon:
-            self.text_scale = urs.Vec3(0.08, 0.08, 0.08)
-            self.text_scale_pad = self.text_scale[0] - 0.03
+            self.text_scale = urs.Vec3(0.07, 0.07, 0.07)
+            self.text_scale_pos = 1.25
 
-        self.text_position: float = self.scale_x / self.text_scale_pad
         self.all_text_on: bool = False
         self.planet_text_only: bool = False
         self.text_on: bool = False
         self.text_full_details: bool = True
         self._swallowed: bool = False
         self._blobs_combined: List[str] = []
-        self.collision_cloud: coll_cloud = None
+        self.start_collision_cloud: bool = False
         self.collision_cleanup_timer: float = 1.5
         self.swallowed_by_blob: BlobCore = None
         self.collisions: deque[urs.Vec3] = deque([])
@@ -576,9 +578,8 @@ class BlobCore(BlobRotator):
 
         super(BlobCore, type(self)).radius.fset(self, radius)  # type: ignore
 
-        if self.text_scale_pad is not None:
-            self.text_position = self.scale_x / self.text_scale_pad
-            self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
+        # if self.text_scale_pos is not None:
+        self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
 
         if not self.is_moon:
             self.percent_radius = round(
@@ -640,7 +641,7 @@ class BlobCore(BlobRotator):
     def swallowed_by(self: Self, blob: "BlobCore") -> None:
         """Tells this blob what other blob is swallowing it"""
         self.swallowed_by_blob = blob
-        self.swallowed_by_blob.blobs_combined_add(self.blob_name)
+        self.swallowed_by_blob.blobs_combined_add(str(self.index))
         if len(self._blobs_combined) > 0:
             self.swallowed_by_blob.blobs_combined_extend(self._blobs_combined)
         planet_only = self.swallowed_by_blob.planet_text_only
@@ -659,9 +660,9 @@ class BlobCore(BlobRotator):
         """A list of blob names that have been swallowed by this blob"""
         self._blobs_combined = blobs_combined
 
-    def blobs_combined_add(self: Self, blobs_combined: str) -> None:
+    def blobs_combined_add(self: Self, blob_name: str) -> None:
         """Add one blob name to the blobs_combined list"""
-        self._blobs_combined.append(blobs_combined)
+        self._blobs_combined.append(blob_name)
 
     def blobs_combined_extend(self: Self, blobs_combined: List[str]) -> None:
         """Add a list of blob names to the blobs_combined list"""
@@ -699,7 +700,7 @@ class BlobCore(BlobRotator):
 
     def begin_disintegration(self: Self) -> None:
         """Instantiates the dust cloud object"""
-        self.collision_cloud = coll_cloud(self.blob_name)
+        self.start_collision_cloud = True
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
@@ -720,7 +721,6 @@ class BlobCore(BlobRotator):
         dz: float = (self.world_z - orbital.ursina_blob.world_z) * bg_vars.scale_up
 
         distance: float = math.sqrt(dx**2 + dy**2 + dz**2)
-        # print(f"{self.index} to {orbital.ursina_blob.index} dist: {distance}")
 
         vel: float = math.sqrt(G * self.mass / distance)
 
@@ -935,11 +935,12 @@ class BlobCore(BlobRotator):
         if self.text_entity is None:
             self.text_entity = BlobRotator(
                 scale=self.text_scale,
-                color=urs.color.rgba(1, 1, 1, 0.9),
+                color=urs.color.clear,
                 unlit=True,
+                add_to_scene_entities=False,
             )
 
-            self.text_entity.setShaderOff()
+            # self.text_entity.setShaderOff()
             self.text_entity.setLightOff()
 
             for bit in range(0, len(lu.bit_masks)):
@@ -962,6 +963,7 @@ class BlobCore(BlobRotator):
                 color=urs.color.rgba(1, 1, 1, 0.9),
                 enabled=False,
                 unlit=True,
+                add_to_scene_entities=False,
             )
 
             self.info_text.setLightOff()
@@ -1028,27 +1030,29 @@ class BlobCore(BlobRotator):
 
         if not FPS.paused:
 
-            if self.collision_cloud is not None and self.swallowed_by_blob is not None:
+            if self.start_collision_cloud and self.swallowed_by_blob is not None:
 
-                self.collision_cloud.start(self.swallowed_by_blob)
-                self.collision_cloud.setScale(urs.scene, self.scale_x)
+                collision_cloud: CollCloud = CollCloud(self.blob_name)
+                collision_cloud.start(self.swallowed_by_blob)
+                collision_cloud.setScale(urs.scene, self.scale_x)
 
                 angle_pos = PanVec3(
                     self.getPos(self.swallowed_by_blob)
                     - self.swallowed_by_blob.getPos(self.swallowed_by_blob)
                 ).normalized()
 
-                self.collision_cloud.setPos(
+                collision_cloud.setPos(
                     self.swallowed_by_blob,
                     angle_pos,
                 )
 
-                self.swallowed_by_blob.collisions.append(self.collision_cloud)
+                self.swallowed_by_blob.collisions.append(collision_cloud)
                 self._swallowed = True
+                self.start_collision_cloud = False
 
             if len(self.collisions) > 0:
                 if self.collision_cleanup_timer <= 0:
-                    cloud = self.collisions.popleft()
+                    cloud: CollCloud = self.collisions.popleft()
 
                     cloud.cleanup()
                     del cloud
@@ -1059,13 +1063,13 @@ class BlobCore(BlobRotator):
         if self.text_entity is not None and self.info_text.enabled:
 
             self.text_entity.position = self.position
-            self.text_entity.rotation = urs.camera.parent.rotation
+            self.text_entity.rotation_pos = urs.camera.parent.rotation_pos
 
             d = mf.distance(self.text_entity.world_position, urs.camera.world_position)
 
             self.text_entity.scale = self.text_scale * d
-            self.text_entity.position += (self.text_entity.my_up) * (
-                self.text_position / d
+            self.text_entity.position += (urs.camera.parent.my_up.normalized()) * (
+                self.scale_x * self.text_scale_pos
             )
 
             if self.text_on and self.text_full_details:
@@ -1152,7 +1156,6 @@ class BlobCore(BlobRotator):
             else:
                 self.scale = urs.Vec3(self.radius)
 
-            self.text_position = self.scale_x / self.text_scale_pad
             self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
 
         if not self.blob_name == CENTER_BLOB_NAME and self.is_moon and key == "u":
@@ -1166,7 +1169,6 @@ class BlobCore(BlobRotator):
             else:
                 self.scale = urs.Vec3(self.radius)
 
-            self.text_position = self.scale_x / self.text_scale_pad
             self.spotlight_distance = self.scale_x * self.spotlight_dist_factor
 
     def on_disable(self: Self) -> None:
@@ -1183,14 +1185,14 @@ class BlobCore(BlobRotator):
             BlobWatcherRegistryUrsina as blob_registry,
         )
 
-        if self.trail is not None:
-            urs.destroy(self.trail)
-
         if self.is_moon:
             self.barycenter_blob = None
             blob_registry.remove_moon(self)
         else:
             blob_registry.remove_planet(self)
+
+        if self.trail is not None:
+            urs.destroy(self.trail)
 
         self.destroy_text_overlay()
 
@@ -1207,7 +1209,6 @@ class BlobCore(BlobRotator):
                 del self.light_node
 
         super().on_destroy()
-
         self.enabled = False
 
 
@@ -1304,6 +1305,7 @@ class BlobSurfaceUrsina:
     center_blob: BlobCore = None
     universe_node: NodePath = None
     num_rings: int = 1
+    trail_color_used: Dict[int, int] = dict()
 
     def __init__(
         self: Self,
@@ -1351,10 +1353,15 @@ class BlobSurfaceUrsina:
 
         self.urs_trail_color: urs.Color = None
 
+        if len(BlobSurfaceUrsina.trail_color_used.keys()) == NUM_TRAIL_COLORS:
+            BlobSurfaceUrsina.trail_color_used.clear()
+
         if self.trail_color is None:
-            self.trail_color = BLOB_TRAIL_COLOR[
-                blob_random.randint(0, len(BLOB_TRAIL_COLOR) - 1)
-            ]
+            trail_color_index: int = blob_random.randint(0, NUM_TRAIL_COLORS - 1)
+            while BlobSurfaceUrsina.trail_color_used.get(trail_color_index, 0) == 1:
+                trail_color_index = blob_random.randint(0, NUM_TRAIL_COLORS - 1)
+            BlobSurfaceUrsina.trail_color_used[trail_color_index] = 1
+            self.trail_color = BLOB_TRAIL_COLOR[trail_color_index]
 
         self.urs_trail_color = urs.color.rgba(*self.trail_color)
 
@@ -1452,6 +1459,7 @@ class BlobSurfaceUrsina:
                 glow_map_name=glow_map_name,
                 ring_texture=self.ring_texture,
                 ring_scale=self.ring_scale,
+                center_blob=BlobSurfaceUrsina.center_blob,
                 center_light=BlobSurfaceUrsina.center_blob.light_node,
                 color=urs_color,
                 trail_color=self.trail_color,

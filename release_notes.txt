@@ -1,0 +1,163 @@
+v0.0.8 changes:
+
+Added global pause variable
+Added global delta time variable
+Updated asset path
+Tweaked speed/rotation
+Optimization for trail render
+Tweaked planet sizes
+Optimized start up time
+Separated moon textures from planet textures
+Added many new planet/moon textures
+Tweaked gimbal code
+Various other small tweaks
+Improved space background
+Added planet rings!
+Fixed shadows
+added better random number generator
+Various bug fixes
+
+v0.0.9 changes:
+Tweaked first person speed and rotation speed controls
+Added new rings to better match planets
+Fixed windowed mode bug where size and position were being reset when mouse was reengaged
+
+Gave first person viewer entity a name
+Revamped "follow entity" feature to reduce shaking of gimbal/cursor
+Added timescale setting to display (i.e. time per second setting that changes with up/down arrow keys)
+
+
+v0.1.0 changes:
+Added bloom filter to sun for glowing effect
+Changed antialias to use CommonFilters
+Reworked gimbal and Universe background to use Panda3D directly
+Added black glow maps to blobs to prevent glowing (except sun blob)
+Added death star easter egg
+Fixed progress bar bugs
+Fixed crash on reset bug
+Added 3 new background textures and randomizer to choose one
+Reduced size of timescale display block in top left screen
+Fixed shaky gimbal issue
+Reworked camera for better close ups
+Added collision detection for first person entity
+Improved moon scale up to better fit planet sizes 
+Added more values to saving feature
+Numerous bug fixes
+
+
+v0.1.1 changes:
+Made moon trails follow inertial frame of reference when it's a moon itself
+Centralized bit_mask array to blob_utils
+Made local version of distance method to performance tweak
+Added coefficient of restitution to collision method so we have inelastic collisions
+Implemented blobs combining into one when they collide without bounce
+^ New blob will have combined mass and radius of the two
+Fixed slow performance issue when text overlay was on 
+Limited number of ringed planets to 2, for performance reasons
+Optimized grid check algorithm (fast gravity collision adjustments)
+Reworked trails for better visuals and performance
+Improved ring planet lighting
+Added dust clouds to blob collisions when they combine into one
+
+v0.1.2 changes:
+Fixed bug in trails that sometimes caused a crash when colors and point got out of sync
+Fixed bug in enlarged state, when blobs combined the new blob would go back to normal size, 
+    making it large when all others are restored to normal size.
+Fixed bug that was combining collided blobs more than once, making the result too big and heavy
+Made collision and combine more realistic, less prone to fly away blobs
+
+v0.1.3 changes:
+Fixed bug that broke trails when there are no moons
+Fixed bug that sometimes enlarged blobs after collision
+Set near and far on center blob light
+Tweaked cloud setup for collisions
+Added feature for dynamic starting point based on furthest blob from center
+Changed num of blobs to 51
+
+v0.1.4 changes:
+Removed pause restriction for right click to change inertial frame of reference
+Added session saving (last 10 random generations saved)
+Added incremental time save per session (every 90 days a save point)
+Added controls to go back in time (previous 90 day save points)
+various tweaks/bug fixes
+
+v0.1.5 changes:
+Bug fixes and tweaks
+
+v0.1.6 changes:
+Implemented local lighting for nearest planet to viewer to fix shadows
+bug fixes and tweaks
+
+v0.1.7 changes:
+Fixed lighting for moons out of spotlight range
+For full text info on info flags, added constant update to position
+fixed bug that crashed system when view was on edge of Universe boundary
+Made Universe smaller
+Improved "bounce off edge of Universe" feature, to use real world physics (ironically)
+Fixed bug that sometimes placed moons on top of each other
+
+v0.1.8 changes:
+Added "position memory" of window when switching to and from fullscreen
+Added vector to top level blob class for better position and velocity handling
+Improved performance of proximity grid, more efficient iterations and use of grid cache/queue
+Turned HDR back on
+Added utility class for lighting bit mask management
+Reworked Trail backend to improve performance
+Tweaked the bloom filter for sun
+Cleaned up unused API methods
+Adjusted scaling
+Fixed roll speed issues
+Fixed gimbal ring lighting issue
+Bug fixes, tweaks
+
+
+v0.1.9 changes:
+Adjusted roll speed
+Fixed need to divide font size
+Optimized info text code
+fixed info text placement after planet merge
+Added random colors for orbit trails
+Low VRAM tweaks
+
+v0.2.0 changes:
+Adjusted roll speed again
+Improved black hole mode
+Adjusted setLightOff() method call
+Added mass to first person classes
+Improved scale/radius settings for first person classes
+Bug fixes and tweaks
+
+v0.2.1
+Reworked moon enlargement for better proportions 
+Changed default timescale to 12/hours a second, with 3 hour change increments
+Bug fixes
+
+v0.2.2
+Format change to info flag
+
+
+v0.2.3
+Added view position/rotation to save feature
+Added list of swallowed blobs to blob info flag
+Changed default starting timescale to 3h/sec 
+Tweaks and bug fixes 
+
+
+v0.2.4
+Fixed window mode change bug
+Improved memory efficiency
+Improved camera lens scaling
+Tweaked view roll speed adjustment scaling
+Center cursor now stays on even when gimbal is turned off
+Improved efficiency of trail rendering
+Improved trail color distribution
+Improved info text scaling
+Fixed collision cloud bug (cloud  not always showing up)
+Updated physics collision and gravity math to be more accurate
+Simplified first person view collision detection
+Fixed blob watcher bugs and improved efficiency
+Revamped blob plotting and combined circular and square plotting into single function
+Improved efficiency of blob update function
+Added timescale to save data
+Updated vector class with more functionality
+Various tweaks and bug fixes

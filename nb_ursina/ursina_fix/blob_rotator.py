@@ -159,8 +159,12 @@ class BlobRotator(urs.Entity):
         self.glow_map_name: str = kwargs.get("glow_map_name")
         self.ring_texture: str = kwargs.get("ring_texture")
         self.ring_scale: float = kwargs.get("ring_scale")
+        self.center_blob: BlobRotator = kwargs.get("center_blob")
         self.center_light: NodePath = kwargs.get("center_light")
         self.color = kwargs.get("color")
+
+        if self.center_blob is None:
+            self.center_blob = urs.scene
 
         self._follower_entity: FollowerEntity = None
         self.follower_entity_last_pos: urs.Vec3 = None
@@ -191,6 +195,8 @@ class BlobRotator(urs.Entity):
         for key, value in kwargs.items():
             if kwargs[key] is not None:
                 setattr(self, key, value)
+
+        self.is_moon: bool = self.scale_x < bg_vars.min_radius
 
         if self.texture_name is not None:
             self.create_blob()
@@ -227,7 +233,6 @@ class BlobRotator(urs.Entity):
     @scale.setter
     def scale(self: Self, scale: urs.Vec3) -> None:
         """Sets the scale of this blob relative to urs.scene"""
-        # print(f"{self.blob_name} setting scale")
         if self.rotator_model is not None:
             self.rotator_model.setScale(urs.scene, scale)
         self.setScale(urs.scene, scale)
@@ -318,14 +323,9 @@ class BlobRotator(urs.Entity):
     def rotate(self: Self, rotation: Tuple[float, float, float]) -> None:
         """The x,y,z axis rotation positions set relative to current self position"""
         x, y, z = rotation
+        self.setHpr(self, (z, x, y))
         if self.rotator_model is not None:
             self.rotator_model.setHpr(self.rotator_model, (z, x, y))
-            z, x, y = self.rotator_model.getHpr(urs.scene)
-        else:
-            self.setHpr(self, (z, x, y))
-            z, x, y = self.getHpr(urs.scene)
-
-        self.rotation_pos = (x, y, z)
 
     @property
     def follower_entity(self: Self) -> FollowerEntity:
@@ -384,7 +384,7 @@ class BlobRotator(urs.Entity):
     def create_blob(self: Self, texture_name: str = None) -> None:
         """Creates the blob model"""
 
-        if not LOW_VRAM and self.index == 10:
+        if not LOW_VRAM and self.is_moon and self.index == 10:
             self.create_special_blob()
             return
 
@@ -439,7 +439,8 @@ class BlobRotator(urs.Entity):
             if self.rotation_speed is None:
                 self.rotation_speed = (blob_random.random() * 29.00) + 1
                 if self.blob_name != CENTER_BLOB_NAME:
-                    self.rotation_pos = (0, 0, blob_random.random() * 360)
+                    self.rotation_pos = self.center_blob.rotation_pos
+                    self.rotate = (0, 0, blob_random.random() * 360)
                     self.rotate = (-45 + (blob_random.random() * 90), 0, 0)
             else:
                 self.rotation_pos = self.rotation_pos

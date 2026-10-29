@@ -9,7 +9,7 @@ by Jason Mott, copyright 2025
 from pathlib import Path
 from typing import Any, Tuple, Self
 
-from panda3d.core import BitMask32, Shader, TransparencyAttrib  # type: ignore
+from panda3d.core import TransparencyAttrib, NodePath  # type: ignore
 
 import ursina as urs  # type: ignore
 import ursina.shaders as shd  # type: ignore
@@ -64,6 +64,9 @@ class BlobUniverseUrsina:
         Returns the current height of the universe object
 
     get_center_blob_start_pos() -> Tuple[float,float,float]
+        Returns a tuple of the scaled up center point x,y,z
+
+    get_center_pos() -> Tuple[float, float, float]
         Returns a tuple of the center point x,y,z
 
     get_center_offset(x: float, y: float, z: float) -> Tuple[float, float, float]
@@ -82,7 +85,7 @@ class BlobUniverseUrsina:
         self.width = size_w
         self.height = size_h
 
-        self.universe: urs.Entity = None
+        self.universe: NodePath = None
         self.base_dir: Path = urs.application.asset_folder
         self.texture: str = None
         self.set_universe_entity(bg_vars.background_scale)
@@ -124,11 +127,14 @@ class BlobUniverseUrsina:
 
         self.universe.reparentTo(urs.scene)
         self.universe.setTransparency(TransparencyAttrib.M_none)
-        self.universe.setPos(urs.scene, (0, 0, 0))
+        self.universe.setPos(
+            urs.scene, (self.width / 2, self.width / 2, self.width / 2)
+        )
 
         self.universe.setColorScaleOff()
         self.universe.setColorScale((1, 1, 1, 1))
         self.universe.setColor((0.65, 0.65, 0.65, 1))
+
         self.universe.setScale(urs.scene, scale)
 
         if self.texture is not None:
@@ -166,10 +172,17 @@ class BlobUniverseUrsina:
         return self.height
 
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
-        """Returns a tuple of the center point x,y,z"""
+        """Returns a tuple of the scaled up center point x,y,z"""
         x = self.get_width() * bg_vars.scale_up
         y = self.get_height() * bg_vars.scale_up
         z = self.get_height() * bg_vars.scale_up
+        return (x / 2, y / 2, z / 2)
+
+    def get_center_pos(self: Self) -> Tuple[float, float, float]:
+        """Returns a tuple of the center point x,y,z"""
+        x = self.get_width()
+        y = self.get_height()
+        z = self.get_height()
         return (x / 2, y / 2, z / 2)
 
     def get_center_offset(
@@ -185,7 +198,7 @@ class BlobUniverseUrsina:
 
         urs.scene.clear()
         self.width, self.height = (
-            bg_vars.universe_size_w,
-            bg_vars.universe_size_h,
+            bg_vars.universe_size,
+            bg_vars.universe_size,
         )
         self.set_universe_entity(bg_vars.background_scale)

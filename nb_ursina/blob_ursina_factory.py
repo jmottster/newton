@@ -24,7 +24,7 @@ from newtons_blobs import BlobVector as BVec3
 from newtons_blobs import BlobSurface
 from newtons_blobs import BlobDisplay
 from newtons_blobs import BlobUniverse
-from newtons_blobs import blob_random
+from newtons_blobs.blob_physics import BlobPhysics as bp
 
 from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_display_ursina import BlobDisplayUrsina
@@ -32,11 +32,10 @@ from .blob_first_person_surface import FirstPersonSurface
 from .blob_watcher_registry_ursina import (
     BlobWatcherRegistryUrsina as blob_registry,
 )
-from .blob_surface_ursina import BlobCore, BlobSurfaceUrsina
+from .blob_surface_ursina import BlobSurfaceUrsina
 from .blob_loading_screen_ursina import BlobLoadingScreenUrsina
-from .fps import FPS
 from .ursina_fix import BlobText
-from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
+from .blob_utils_ursina import LightUtils as lu
 
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2025"
@@ -125,7 +124,7 @@ class BlobUrsinaFactory:
     def __init__(self: Self):
 
         bg_vars.set_au_scale_factor(1.495978707 * 10**5)
-        bg_vars.set_universe_scale(50)
+        bg_vars.set_universe_scale(40)
         bg_vars.set_center_blob_scale(15)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
@@ -136,9 +135,10 @@ class BlobUrsinaFactory:
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(0.5)
         bg_vars.set_first_person_scale(bg_vars.max_radius * 0.75)
-        bg_vars.set_background_scale(bg_vars.universe_size)
-        if LOW_VRAM:
-            bg_vars.set_background_scale(bg_vars.universe_size * 1)
+        bg_scale: float = bg_vars.universe_size * 0.75
+        bg_vars.set_background_scale(
+            float(round(BVec3(bg_scale, bg_scale, bg_scale).mag()))
+        )
         bg_vars.set_timescale(HOURS * 3)
         bg_vars.set_orig_timescale(HOURS * 3)
         bg_vars.set_timescale_inc(HOURS * 3)
@@ -164,7 +164,7 @@ class BlobUrsinaFactory:
         )
 
         self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina(
-            bg_vars.universe_size_w, bg_vars.universe_size_h
+            bg_vars.universe_size, bg_vars.universe_size
         )
 
         self.urs_display.first_person_surface = FirstPersonSurface(
@@ -178,7 +178,7 @@ class BlobUrsinaFactory:
         )
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
-            bg_vars.universe_size_h,
+            bg_vars.universe_size,
             -1,
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
@@ -188,7 +188,7 @@ class BlobUrsinaFactory:
         )
 
         self.default_center_pos: urs.Vec3 = urs.Vec3(
-            urs.Vec3(self.urs_universe.get_center_blob_start_pos()) * bg_vars.scale_down
+            urs.Vec3(self.urs_universe.get_center_pos())
         )
 
         self.loading_screen: BlobLoadingScreenUrsina = None
@@ -197,21 +197,34 @@ class BlobUrsinaFactory:
 
         self.urs_display.update()
 
-    def setup_start_pos_rand(self: Self, center_pos: urs.Vec3) -> None:
-        """Configures the starting position of the first person viewer at a random spot self.start_distance from center_pos"""
-
-        temp_ent = urs.Entity(position=center_pos, shader=shd.unlit_shader, unlit=True)
-
-        start_pos = center_pos + (
-            urs.Vec3(
-                blob_random.randint(-10, 10),
-                blob_random.randint(-10, 10),
-                blob_random.randint(-10, 10),
-            ).normalized()
-            * self.start_distance
+        bp.setup()
+        bp.edge_radius = self.urs_universe.universe.getScale()[0] * bg_vars.scale_up
+        bp.uni_center = (
+            BVec3(
+                self.urs_universe.universe.getPos()[0],
+                self.urs_universe.universe.getPos()[1],
+                self.urs_universe.universe.getPos()[2],
+            )
+            * bg_vars.scale_up
         )
 
-        # start_pos = center_pos + urs.Vec3((0, -self.start_distance, 0))
+    def setup_start_pos_default(self: Self, center_pos: urs.Vec3) -> None:
+        """Configures the starting position of the first person viewer at a random spot self.start_distance from center_pos"""
+
+        temp_ent: urs.Entity = urs.Entity(
+            position=center_pos, shader=shd.unlit_shader, unlit=True
+        )
+
+        # start_pos: urs.Vec3 = center_pos + (
+        #     urs.Vec3(
+        #         blob_random.randint(-10, 10),
+        #         blob_random.randint(-10, 10),
+        #         blob_random.randint(-10, 10),
+        #     ).normalized()
+        #     * self.start_distance
+        # )
+
+        start_pos: urs.Vec3 = center_pos + urs.Vec3((0, -self.start_distance, 0))
 
         self.urs_display.first_person_surface.draw(start_pos)
 
@@ -233,8 +246,6 @@ class BlobUrsinaFactory:
         view_rot: Tuple[float, float, float],
     ) -> None:
         """Configures the starting position of the first person viewer at a specific spot and rotation"""
-
-        # start_pos = center_pos + urs.Vec3((0, -self.start_distance, 0))
 
         self.urs_display.first_person_surface.draw(view_pos)
 
@@ -297,8 +308,9 @@ class BlobUrsinaFactory:
         populating dict in get_prefs()) (if saving is turned on)
 
         """
+        # TODO change this save file var to just one universe_size
         self.urs_universe.width = data["universe_size_w"] * bg_vars.au_scale_factor
-        self.urs_universe.height = data["universe_size_h"] * bg_vars.au_scale_factor
+        self.urs_universe.height = data["universe_size_w"] * bg_vars.au_scale_factor
 
         if data.get("center_blob_scale") is not None:
             bg_vars.set_center_blob_scale(data["center_blob_scale"])
@@ -420,7 +432,7 @@ class BlobUrsinaFactory:
             if view_pos is not None:
                 self.setup_start_pos(view_pos, view_rot)
             else:
-                self.setup_start_pos_rand(self.default_center_pos)
+                self.setup_start_pos_default(self.default_center_pos)
 
             self.loading_screen_end(False)
 
@@ -481,7 +493,7 @@ class BlobUrsinaFactory:
     def set_plot_radius(self: Self, plot_radius: float) -> None:
         """Set the radius of where the farthest blob from the center is"""
         self.start_distance = (plot_radius + AU) * bg_vars.scale_down
-        self.setup_start_pos_rand(self.default_center_pos)
+        self.setup_start_pos_default(self.default_center_pos)
 
     def get_blob_universe(self: Self) -> BlobUniverse:
         """
@@ -501,11 +513,11 @@ class BlobUrsinaFactory:
         """
         Gives the graphics layer a chance to traverse the proximity grid for collision detection, etc.
         """
-        gk: Tuple[int, int, int] = self.first_person_blob.grid_key(
+        gk: Tuple[int, int, int] = self.first_person_blob.gen_grid_key(
             self.first_person_blob.blob_surface.position
         )
         pg: npt.NDArray = proximity_grid
-        blobs: npt.NDArray = None
+        blobs: npt.NDArray = pg[gk[0]][gk[1]][gk[2]]
 
         pos1: urs.Vec3 = urs.Vec3(self.first_person_blob.blob_surface.position)
         pos2: urs.Vec3 = None
@@ -514,38 +526,58 @@ class BlobUrsinaFactory:
         d: float = 0.0
         colliding: bool = False
 
-        for z_i_offset in range(-1, 2):
-            z = gk[2] + z_i_offset
-            for x_i_offset in range(-1, 2):
-                x = gk[0] + x_i_offset
-                for y_i_offset in range(-1, 2):
-                    y = gk[1] + y_i_offset
-                    # Skip the corners of the cube, worth risking the occasional miss for the performance boost
-                    if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
-                        continue
-                    # do the thing here
-                    try:
-                        blobs = pg[x][y][z]
-                    except:
-                        continue
-                    if blobs is not None:
+        if blobs is not None:
 
-                        for blob in blobs:
-                            pos2 = urs.Vec3(blob.blob_surface.position)
-                            touching = (
-                                blob.blob_surface.ursina_blob.scale_x
-                                + self.first_person_blob.blob_surface.radius
-                            )
-                            diff = urs.Vec3(pos1 - pos2)
-                            d = math.sqrt(diff[0] ** 2 + diff[1] ** 2 + diff[2] ** 2)
-                            if d <= touching:
-                                touching += 20
-                                diff = urs.Vec3(diff.normalized() * (touching - d))
-                                self.urs_display.first_person_surface.first_person_viewer.position += (
-                                    diff
-                                )
-                                colliding = True
-                                pos1 = urs.Vec3(
-                                    self.first_person_blob.blob_surface.position
-                                )
+            blob: MassiveBlob
+            for blob in blobs:
+                pos2 = urs.Vec3(blob.blob_surface.position)
+                touching = (
+                    blob.blob_surface.ursina_blob.scale_x
+                    + self.first_person_blob.blob_surface.radius
+                )
+                diff = urs.Vec3(pos1 - pos2)
+                d = math.sqrt(diff[0] ** 2 + diff[1] ** 2 + diff[2] ** 2)
+                if d <= touching:
+                    touching += 20
+                    diff = urs.Vec3(diff.normalized() * (touching - d))
+                    self.urs_display.first_person_surface.first_person_viewer.position += (
+                        diff
+                    )
+                    colliding = True
+                    pos1 = urs.Vec3(self.first_person_blob.blob_surface.position)
+
+        # for z_i_offset in range(-1, 2):
+        #     z = gk[2] + z_i_offset
+        #     for x_i_offset in range(-1, 2):
+        #         x = gk[0] + x_i_offset
+        #         for y_i_offset in range(-1, 2):
+        #             y = gk[1] + y_i_offset
+        #             # Skip the corners of the cube, worth risking the occasional miss for the performance boost
+        #             if x_i_offset != 0 and y_i_offset != 0 and z_i_offset != 0:
+        #                 continue
+        #             # do the thing here
+        #             try:
+        #                 blobs = pg[x][y][z]
+        #             except:
+        #                 continue
+        #             if blobs is not None:
+
+        #                 for blob in blobs:
+        #                     pos2 = urs.Vec3(blob.blob_surface.position)
+        #                     touching = (
+        #                         blob.blob_surface.ursina_blob.scale_x
+        #                         + self.first_person_blob.blob_surface.radius
+        #                     )
+        #                     diff = urs.Vec3(pos1 - pos2)
+        #                     d = math.sqrt(diff[0] ** 2 + diff[1] ** 2 + diff[2] ** 2)
+        #                     if d <= touching:
+        #                         touching += 20
+        #                         diff = urs.Vec3(diff.normalized() * (touching - d))
+        #                         self.urs_display.first_person_surface.first_person_viewer.position += (
+        #                             diff
+        #                         )
+        #                         colliding = True
+        #                         pos1 = urs.Vec3(
+        #                             self.first_person_blob.blob_surface.position
+        #                         )
         self.urs_display.first_person_surface.first_person_viewer.colliding = colliding

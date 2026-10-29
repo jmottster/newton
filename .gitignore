@@ -3,5 +3,6 @@ main.build/**
 main.dist/**
 **/__pycache__/**
 testers/**
+test/**
 save/**
 .vscode/**

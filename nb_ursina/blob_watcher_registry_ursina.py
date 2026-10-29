@@ -228,6 +228,18 @@ class BlobWatcher(urs.Entity):
 
     def remove_planet(self: Self, planet: BlobCore) -> None:
         """Removes a blob from the internal planet blob array"""
+        if self.nearest_planet >= 0:
+            self.planets[self.nearest_planet].unset_spotlight()
+            self.nearest_planet = -1
+
+        for t_blob in self.moons:
+            if t_blob is not None and t_blob.barycenter_blob is not None:
+                if t_blob.barycenter_blob.index == planet.index:
+                    if t_blob.trail is not None and t_blob.trail.enabled:
+                        t_blob.trail.enabled = False
+                        t_blob.trail.barycenter_blob = t_blob.center_blob
+                    t_blob.barycenter_blob = t_blob.center_blob
+
         self.planets = np.delete(self.planets, np.where(self.planets == planet)[0])
 
     def remove_moon(self: Self, moon: BlobCore) -> None:
@@ -242,7 +254,9 @@ class BlobWatcher(urs.Entity):
     def is_ready(self: Self) -> bool:
         """Returns True if all blob arrays are full and the moon blobs all have a barycenter"""
         if not self._is_ready:
-            self._is_ready = self.planets[-1] is not None and self.moons[-1] is not None
+            self._is_ready = self.planets[-1] is not None
+            if self._is_ready and self.num_moons > 0:
+                self._is_ready = self.moons[-1] is not None
 
         return self._is_ready
 
@@ -277,8 +291,12 @@ class BlobWatcher(urs.Entity):
                     self.nearest_planet = this_nearest_planet
                     self.planets[self.nearest_planet].set_spotlight(self.nearby_light)
 
+            if self.num_moons == 0:
+                return
+
             if not self.trail_on:
 
+                blob: BlobCore
                 for blob in self.moons:
                     blob.check_light_source()
 
@@ -299,32 +317,33 @@ class BlobWatcher(urs.Entity):
                 if barycenter is None and self.nearest_planet >= 0:
                     barycenter = self.planets[self.nearest_planet]
 
-                for blob in self.moons:
+                t_blob: BlobCore
+                for t_blob in self.moons:
 
                     if (
                         barycenter is not None
-                        and mf.distance(blob.position, barycenter.position)
+                        and mf.distance(t_blob.position, barycenter.position)
                         <= bg_vars.au_scale_factor
-                        and blob.blob_name != barycenter.blob_name
+                        and t_blob.blob_name != barycenter.blob_name
                     ):
 
                         if (
-                            blob.trail.barycenter_blob is None
-                            or blob.trail.barycenter_blob.blob_name
+                            t_blob.trail.barycenter_blob is None
+                            or t_blob.trail.barycenter_blob.blob_name
                             != barycenter.blob_name
                         ):
 
-                            blob.destroy_trail()
-                            blob.create_trail(barycenter)
+                            t_blob.destroy_trail()
+                            t_blob.create_trail(barycenter)
 
-                        if not blob.trail.enabled:
-                            blob.trail.enabled = True
-                        blob.check_light_source()
+                        if not t_blob.trail.enabled:
+                            t_blob.trail.enabled = True
+                        t_blob.check_light_source()
 
                     else:
-                        if blob.trail.enabled:
-                            blob.trail.enabled = False
-                        blob.check_light_source()
+                        if t_blob.trail.enabled:
+                            t_blob.trail.enabled = False
+                        t_blob.check_light_source()
 
             self._t = 0
 

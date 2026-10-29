@@ -109,7 +109,7 @@ class BlobFirstPersonUrsina(urs.Entity):
 
     def __init__(self: Self, **kwargs):
 
-        self.temp_scale: float = kwargs["scale"]
+        self.org_scale: float = kwargs["scale"]
         self.flashlight_color: urs.Vec3 = urs.color.rgba(0.25, 0.25, 0.25, 0.25)
         if not bg_vars.textures_3d:
             self.flashlight_color = urs.color.rgba(0.7, 0.7, 0.7, 0.3)
@@ -126,9 +126,9 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         lens = urs.camera.lens
         lens.setNear(0.09)
-        if lens.getFar() < (bg_vars.background_scale * 1.2 / self.temp_scale):
-            lens.setFar(bg_vars.background_scale * 1.2 / self.temp_scale)
-        self.radius: float = lens.getNear() * self.temp_scale  # + 0.01
+        lens.setFar(bg_vars.background_scale * 2 / self.org_scale)
+
+        self.radius: float = lens.getNear() * self.org_scale  # + 0.01
 
         urs.camera.ui.position = (0, 0, 0)
 
@@ -139,6 +139,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             scale=urs.Vec3(0.007, 0.007, 0.007),
             eternal=kwargs["eternal"],
             shader=shd.unlit_shader,
+            add_to_scene_entities=False,
         )
         self.center_cursor.setHpr(urs.scene, (0, 0, 45))
 
@@ -150,10 +151,11 @@ class BlobFirstPersonUrsina(urs.Entity):
             )
             self.gimbal_texture = None
 
+        self.gimbal_scale = PanVec3(0.03, 0.03, 0.03)
         self.gimbal: NodePath = self.node_factory.create_node_path(
             model="blend_uvsphere.obj",
             parent=urs.scene,
-            scale=PanVec3(0.03, 0.03, 0.03) * self.temp_scale,
+            scale=self.gimbal_scale * self.org_scale,
             texture=self.gimbal_texture,
             color=self.gimbal_color,
         )
@@ -173,6 +175,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             position=(PanVec3.forward() * 0.95),
             unlit=True,
             eternal=kwargs["eternal"],
+            add_to_scene_entities=False,
         )
         self.gimbal_arrow.setHpr(self.gimbal_arrow, (90, 0, 0))
 
@@ -195,6 +198,7 @@ class BlobFirstPersonUrsina(urs.Entity):
             position=(0, 0, 0),
             color=self.flashlight_color,
             eternal=kwargs["eternal"],
+            add_to_scene_entities=False,
         )
         self.ambient_light_node: NodePath = self.flashlight.attachNewNode(
             self.ambient_light
@@ -209,17 +213,13 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.speed: float = self.orig_speed
         self.speed_inc: float = self.max_speed / 50
 
-        self.min_roll_speed: float = 30
-        self.max_roll_speed: float = 700
-        self.clamp_max_roll_speed: float = 130
+        self.min_roll_speed: float = 10
+        self.max_roll_speed: float = 90
 
-        self.orig_roll_speed: float = (
-            self.min_roll_speed + self.clamp_max_roll_speed
-        ) / 2
+        self.orig_roll_speed: float = (self.min_roll_speed + self.max_roll_speed) / 2
         self.roll_speed: float = self.orig_roll_speed
-        self.roll_speed_inc: float = (
-            self.max_roll_speed * self.speed_inc / self.max_speed
-        )
+        self.roll_speed_inc: float = self.max_roll_speed / 10
+
         self.direction: urs.Vec3 = None
         self._position: urs.Vec3 = urs.Vec3(0, 0, 0)
         self.velocity: urs.Vec3 = urs.Vec3(0, 0, 0)
@@ -258,6 +258,8 @@ class BlobFirstPersonUrsina(urs.Entity):
             setattr(self, key, value)
 
         self.setup_stage: bool = True
+
+        self.position = urs.Vec3(self.universe.get_center_pos())
 
     @property
     def position(self: Self) -> urs.Vec3:
@@ -423,7 +425,7 @@ class BlobFirstPersonUrsina(urs.Entity):
                 self.roll_speed = urs.clamp(
                     self.roll_speed,
                     self.min_roll_speed,
-                    self.clamp_max_roll_speed,
+                    self.max_roll_speed,
                 )
 
                 self.report_throttle_speed()
@@ -477,11 +479,11 @@ class BlobFirstPersonUrsina(urs.Entity):
             if self.hud:
                 self.gimbal_arrow.enabled = True
                 self.gimbal.unstash()
-                self.center_cursor.enabled = True
+                # self.center_cursor.enabled = True
             else:
                 self.gimbal_arrow.enabled = False
                 self.gimbal.stash()
-                self.center_cursor.enabled = False
+                # self.center_cursor.enabled = False
 
         if key == "scroll up":
             self.mouse_scroll_up = 1
@@ -590,7 +592,10 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         self.on_disable()
 
+        urs.destroy(self.center_cursor)
+        urs.destroy(self.gimbal_arrow)
+        urs.scene.clearLight(self.ambient_light_node)
+        urs.destroy(self.flashlight)
+
         self.gimbal.removeNode()
         del self.gimbal
-
-        urs.scene.clearLight(self.ambient_light_node)

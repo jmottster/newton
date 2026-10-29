@@ -9,7 +9,6 @@ by Jason Mott, copyright 2025
 from typing import ClassVar
 from .globals import *
 
-
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
@@ -43,9 +42,6 @@ class BlobGlobalVars:
     BlobGlobalVars.scale_up: ClassVar[float] - multiply pixel value by this to get real world space distance (in meters)
 
     BlobGlobalVars.universe_size: ClassVar[float] - size of universe in pixels
-    BlobGlobalVars.universe_size_h: ClassVar[float] - height of universe in pixels
-    BlobGlobalVars.universe_size_w: ClassVar[float] - width of universe in pixels
-    BlobGlobalVars.universe_size_d: ClassVar[float] - depth of universe in pixels
 
     BlobGlobalVars.center_blob_radius: ClassVar[float] - Starting radius (in pixels) of the center blob
 
@@ -188,9 +184,6 @@ class BlobGlobalVars:
     scale_up: ClassVar[float] = SCALE_UP
 
     universe_size: ClassVar[float] = UNIVERSE_SIZE
-    universe_size_h: ClassVar[float] = UNIVERSE_SIZE_H
-    universe_size_w: ClassVar[float] = UNIVERSE_SIZE_W
-    universe_size_d: ClassVar[float] = UNIVERSE_SIZE_D
 
     center_blob_radius: ClassVar[float] = CENTER_BLOB_RADIUS
 
@@ -296,9 +289,6 @@ class BlobGlobalVars:
         cls.scale_up = AU / cls.au_scale_factor
 
         cls.universe_size = cls.au_scale_factor * cls.universe_scale
-        cls.universe_size_h = cls.universe_size
-        cls.universe_size_w = cls.universe_size
-        cls.universe_size_d = cls.universe_size
 
         cls.center_blob_radius = (
             cls.au_scale_factor * (S / AU)

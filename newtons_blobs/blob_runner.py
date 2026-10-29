@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, Self
 
 from .globals import *
 from newtons_blobs import BlobGlobalVars as bg_vars
+from .blob_physics import BlobPhysics as bp
 from .blob_plugin_factory import BlobPluginFactory
 from .blob_save_load import BlobSaveLoad
 from .blob_plotter import BlobPlotter
@@ -43,6 +44,10 @@ class BlobRunner:
     set_prefs(data: Dict[str, Any]) -> None
         Sets this instances variables according to the key/value pairs in the provided dict, restoring the state
         saved in it. universe param is ignored, put there to conform with SavableLoadablePrefs protocol
+
+    def get_timescale_str(time_seconds: int = -1, suffix: str = "/sec") -> str
+        Returns displayable text of the current (or provided by time_seconds) timescale, i.e.
+        lapsed time per real second
 
     load_keyboard_events() -> Dict[int, Callable[[None], None]]
         Creates and populates a dict that holds function references for keyboard events (also creates the functions),
@@ -97,7 +102,7 @@ class BlobRunner:
         # Runtime preferences/states
         self.session_num: int = self.blob_save_load.find_session_num()
         self.session_inc_num: int = 0
-        self.session_inc_adj: int = 0
+        self.session_inc_change: int = 0
         self.time_adj: bool = False
         self.session_save_itr: int = DAYS * 90
         self.auto_save_load: bool = AUTO_SAVE_LOAD
@@ -138,6 +143,7 @@ class BlobRunner:
         data["running"] = self.running
         data["paused"] = self.paused
         data["elapsed_time"] = self.elapsed_time
+        data["timescale"] = bg_vars.timescale
         data["show_stats"] = self.show_stats
         data["fullscreen"] = self.fullscreen
         data["fullscreen_save_w"] = self.fullscreen_save_w
@@ -152,6 +158,11 @@ class BlobRunner:
         self.running = data["running"]
         self.paused = data["paused"]
         self.elapsed_time = data["elapsed_time"]
+        if data.get("timescale", None) is not None:
+            bg_vars.set_timescale(data["timescale"])
+            bp.set_timescale(bg_vars.timescale)
+            self.timescale_str = self.get_timescale_str()
+
         self.show_stats = data["show_stats"]
         self.fullscreen = data["fullscreen"]
         self.fullscreen_save_w = data["fullscreen_save_w"]
@@ -163,16 +174,18 @@ class BlobRunner:
     def get_timescale_str(
         self: Self, time_seconds: int = -1, suffix: str = "/sec"
     ) -> str:
+        """
+        Returns displayable text of the current (or provided by time_seconds) timescale, i.e.
+        lapsed time per real second
+        """
 
         if time_seconds == -1:
             time_seconds = bg_vars.timescale
 
         days: int = int(time_seconds / DAYS)
-        hours: int = int(((time_seconds) - (DAYS * int(time_seconds / DAYS))) / HOURS)
-        minutes: int = int(
-            ((time_seconds) - (HOURS * int(time_seconds / HOURS))) / MINUTES
-        )
-        seconds: int = int(((time_seconds) - (MINUTES * int(time_seconds / MINUTES))))
+        hours: int = int((time_seconds % DAYS) / HOURS)
+        minutes: int = int(((time_seconds % DAYS) % HOURS) / MINUTES)
+        seconds: int = int(((time_seconds % DAYS) % HOURS) % MINUTES)
 
         return_str: str = ""
 
@@ -238,14 +251,14 @@ class BlobRunner:
             if self.session_inc_num > 1:
                 self.session_num = self.blob_save_load.find_session_num()
             self.session_inc_num = 0
-            self.session_inc_adj = 0
+            self.session_inc_change = 0
             self.blob_save_load.save(True, "last_blob_plot.json")
             self.blob_save_load.save(
                 True, f"{self.session_num}-{self.session_inc_num}.json"
             )
 
             self.session_inc_num += 1
-            self.session_inc_adj = self.session_inc_num
+            self.session_inc_change = self.session_inc_num
             self.time_adj = False
 
         def toggle_square_grid() -> None:
@@ -304,7 +317,7 @@ class BlobRunner:
             auto_save: bool = self.auto_save_load
 
             if self.time_adj:
-                self.session_inc_num = self.session_inc_adj
+                self.session_inc_num = self.session_inc_change
                 self.elapsed_time = 0
                 self.message = None
                 self.message_counter = 0
@@ -312,14 +325,13 @@ class BlobRunner:
                 self.blob_save_load.load(
                     True, f"{self.session_num}-{self.session_inc_num}.json"
                 )
-                self.blob_plotter.populate_grid()
                 self.paused = True
                 self.display.paused = True
                 self.auto_save_load = auto_save
                 self.universe = self.blob_factory.get_blob_universe()
                 self.blob_save_load.save(True, "last_blob_plot.json")
                 self.session_inc_num += 1
-                self.session_inc_adj = self.session_inc_num
+                self.session_inc_change = self.session_inc_num
                 self.time_adj = False
 
         def time_reverse_left() -> None:
@@ -327,14 +339,14 @@ class BlobRunner:
                 self.paused = True
                 self.display.paused = True
 
-            if self.session_inc_adj > 0:
-                self.session_inc_adj -= 1
+            if self.session_inc_change > 0:
+                self.session_inc_change -= 1
 
             self.time_adj = True
 
             self.message = (
                 self.time_reverse_1_t
-                + f"{self.get_timescale_str(self.session_inc_adj*self.session_save_itr, "")}"
+                + f"{self.get_timescale_str(self.session_inc_change*self.session_save_itr, "")}"
                 + self.time_reverse_2_t
             )
             self.message_counter = 60 * 3
@@ -344,17 +356,17 @@ class BlobRunner:
                 self.paused = True
                 self.display.paused = True
 
-            if self.session_inc_adj < self.session_inc_num:
-                self.session_inc_adj += 1
+            if self.session_inc_change < self.session_inc_num:
+                self.session_inc_change += 1
 
-            if self.session_inc_adj == self.session_inc_num:
-                self.session_inc_adj -= 1
+            if self.session_inc_change == self.session_inc_num:
+                self.session_inc_change -= 1
 
             self.time_adj = True
 
             self.message = (
                 self.time_reverse_1_t
-                + f"{self.get_timescale_str(self.session_inc_adj*self.session_save_itr, "")}"
+                + f"{self.get_timescale_str(self.session_inc_change*self.session_save_itr, "")}"
                 + self.time_reverse_2_t
             )
             self.message_counter = 60 * 3
@@ -365,6 +377,7 @@ class BlobRunner:
             else:
                 bg_vars.set_timescale(bg_vars.timescale + (bg_vars.timescale_inc))
 
+            bp.set_timescale(bg_vars.timescale)
             self.timescale_str = self.get_timescale_str()
             self.message = f"Timescale is now {self.timescale_str}"
             self.message_counter = 60 * 2
@@ -374,6 +387,8 @@ class BlobRunner:
                 bg_vars.set_timescale(bg_vars.timescale_inc)
             else:
                 bg_vars.set_timescale(bg_vars.timescale - (bg_vars.timescale_inc))
+
+            bp.set_timescale(bg_vars.timescale)
             self.timescale_str = self.get_timescale_str()
             self.message = f"Timescale is now {self.timescale_str}"
             self.message_counter = 60 * 2
@@ -424,7 +439,7 @@ class BlobRunner:
                 True, f"{self.session_num}-{self.session_inc_num}.json"
             )
         self.session_inc_num += 1
-        self.session_inc_adj = self.session_inc_num
+        self.session_inc_change = self.session_inc_num
 
         while self.running:
             self.display.check_events(self.keyboard_events)
@@ -459,6 +474,8 @@ class BlobRunner:
         self.display.fps_clock_tick(FRAME_RATE)
 
         if not self.paused:
+            # We're currently using a static dt, but uncomment this if that changes
+            # bp.set_average_delta_time(self.display.fps_get_dt())
             self.blob_plotter.update_blobs(self.display.fps_get_dt())
             self.elapsed_time += bg_vars.timescale * self.display.fps_get_dt()
             if (self.elapsed_time / self.session_save_itr) >= self.session_inc_num:
@@ -466,7 +483,7 @@ class BlobRunner:
                     True, f"{self.session_num}-{self.session_inc_num}.json"
                 )
                 self.session_inc_num += 1
-                self.session_inc_adj = self.session_inc_num
+                self.session_inc_change = self.session_inc_num
                 self.time_adj = False
 
         self.display.update()

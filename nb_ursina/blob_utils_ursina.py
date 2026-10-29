@@ -20,7 +20,6 @@ from newtons_blobs.globals import *
 from .fps import FPS
 from .ursina_fix import BlobText
 
-
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
@@ -196,6 +195,7 @@ class FontUtils:
                 eternal=True,
                 unlit=True,
                 shader=shd.unlit_shader,
+                add_to_scene_entities=False,
             )
         return FontUtils.font_overlay
 
@@ -346,6 +346,7 @@ class TempMessage(urs.Entity):
             enabled=True,
             origin=(0, 0, 0),
             eternal=True,
+            add_to_scene_entities=False,
         )
 
         self.position = urs.Vec3(0, 0, 0)
@@ -486,6 +487,7 @@ class StatText(urs.Entity):
             enabled=True,
             origin=(-0.5, 0, -0.5),
             eternal=True,
+            add_to_scene_entities=False,
         )
 
         self.set_text(self.text, self.pos, self.orientation)

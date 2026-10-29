@@ -24,7 +24,6 @@ from .blob_utils_ursina import *
 from .blob_first_person_surface import FirstPersonSurface
 from .fps import FPS
 
-
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2025"
 __license__ = "GPL 3.0"
@@ -466,16 +465,17 @@ class BlobDisplayUrsina:
         if adjusted_height < size[1]:
             size = (size[0], adjusted_height)
 
-        urs.window.fullscreen = self.modes[mode]
+        if urs.window.fullscreen != self.modes[mode]:
+            urs.window.fullscreen = self.modes[mode]
 
-        if not self.modes[mode]:
-            urs.window.size = urs.Vec2(size[0], size[1])
-            urs.window.position = urs.Vec2(
-                ((urs.window.main_monitor.width - size[0]) / 2),
-                ((urs.window.main_monitor.height - size[1]) / 2),
-            )
-            self.windowed_width = size[0]
-            self.windowed_height = size[1]
+            if not self.modes[mode]:
+                urs.window.size = urs.Vec2(size[0], size[1])
+                urs.window.position = urs.Vec2(
+                    ((urs.window.main_monitor.width - size[0]) / 2),
+                    ((urs.window.main_monitor.height - size[1]) / 2),
+                )
+                self.windowed_width = size[0]
+                self.windowed_height = size[1]
 
         if pos_lock:
             self.first_person_surface.first_person_viewer.pos_unlock()
@@ -524,7 +524,7 @@ class BlobDisplayUrsina:
         text_entity_entity = self.text_entity_cache.get(key)
         if text_entity_entity is None:
             self.text_entity_cache[key] = StatText(
-                text=text, pos=pos, orientation=orientation
+                text=text, pos=pos, orientation=orientation, add_to_scene_entities=False
             )
 
             text_entity_entity = self.text_entity_cache.get(key)

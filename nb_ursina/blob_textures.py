@@ -6,6 +6,8 @@ Lists of textures for blobs, large and small
 by Jason Mott, copyright 2025
 """
 
+from typing import List
+
 from newtons_blobs.globals import *
 
 __author__ = "Jason Mott"
@@ -17,7 +19,7 @@ __email__ = "github@jasonmott.com"
 __status__ = "In Progress"
 
 
-BLOB_TEXTURES_GAS = [
+BLOB_TEXTURES_GAS: List[str] = [
     "gas_planets/gas_001.png",
     "gas_planets/gas_002.png",
     "gas_planets/gas_003.png",
@@ -63,7 +65,7 @@ BLOB_TEXTURES_GAS = [
     "gas_planets/2k_uranus.jpg",
 ]
 
-BLOB_TEXTURES_RINGS = [
+BLOB_TEXTURES_RINGS: List[str] = [
     "planet_rings/ring_001.png",
     "planet_rings/ring_002.png",
     "planet_rings/ring_003.png",
@@ -110,7 +112,7 @@ BLOB_TEXTURES_RINGS = [
 ]
 
 
-BLOB_TEXTURES_ROCKY = [
+BLOB_TEXTURES_ROCKY: List[str] = [
     "rocky_planets/8k_earth_daymap.jpg",
     "rocky_planets/8k_mercury.jpg",
     "rocky_planets/4k_venus_atmosphere.jpg",
@@ -137,7 +139,7 @@ BLOB_TEXTURES_ROCKY = [
     "rocky_planets/terraformed_mars.jpg",
 ]
 
-BLOB_TEXTURES_MOON = [
+BLOB_TEXTURES_MOON: List[str] = [
     "moons/8k_moon.jpg",
     "moons/4k_ceres_fictional.jpg",
     "moons/4k_eris_fictional.jpg",
@@ -159,7 +161,7 @@ BLOB_TEXTURES_MOON = [
 ]
 
 # orig: (25 / 255, 100 / 255, 150 / 255, 0.9)
-BLOB_TRAIL_COLOR = [
+BLOB_TRAIL_COLOR: List[str] = [
     # Blue
     (0 / 255, 132 / 255, 184 / 255, 0.9),  # rgb(0, 132, 184)
     (5 / 255, 102 / 255, 141 / 255, 0.9),  # rgb(5, 102, 141)
@@ -186,21 +188,23 @@ BLOB_TRAIL_COLOR = [
     (70 / 255, 58 / 255, 64 / 255, 0.9),  # rgb(70, 58, 64)
 ]
 
-BLOB_BACKGROUND_LARGE = [
+NUM_TRAIL_COLORS: int = len(BLOB_TRAIL_COLOR)
+
+BLOB_BACKGROUND_LARGE: List[str] = [
     "backgrounds/8k_stars_milky_way.jpeg",
     "backgrounds/starmap_2020_8k_gal.png",
     "backgrounds/multi_nebulae_2.png",
     "backgrounds/night_sky_02.jpg",
 ]
 
-BLOB_BACKGROUND_SMALL = [
+BLOB_BACKGROUND_SMALL: List[str] = [
     "backgrounds/8k_stars_milky_way-small.jpeg",
     "backgrounds/starmap_2020_8k_gal-small.png",
     "backgrounds/multi_nebulae_2-small.png",
     "backgrounds/night_sky_02-small.jpg",
 ]
 
-BLOB_BACKGROUND_ROTATION = [
+BLOB_BACKGROUND_ROTATION: List[str] = [
     (0, 0, 40),
     (0, 0, 40),
     (0, 0, 90),
