@@ -39,7 +39,7 @@ from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial, Blob
 from .blob_collision_cloud import BlobCollisionCloud as CollCloud
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

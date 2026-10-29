@@ -22,7 +22,7 @@ from newtons_blobs.globals import *
 from .blob_quad import createBlobQuad
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

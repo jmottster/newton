@@ -20,7 +20,7 @@ from .blob_surface import BlobSurface
 from .blob_vector import BlobVector as BVec3
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

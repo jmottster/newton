@@ -17,7 +17,7 @@ from .blob_universe import BlobUniverse
 from .globals import *
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

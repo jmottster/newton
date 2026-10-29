@@ -17,7 +17,7 @@ from .globals import *
 from .blob_global_vars import BlobGlobalVars as bg_vars
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

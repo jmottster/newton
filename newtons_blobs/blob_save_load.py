@@ -13,7 +13,7 @@ from .globals import *
 from .savable_loadable_prefs import SavableLoadablePrefs
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

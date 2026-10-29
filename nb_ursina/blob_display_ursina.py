@@ -17,7 +17,6 @@ from direct.showbase import DirectObject  # type: ignore
 import ursina as urs  # type: ignore
 
 from newtons_blobs.globals import *
-from newtons_blobs import BlobUniverse
 from newtons_blobs import BlobDisplay
 
 from .blob_utils_ursina import *
@@ -25,7 +24,7 @@ from .blob_first_person_surface import FirstPersonSurface
 from .fps import FPS
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

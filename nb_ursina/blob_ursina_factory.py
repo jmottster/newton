@@ -38,7 +38,7 @@ from .ursina_fix import BlobText
 from .blob_utils_ursina import LightUtils as lu
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"

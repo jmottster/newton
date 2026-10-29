@@ -21,7 +21,7 @@ from .blob_vector import BlobVector as BVec3
 from .blob_physics import BlobPhysics as bp
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"
@@ -792,7 +792,7 @@ class BlobPlotter:
                 if plot_phi_offset % (math.pi / 2) == 0:
                     mag = plot_radius
                 else:
-                    # determine if plot_phi_offset is pointing up (higher than 0.25 rads and lower than 0.75 rads) 
+                    # determine if plot_phi_offset is pointing up (higher than 0.25 rads and lower than 0.75 rads)
                     # or right/left (lower than 0.25 rads or higher than 0.75 rads)
                     # i.e., do we use sine or cosine to stretch the radius (mag) to edge of square?
 
@@ -807,12 +807,19 @@ class BlobPlotter:
                         mag = abs(plot_radius / math.cos(plot_phi_offset))
 
             # position for planets[i] blob
-            blob_pos: BVec3 = center + (cross_a * math.cos(plot_phi_offset) + cross_b * math.sin(plot_phi_offset)).normalize() * mag
+            blob_pos: BVec3 = (
+                center
+                + (
+                    cross_a * math.cos(plot_phi_offset)
+                    + cross_b * math.sin(plot_phi_offset)
+                ).normalize()
+                * mag
+            )
 
             blobs_left -= 1
 
-            # if we're staggering the plots, no two plots share the same radius, 
-            # so add plot_radius partition 
+            # if we're staggering the plots, no two plots share the same radius,
+            # so add plot_radius partition
             if blobs_left > 0 and stagger_radius:
                 plot_radius += plot_radius_partition + (
                     blob_random.random() * plot_radius_partition

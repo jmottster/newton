@@ -19,7 +19,7 @@ from .blob_universe_ursina import BlobUniverseUrsina
 from .blob_first_person_ursina import BlobFirstPersonUrsina
 
 __author__ = "Jason Mott"
-__copyright__ = "Copyright 2025"
+__copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
 __version__ = VERSION
 __maintainer__ = "Jason Mott"
