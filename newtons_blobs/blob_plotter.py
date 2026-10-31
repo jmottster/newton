@@ -90,22 +90,11 @@ class BlobPlotter:
 
     def __init__(
         self: Self,
-        universe_size: float,
-        universe_h: float,
-        display_w: float,
-        display_h: float,
         blob_factory: BlobPluginFactory,
     ):
-
-        self.universe_size: float = universe_size
-        # self.scaled_display_width: float = display_w * bg_vars.scale_up
-        # self.scaled_display_height: float = display_h * bg_vars.scale_up
         self.blob_factory: BlobPluginFactory = blob_factory
         self.display = self.blob_factory.get_blob_display()
 
-        MassiveBlob.center_blob_x = universe_size / 2
-        MassiveBlob.center_blob_y = universe_size / 2
-        MassiveBlob.center_blob_z = universe_size / 2
         bp.set_gravitational_range(bg_vars.universe_size * bg_vars.scale_up)
 
         self.tilt_roll: float = 0
@@ -124,8 +113,8 @@ class BlobPlotter:
             ],
             dtype=object,
         )
-        self.queue_index: int = 1
 
+        self.scaled_universe: float = bg_vars.universe_size * bg_vars.scale_up
         self.num_moons: int = (NUM_BLOBS - 1) - bg_vars.num_planets
         self.square_grid: bool = bg_vars.square_blob_plotter
         self.start_perfect_orbit: bool = bg_vars.start_perfect_orbit
@@ -133,9 +122,14 @@ class BlobPlotter:
 
     def get_prefs(self: Self, data: Dict[str, Any]) -> None:
         """Loads the provided dict with all the necessary key/value pairs to save the state of the instance."""
-        # TODO change this save file var to just universe_size
-        data["universe_size_w"] = self.universe_size / bg_vars.au_scale_factor
-        data["universe_size"] = self.universe_size / bg_vars.au_scale_factor
+
+        # Changed the name of this variable, need to deal with old save files
+        # that have the old variable name
+        if data.get("universe_size_w", None) is not None:
+            del data["universe_size_w"]
+        if data.get("universe_size_h", None) is not None:
+            del data["universe_size_h"]
+
         data["blobs_swallowed"] = self.blobs_swallowed
         data["blobs_escaped"] = self.blobs_escaped
         data["square_grid"] = self.square_grid
@@ -156,8 +150,9 @@ class BlobPlotter:
         """
 
         self.blob_factory.reset(len(data["blobs"]))
+
         self.display.update()
-        self.universe_size = data["universe_size_w"] * bg_vars.au_scale_factor
+
         self.blobs_swallowed = data["blobs_swallowed"]
         self.blobs_escaped = data["blobs_escaped"]
         self.square_grid = data["square_grid"]
@@ -167,6 +162,17 @@ class BlobPlotter:
         bp.set_gravitational_range(bg_vars.universe_size * bg_vars.scale_up)
         bp.hits.clear()
         bp.hits = data.get("coll_hits", dict())
+
+        self.scaled_universe = bg_vars.universe_size * bg_vars.scale_up
+        self.proximity_grid.fill(None)
+        self.proximity_grid = np.empty(
+            [
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+                int(bg_vars.grid_key_upper_bound),
+            ],
+            dtype=object,
+        )
 
         view_pos: Tuple[float, float, float] = None
         view_rot: Tuple[float, float, float] = None
@@ -191,7 +197,6 @@ class BlobPlotter:
             else:
                 view_follow_pos = None
             self.blobs[blob_pref["index"]] = MassiveBlob(
-                self.universe_size,
                 blob_pref["index"],
                 blob_pref["name"],
                 self.blob_factory.new_blob_surface(
@@ -239,6 +244,10 @@ class BlobPlotter:
     def start_over(self: Self, plot_blobs: bool = True) -> None:
         """Clears all variables to initial state (i.e. deletes all blobs), and calls plot_blobs()"""
 
+        universe = self.blob_factory.get_blob_universe()
+        universe.clear()
+        self.display.update()
+
         if plot_blobs:
             self.blob_factory.reset()
         else:
@@ -249,21 +258,30 @@ class BlobPlotter:
             blob.destroy()
             self.display.update()
 
-        bp.hits.clear()
         self.blobs = np.empty([NUM_BLOBS], dtype=MassiveBlob)
         self.display.update()
 
-        universe = self.blob_factory.get_blob_universe()
-        universe.clear()
-        self.display.update()
+        self.scaled_universe = bg_vars.universe_size * bg_vars.scale_up
 
-        self.universe_size = universe.get_width()
+        bp.hits.clear()
+        bp.set_gravitational_range(self.scaled_universe)
+        bp.setup()
 
         self.display.update()
         self.blobs_swallowed = 0
         self.blobs_escaped = 0
 
         if plot_blobs:
+            self.proximity_grid.fill(None)
+            self.proximity_grid = np.empty(
+                [
+                    int(bg_vars.grid_key_upper_bound),
+                    int(bg_vars.grid_key_upper_bound),
+                    int(bg_vars.grid_key_upper_bound),
+                ],
+                dtype=object,
+            )
+
             self.plot_blobs()
 
     def plot_blobs(self: Self) -> None:
@@ -381,7 +399,6 @@ class BlobPlotter:
 
             # Phew, let's instantiate this puppy . . .
             self.blobs[i] = MassiveBlob(
-                self.universe_size,
                 i,
                 str(i),
                 self.blob_factory.new_blob_surface(
@@ -527,7 +544,6 @@ class BlobPlotter:
             x_pos_offset: float = 0
             y_pos_offset: float = 0
             z_pos_offset: float = 0
-            scaled_universe: float = blob.scaled_up_universe_size
 
             check_edge(blob)
 
@@ -554,21 +570,21 @@ class BlobPlotter:
 
                             if x > bg_vars.grid_key_check_bound:
                                 x = 0
-                                x_pos_offset = scaled_universe
+                                x_pos_offset = self.scaled_universe
                             elif x < 0:
-                                x_pos_offset = -scaled_universe
+                                x_pos_offset = -self.scaled_universe
 
                             if y > bg_vars.grid_key_check_bound:
                                 y = 0
-                                y_pos_offset = scaled_universe
+                                y_pos_offset = self.scaled_universe
                             elif y < 0:
-                                y_pos_offset = -scaled_universe
+                                y_pos_offset = -self.scaled_universe
 
                             if z > bg_vars.grid_key_check_bound:
                                 z = 0
-                                z_pos_offset = scaled_universe
+                                z_pos_offset = self.scaled_universe
                             elif z < 0:
-                                z_pos_offset = -scaled_universe
+                                z_pos_offset = -self.scaled_universe
 
                             check_blobs_wrap(
                                 blob,
@@ -650,6 +666,7 @@ class BlobPlotter:
                     elif blob.escaped:
                         self.blobs_escaped += 1
                     dgk: Tuple[int, int, int] = blob.grid_key
+
                     self.proximity_grid[dgk[0]][dgk[1]][dgk[2]] = np.delete(
                         self.proximity_grid[dgk[0]][dgk[1]][dgk[2]],
                         np.where(self.proximity_grid[dgk[0]][dgk[1]][dgk[2]] == blob)[
@@ -704,7 +721,6 @@ class BlobPlotter:
         )
 
         self.blobs[0] = MassiveBlob(
-            self.universe_size,
             0,
             CENTER_BLOB_NAME,
             self.blob_factory.new_blob_surface(

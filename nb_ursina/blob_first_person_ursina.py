@@ -126,7 +126,7 @@ class BlobFirstPersonUrsina(urs.Entity):
 
         lens = urs.camera.lens
         lens.setNear(0.09)
-        lens.setFar(bg_vars.background_scale * 2 / self.org_scale)
+        lens.setFar(bg_vars.background_scale * 1.1 / self.org_scale)
 
         self.radius: float = lens.getNear() * self.org_scale  # + 0.01
 
@@ -260,6 +260,9 @@ class BlobFirstPersonUrsina(urs.Entity):
         self.setup_stage: bool = True
 
         self.position = urs.Vec3(self.universe.get_center_pos())
+
+    def update_lens_far(self: Self) -> None:
+        urs.camera.lens.setFar(bg_vars.background_scale * 1.1 / self.org_scale)
 
     @property
     def position(self: Self) -> urs.Vec3:

@@ -41,13 +41,6 @@ class BlobUniverseUrsina:
     """
     Protocol class to represent an object that holds and controls a drawing area for the universe of blobs
 
-    Attributes
-    ----------
-    size_w: float
-        The desired width of the universe in pixels
-    size_h: float
-        The desired height of the universe in pixels
-
     Methods
     -------
     set_universe_entity(scale: float) -> None
@@ -56,12 +49,6 @@ class BlobUniverseUrsina:
     get_framework() -> Any
         Returns the underlying framework implementation of the drawing area for the universe, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
-
-    get_width() -> float
-        Returns the current width of the universe object
-
-    get_height() -> float
-        Returns the current height of the universe object
 
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the scaled up center point x,y,z
@@ -73,17 +60,12 @@ class BlobUniverseUrsina:
         Returns a tuple of offset values from center to given x,y,z
 
     clear() -> None
-        Used to delete and properly clean up blobs (for a start over, for example)
+        Used to reset universe size to default and
+        respawn the universe entity (for a start over, for example)
 
     """
 
-    size_w: float
-    size_h: float
-
-    def __init__(self: Self, size_w: float, size_h: float):
-
-        self.width = size_w
-        self.height = size_h
+    def __init__(self: Self):
 
         self.universe: NodePath = None
         self.base_dir: Path = urs.application.asset_folder
@@ -128,7 +110,12 @@ class BlobUniverseUrsina:
         self.universe.reparentTo(urs.scene)
         self.universe.setTransparency(TransparencyAttrib.M_none)
         self.universe.setPos(
-            urs.scene, (self.width / 2, self.width / 2, self.width / 2)
+            urs.scene,
+            (
+                bg_vars.universe_size / 2,
+                bg_vars.universe_size / 2,
+                bg_vars.universe_size / 2,
+            ),
         )
 
         self.universe.setColorScaleOff()
@@ -159,31 +146,15 @@ class BlobUniverseUrsina:
         """
         return self.universe
 
-    def get_width(self: Self) -> float:
-        """
-        Returns the current width of the universe object
-        """
-        return self.width
-
-    def get_height(self: Self) -> float:
-        """
-        Returns the current height of the universe object
-        """
-        return self.height
-
     def get_center_blob_start_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the scaled up center point x,y,z"""
-        x = self.get_width() * bg_vars.scale_up
-        y = self.get_height() * bg_vars.scale_up
-        z = self.get_height() * bg_vars.scale_up
-        return (x / 2, y / 2, z / 2)
+        us: float = bg_vars.universe_size * bg_vars.scale_up / 2
+        return (us, us, us)
 
     def get_center_pos(self: Self) -> Tuple[float, float, float]:
         """Returns a tuple of the center point x,y,z"""
-        x = self.get_width()
-        y = self.get_height()
-        z = self.get_height()
-        return (x / 2, y / 2, z / 2)
+        us: float = bg_vars.universe_size / 2
+        return (us, us, us)
 
     def get_center_offset(
         self: Self, x: float, y: float, z: float
@@ -194,11 +165,10 @@ class BlobUniverseUrsina:
         return (center_x - x, center_y - y, center_z - z)
 
     def clear(self: Self) -> None:
-        """Used to delete and properly clean up blobs (for a start over, for example)"""
+        """
+        Used to reset universe size to default and
+        respawn the universe entity (for a start over, for example)
+        """
 
-        urs.scene.clear()
-        self.width, self.height = (
-            bg_vars.universe_size,
-            bg_vars.universe_size,
-        )
+        bg_vars.set_universe_scale(bg_vars.org_universe_scale)
         self.set_universe_entity(bg_vars.background_scale)

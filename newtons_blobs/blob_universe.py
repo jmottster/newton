@@ -23,24 +23,14 @@ class BlobUniverse(Protocol):
     """
     Protocol class to represent an object that holds and controls a drawing area for the universe of blobs
 
-    Attributes
-    ----------
-    size_w: float
-        The desired width of the universe in pixels
-    size_h: float
-        The desired height of the universe in pixels
-
     Methods
     -------
+    set_universe_entity(scale: float, texture: str = None) -> None
+        Creates the Entity that renders the dome of the background image (stars)
+
     get_framework(self: Self) -> Any
         Returns the underlying framework implementation of the drawing area for the universe, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
-
-    get_width(self: Self) -> float
-        Returns the current width of the universe object
-
-    get_height(self: Self) -> float
-        Returns the current height of the universe object
 
     get_center_blob_start_pos() -> Tuple[float,float,float]
         Returns a tuple of the center point x,y,z
@@ -53,25 +43,14 @@ class BlobUniverse(Protocol):
 
     """
 
-    size_w: float
-    size_h: float
+    def set_universe_entity(self: Self, scale: float, texture: str = None) -> None:
+        """Creates the Entity that renders the dome of the background image (stars)"""
+        pass
 
     def get_framework(self: Self) -> Any:
         """
         Returns the underlying framework implementation of the drawing area for the universe, mostly for use
         in an implementation of BlobSurface within the same framework for direct access
-        """
-        pass
-
-    def get_width(self: Self) -> float:
-        """
-        Returns the current width of the universe object
-        """
-        pass
-
-    def get_height(self: Self) -> float:
-        """
-        Returns the current height of the universe object
         """
         pass
 

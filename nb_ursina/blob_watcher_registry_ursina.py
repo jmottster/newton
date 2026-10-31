@@ -244,7 +244,16 @@ class BlobWatcher(urs.Entity):
 
     def remove_moon(self: Self, moon: BlobCore) -> None:
         """Removes a blob from the internal moon blob array"""
+
         self.moons = np.delete(self.moons, np.where(self.moons == moon)[0])
+        for t_blob in self.moons:
+            if (
+                t_blob is not None
+                and t_blob.trail is not None
+                and t_blob.trail.barycenter_blob is not None
+            ):
+                if t_blob.trail.barycenter_blob.index == moon.index:
+                    t_blob.trail.barycenter_blob = None
 
     def purge_none_elements(self: Self) -> None:
         """Removes any None elements from the planets and moons arrays"""

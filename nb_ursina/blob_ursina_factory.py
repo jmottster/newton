@@ -125,6 +125,7 @@ class BlobUrsinaFactory:
 
         bg_vars.set_au_scale_factor(1.495978707 * 10**5)
         bg_vars.set_universe_scale(40)
+        bg_vars.set_org_universe_scale(40)
         bg_vars.set_center_blob_scale(15)
         bg_vars.set_scale_center_blob_mass_with_size(True)
         bg_vars.set_black_hole_mode(False)
@@ -135,10 +136,7 @@ class BlobUrsinaFactory:
         bg_vars.set_scale_blob_mass_with_size(True)
         bg_vars.set_grid_cells_per_au(0.5)
         bg_vars.set_first_person_scale(bg_vars.max_radius * 0.75)
-        bg_scale: float = bg_vars.universe_size * 0.75
-        bg_vars.set_background_scale(
-            float(round(BVec3(bg_scale, bg_scale, bg_scale).mag()))
-        )
+        bg_vars.set_background_scale_factor(0.75)
         bg_vars.set_timescale(HOURS * 3)
         bg_vars.set_orig_timescale(HOURS * 3)
         bg_vars.set_timescale_inc(HOURS * 3)
@@ -163,9 +161,7 @@ class BlobUrsinaFactory:
             DISPLAY_SIZE_W, DISPLAY_SIZE_H
         )
 
-        self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina(
-            bg_vars.universe_size, bg_vars.universe_size
-        )
+        self.urs_universe: BlobUniverseUrsina = BlobUniverseUrsina()
 
         self.urs_display.first_person_surface = FirstPersonSurface(
             bg_vars.first_person_scale,
@@ -178,7 +174,6 @@ class BlobUrsinaFactory:
         )
 
         self.first_person_blob: MassiveBlob = MassiveBlob(
-            bg_vars.universe_size,
             -1,
             "first_person",
             cast(BlobSurface, self.urs_display.first_person_surface),
@@ -198,15 +193,6 @@ class BlobUrsinaFactory:
         self.urs_display.update()
 
         bp.setup()
-        bp.edge_radius = self.urs_universe.universe.getScale()[0] * bg_vars.scale_up
-        bp.uni_center = (
-            BVec3(
-                self.urs_universe.universe.getPos()[0],
-                self.urs_universe.universe.getPos()[1],
-                self.urs_universe.universe.getPos()[2],
-            )
-            * bg_vars.scale_up
-        )
 
     def setup_start_pos_default(self: Self, center_pos: urs.Vec3) -> None:
         """Configures the starting position of the first person viewer at a random spot self.start_distance from center_pos"""
@@ -265,6 +251,8 @@ class BlobUrsinaFactory:
         A dict will be sent to this method. so the implementor can load the dict up with
         attributes that are desired to be saved (if saving is turned on)
         """
+
+        data["universe_size"] = bg_vars.universe_size / bg_vars.au_scale_factor
         data["center_blob_scale"] = bg_vars.center_blob_scale
         data["scale_center_blob_mass_with_size"] = (
             bg_vars.scale_center_blob_mass_with_size
@@ -308,9 +296,14 @@ class BlobUrsinaFactory:
         populating dict in get_prefs()) (if saving is turned on)
 
         """
-        # TODO change this save file var to just one universe_size
-        self.urs_universe.width = data["universe_size_w"] * bg_vars.au_scale_factor
-        self.urs_universe.height = data["universe_size_w"] * bg_vars.au_scale_factor
+        # Changed the name of this variable, need to deal with old save files
+        # that have the old variable name
+        if data.get("universe_size", None) is not None:
+            bg_vars.set_universe_scale(data["universe_size"])
+        else:
+            bg_vars.set_universe_scale(data["universe_size_w"])
+
+        bp.setup()
 
         if data.get("center_blob_scale") is not None:
             bg_vars.set_center_blob_scale(data["center_blob_scale"])
@@ -352,12 +345,15 @@ class BlobUrsinaFactory:
                 "view_roll_speed"
             ]
 
+        self.urs_display.first_person_surface.first_person_viewer.update_lens_far()
+
     def reset(self: Self, num_blobs: int = NUM_BLOBS) -> None:
         """Resets to default state"""
 
         blob_registry.reset()
 
         self.urs_display.first_person_surface.first_person_viewer.stop_following()
+        self.urs_display.first_person_surface.first_person_viewer.update_lens_far()
 
         blob_registry.set_first_person_viewer(
             self.urs_display.first_person_surface.first_person_viewer
@@ -532,7 +528,7 @@ class BlobUrsinaFactory:
             for blob in blobs:
                 pos2 = urs.Vec3(blob.blob_surface.position)
                 touching = (
-                    blob.blob_surface.ursina_blob.scale_x
+                    blob.blob_surface.ursina_blob.scale_x  # type: ignore
                     + self.first_person_blob.blob_surface.radius
                 )
                 diff = urs.Vec3(pos1 - pos2)

@@ -79,17 +79,10 @@ class BlobRunner:
 
         # Set up the rendering objects
         self.blob_factory: BlobPluginFactory = blob_factory
-        self.universe: BlobUniverse = blob_factory.get_blob_universe()
         self.display: BlobDisplay = blob_factory.get_blob_display()
 
         # Get all the blobs ready to roll
-        self.blob_plotter: BlobPlotter = BlobPlotter(
-            self.universe.get_width(),
-            self.universe.get_height(),
-            self.display.get_width(),
-            self.display.get_height(),
-            blob_factory,
-        )
+        self.blob_plotter: BlobPlotter = BlobPlotter(blob_factory)
         self.blob_save_load: BlobSaveLoad = BlobSaveLoad(
             [blob_factory, self, self.blob_plotter]
         )
@@ -328,7 +321,6 @@ class BlobRunner:
                 self.paused = True
                 self.display.paused = True
                 self.auto_save_load = auto_save
-                self.universe = self.blob_factory.get_blob_universe()
                 self.blob_save_load.save(True, "last_blob_plot.json")
                 self.session_inc_num += 1
                 self.session_inc_change = self.session_inc_num
@@ -424,7 +416,6 @@ class BlobRunner:
         self.auto_save_load = self.blob_save_load.load_value("auto_save_load")
 
         if self.auto_save_load and self.blob_save_load.load():
-            self.universe = self.blob_factory.get_blob_universe()
             self.session_inc_num = self.blob_save_load.rename_session(
                 "saved", str(self.session_num)
             )

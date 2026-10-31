@@ -161,3 +161,12 @@ Improved efficiency of blob update function
 Added timescale to save data
 Updated vector class with more functionality
 Various tweaks and bug fixes
+
+v0.2.5
+Refactored how Universe size is passed around, now just in bg_vars
+Made it so changing which blob you follow is one click instead of two
+Removed some center blob variables that weren't being unused
+Added ability to update camera lens "far" setting
+Made it so when a followed blob is swallowed, following is automatically switched to the swallowing blob
+Fixed blob watcher bug, sometimes blobs had a barycenter which was a destroyed blob, freezing the game -- added clean up for dead blobs that are a barycenter
+various tweaks and bug fixes

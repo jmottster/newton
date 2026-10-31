@@ -36,8 +36,6 @@ class MassiveBlob:
 
     Attributes
     ----------
-    universe_size : float
-        the size of the universe in pixels (this size is cubed for full environment size)
     index : int
         An order number in a group of blobs
     name : str
@@ -88,8 +86,6 @@ class MassiveBlob:
     """
 
     __slots__ = (
-        "scaled_up_universe_size",
-        "universe_size",
         "index",
         "name",
         "blob_surface",
@@ -110,13 +106,8 @@ class MassiveBlob:
         "warn",
     )
 
-    center_blob_x: ClassVar[float] = bg_vars.universe_size / 2
-    center_blob_y: ClassVar[float] = bg_vars.universe_size / 2
-    center_blob_z: ClassVar[float] = bg_vars.universe_size / 2
-
     def __init__(
         self: Self,
-        universe_size: float,
         index: int,
         name: str,
         blob_surface: BlobSurface,
@@ -124,9 +115,6 @@ class MassiveBlob:
         position: BVec3,
         velocity: BVec3,
     ):
-
-        self.scaled_up_universe_size: float = universe_size * bg_vars.scale_up
-        self.universe_size = universe_size
 
         self.index: int = index
         self.name: str = name
@@ -430,10 +418,6 @@ class MassiveBlob:
         if self.name != CENTER_BLOB_NAME:
             self.blob_surface.draw((x, y, z), LIGHTING)
         else:
-            MassiveBlob.center_blob_x = x
-            MassiveBlob.center_blob_y = y
-            MassiveBlob.center_blob_z = z
-            self.blob_surface.update_center_blob(x, y, z)
             self.blob_surface.draw_as_center_blob(
                 (x, y, z), (LIGHTING and not self.pause)
             )

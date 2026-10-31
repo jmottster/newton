@@ -39,7 +39,7 @@ class BlobPluginFactory(Protocol):
         A dict instance will be sent to this method so its implementer can load up values from it (that it saved when
         populating dict in get_prefs()) (if saving is turned on)
 
-    reset(self: Self) -> None
+    reset(num_blobs: int = NUM_BLOBS) -> None
         Resets to default state
 
     new_blob_surface(index: int,

@@ -35,7 +35,14 @@ from .blob_textures import *
 from .blob_utils_ursina import MathFunctions as mf, LightUtils as lu
 
 from .fps import FPS
-from .ursina_fix import BlobText, BlobRotator, SunMaterial, PlanetMaterial, BlobLine
+from .ursina_fix import (
+    BlobText,
+    BlobRotator,
+    FollowerEntity,
+    SunMaterial,
+    PlanetMaterial,
+    BlobLine,
+)
 from .blob_collision_cloud import BlobCollisionCloud as CollCloud
 
 __author__ = "Jason Mott"
@@ -362,9 +369,6 @@ class BlobCore(BlobRotator):
         Checks if the barycenter blob has its own light and uses that if so.
         Otherwise it will use the center blob light
 
-    begin_disintegration() -> None
-        Instantiates the dust cloud object
-
     set_orbital_pos_vel(orbital: BlobSurface) -> None
         Sets orbital to a position and velocity appropriate for an orbital of this blob
 
@@ -636,11 +640,17 @@ class BlobCore(BlobRotator):
     @swallowed.setter
     def swallowed(self: Self, swallowed: bool) -> None:
         """Sets bool indicating if this blob has been swallowed"""
-        self.begin_disintegration()
+        self.start_collision_cloud = swallowed
 
     def swallowed_by(self: Self, blob: "BlobCore") -> None:
         """Tells this blob what other blob is swallowing it"""
         self.swallowed_by_blob = blob
+
+        if self.follower_entity is not None:
+            temp_follower_entity: FollowerEntity = self.follower_entity
+            self.follower_entity.stop_following()
+            temp_follower_entity.start_following(blob)
+
         self.swallowed_by_blob.blobs_combined_add(str(self.index))
         if len(self._blobs_combined) > 0:
             self.swallowed_by_blob.blobs_combined_extend(self._blobs_combined)
@@ -697,10 +707,6 @@ class BlobCore(BlobRotator):
                 for bit in range(1, len(lu.bit_masks)):
                     self.hide(lu.bit_masks[bit])
                     self.rotator_model.hide(lu.bit_masks[bit])
-
-    def begin_disintegration(self: Self) -> None:
-        """Instantiates the dust cloud object"""
-        self.start_collision_cloud = True
 
     def set_orbital_pos_vel(self: Self, orbital: "BlobSurfaceUrsina") -> urs.Vec3:
         """Sets orbital to a position and velocity appropriate for an orbital of this blob"""
@@ -1181,6 +1187,9 @@ class BlobCore(BlobRotator):
     def on_destroy(self: Self) -> None:
         """Called when this Entity is destroyed"""
 
+        if self.follower_entity is not None:
+            self.follower_entity.stop_following()
+
         from .blob_watcher_registry_ursina import (
             BlobWatcherRegistryUrsina as blob_registry,
         )
@@ -1190,9 +1199,6 @@ class BlobCore(BlobRotator):
             blob_registry.remove_moon(self)
         else:
             blob_registry.remove_planet(self)
-
-        if self.trail is not None:
-            urs.destroy(self.trail)
 
         self.destroy_text_overlay()
 
@@ -1259,10 +1265,6 @@ class BlobSurfaceUrsina:
     resize(radius: float) -> None
         Sets a new radius for this blob
 
-    update_center_blob(x: float, y: float, z: float) -> None
-        Update the x,y,z of the center blob (for lighting effects, etc.,
-        all blobs are informed where the center blob is)
-
     draw(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draws this blob to the universe surface, with the given position (or uses position already set),
         send (pos,False) to turn off lighting effects
@@ -1299,9 +1301,6 @@ class BlobSurfaceUrsina:
         "_swallowed",
     )
 
-    center_blob_x: ClassVar[float] = 0
-    center_blob_y: ClassVar[float] = 0
-    center_blob_z: ClassVar[float] = 0
     center_blob: BlobCore = None
     universe_node: NodePath = None
     num_rings: int = 1
@@ -1621,15 +1620,6 @@ class BlobSurfaceUrsina:
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""
         pass
-
-    def update_center_blob(self: Self, x: float, y: float, z: float) -> None:
-        """
-        Update the x,y,z of the center blob (for lighting effects, etc.,
-        all blobs are informed where the center blob is)
-        """
-        BlobSurfaceUrsina.center_blob_x = x
-        BlobSurfaceUrsina.center_blob_y = y
-        BlobSurfaceUrsina.center_blob_z = z
 
     def draw(
         self: Self, pos: Tuple[float, float, float] = None, lighting: bool = True

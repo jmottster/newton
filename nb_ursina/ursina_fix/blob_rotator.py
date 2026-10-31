@@ -51,6 +51,9 @@ class FollowerEntity(Protocol):
     def stop_following(self: Self) -> None:
         pass
 
+    def start_following(self: Self, follow_entity: urs.Entity) -> None:
+        pass
+
 
 class BlobRotator(urs.Entity):
     """

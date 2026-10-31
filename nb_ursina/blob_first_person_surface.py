@@ -56,10 +56,6 @@ class FirstPersonSurface:
     resize(radius: float) -> None
         Sets a new radius for this blob
 
-    update_center_blob(x: float, y: float, z: float) -> None
-        Update the x,y,z of the center blob (for lighting effects, etc.,
-        all blobs are informed where the center blob is)
-
     draw(pos: Tuple[float] = None, lighting: bool = True) -> None
         Draws this blob to the universe surface, with the given position (or uses position already set),
         send (pos,False) to turn off lighting effects
@@ -123,13 +119,6 @@ class FirstPersonSurface:
 
     def resize(self: Self, radius: float) -> None:
         """Sets a new radius for this blob"""
-        pass
-
-    def update_center_blob(self: Self, x: float, y: float, z: float) -> None:
-        """
-        Update the x,y,z of the center blob (for lighting effects, etc.,
-        all blobs are informed where the center blob is)
-        """
         pass
 
     def draw(

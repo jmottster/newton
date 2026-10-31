@@ -9,6 +9,8 @@ by Jason Mott, copyright 2025
 from typing import ClassVar
 from .globals import *
 
+from .blob_vector import BlobVector as BVec3
+
 __author__ = "Jason Mott"
 __copyright__ = "Copyright 2026"
 __license__ = "GPL 3.0"
@@ -27,6 +29,7 @@ class BlobGlobalVars:
     BlobGlobalVars.au_scale_factor: ClassVar[float] - how many pixels are equal to one astronomical unit
 
     BlobGlobalVars.universe_scale: ClassVar[float] - Number of AU to equal universe size
+    BlobGlobalVars.org_universe_scale: ClassVar[float] - Number of AU to equal universe size. original value
 
     BlobGlobalVars.center_blob_scale: ClassVar[float] - To see more than 1 blob at a time, make blobs this times bigger than real proportion to AU
     BlobGlobalVars.scale_center_blob_mass_with_size: ClassVar[bool] - Whether or not to scale the mass in proportion to radius scaling
@@ -70,6 +73,7 @@ class BlobGlobalVars:
     BlobGlobalVars.enlarge_moon_factor: ClassVar[float] - the multiple by which a moon should be enlarged in enlarged mode (pressing "U")
 
     BlobGlobalVars.first_person_scale: ClassVar[float] - size (in pixels) that the first person view object is, especially in relation to center_blob_radius
+    BlobGlobalVars.background_scale_factor: ClassVar[float] - the amount to multiply universe_size by to set background_scale
     BlobGlobalVars.background_scale: ClassVar[float] - the distance (in pixels) that the first person viewer can see
 
     BlobGlobalVars.grid_cells_per_au: ClassVar[float] - the number of cubed grid cells for every AU
@@ -96,6 +100,12 @@ class BlobGlobalVars:
 
     BlobGlobalVars.set_universe_scale(universe_scale: float) -> None
         Class method to set BlobGlobalVars.universe_scale
+
+    BlobGlobalVars.set_org_universe_scale(universe_scale: float) -> None
+        Class method to set BlobGlobalVars.org_universe_scale
+
+    BlobGlobalVars.set_background_scale_factor(background_scale_factor: float) -> None
+        Class method to set the scale (magnitude of a 3D grid, each side size (universe_size * background_scale_factor)) of the background entity (which displays the space scene)
 
     BlobGlobalVars.set_center_blob_scale(center_blob_scale: float) -> None
         Class method to set BlobGlobalVars.center_blob_scale
@@ -140,9 +150,6 @@ class BlobGlobalVars:
     BlobGlobalVars.set_first_person_scale(first_person_scale: float) -> None
         Class method to set the scale of the first person entity
 
-    BlobGlobalVars.set_background_scale(background_scale: float) -> None
-        Class method to set the scale of the background entity (which displays the space scene)
-
     BlobGlobalVars.set_timescale(timescale: int) -> None
         Class method to set BlobGlobalVars.timescale
 
@@ -169,6 +176,7 @@ class BlobGlobalVars:
     au_scale_factor: ClassVar[float] = AU_SCALE_FACTOR
 
     universe_scale: ClassVar[float] = UNIVERSE_SCALE
+    org_universe_scale: ClassVar[float] = universe_scale
 
     center_blob_scale: ClassVar[float] = CENTER_BLOB_SCALE
     scale_center_blob_mass_with_size: ClassVar[bool] = True
@@ -211,7 +219,12 @@ class BlobGlobalVars:
     enlarge_moon_factor: ClassVar[float] = (max_radius / max_moon_radius) * 0.85
 
     first_person_scale: ClassVar[float] = FIRST_PERSON_SCALE
-    background_scale: ClassVar[float] = BACKGROUND_SCALE
+    background_scale_factor: ClassVar[float] = 0.75
+    background_scale: ClassVar[float] = BVec3(
+        (universe_size * background_scale_factor),
+        (universe_size * background_scale_factor),
+        (universe_size * background_scale_factor),
+    ).mag()
 
     grid_cells_per_au: ClassVar[float] = GRID_CELLS_PER_AU
     grid_cell_size: ClassVar[float] = GRID_CELL_SIZE
@@ -241,6 +254,17 @@ class BlobGlobalVars:
     def set_universe_scale(cls, universe_scale: float) -> None:
         """Class method to set BlobGlobalVars.universe_scale"""
         cls.universe_scale = universe_scale
+        cls.apply_configure()
+
+    @classmethod
+    def set_org_universe_scale(cls, org_universe_scale: float) -> None:
+        """Class method to set BlobGlobalVars.universe_scale"""
+        cls.org_universe_scale = org_universe_scale
+
+    @classmethod
+    def set_background_scale_factor(cls, background_scale_factor: float) -> None:
+        """Class method to set the scale (magnitude of a 3D grid, each side size (universe_size * background_scale_factor)) of the background entity (which displays the space scene)"""
+        cls.background_scale_factor = background_scale_factor
         cls.apply_configure()
 
     @classmethod
@@ -289,6 +313,12 @@ class BlobGlobalVars:
         cls.scale_up = AU / cls.au_scale_factor
 
         cls.universe_size = cls.au_scale_factor * cls.universe_scale
+
+        cls.background_scale = BVec3(
+            (cls.universe_size * cls.background_scale_factor),
+            (cls.universe_size * cls.background_scale_factor),
+            (cls.universe_size * cls.background_scale_factor),
+        ).mag()
 
         cls.center_blob_radius = (
             cls.au_scale_factor * (S / AU)
@@ -369,11 +399,6 @@ class BlobGlobalVars:
     def set_first_person_scale(cls, first_person_scale: float) -> None:
         """Class method to set the scale of the first person entity"""
         cls.first_person_scale = first_person_scale
-
-    @classmethod
-    def set_background_scale(cls, background_scale: float) -> None:
-        """Class method to set the scale of the background entity (which displays the space scene)"""
-        cls.background_scale = background_scale
 
     @classmethod
     def set_timescale(cls, timescale: int) -> None:

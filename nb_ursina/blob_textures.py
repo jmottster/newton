@@ -161,7 +161,7 @@ BLOB_TEXTURES_MOON: List[str] = [
 ]
 
 # orig: (25 / 255, 100 / 255, 150 / 255, 0.9)
-BLOB_TRAIL_COLOR: List[str] = [
+BLOB_TRAIL_COLOR: List[tuple] = [
     # Blue
     (0 / 255, 132 / 255, 184 / 255, 0.9),  # rgb(0, 132, 184)
     (5 / 255, 102 / 255, 141 / 255, 0.9),  # rgb(5, 102, 141)
@@ -204,7 +204,7 @@ BLOB_BACKGROUND_SMALL: List[str] = [
     "backgrounds/night_sky_02-small.jpg",
 ]
 
-BLOB_BACKGROUND_ROTATION: List[str] = [
+BLOB_BACKGROUND_ROTATION: List[tuple] = [
     (0, 0, 40),
     (0, 0, 40),
     (0, 0, 90),
