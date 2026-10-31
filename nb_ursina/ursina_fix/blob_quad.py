@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class to create a quad mesh object
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Dict, List, Self, Tuple

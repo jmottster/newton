@@ -5,7 +5,7 @@ A singleton class (accessed via a class instance) that tracks viewer position in
 coordinates interactions. Currently handles moon trails (only on around closest planet, and only if within 2 AU),
 and shadow spotlight (only on for nearest planet, unless a ring planet)
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import ClassVar, Self

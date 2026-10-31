@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Global constants
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 __author__ = "Jason Mott"

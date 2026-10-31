@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 A Protocol class that defines an interface for a plugin object for providing
 a graphics/drawing library to this simulator
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Any, Dict, Tuple, Self, Protocol

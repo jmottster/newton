@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 An Entity (Ursina) class that holds the first person view,
 position and rotation control via keyboard and mouse
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from pathlib import Path

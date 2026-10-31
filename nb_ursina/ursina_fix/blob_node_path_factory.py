@@ -4,7 +4,7 @@ Newton's Laws, a simulator of physics at the scale of space
 Class to create NodePath instances when needed to use instead
 of urs.Entity
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from pathlib import Path

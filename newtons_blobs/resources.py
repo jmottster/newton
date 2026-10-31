@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 File for resource related vars or functions
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 import sys

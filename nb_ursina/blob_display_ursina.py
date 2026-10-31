@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class to represent an object that holds and controls a drawing area intended for screen display
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from pathlib import Path

@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class file for setting up initial positions and velocities of blobs and maintaining them
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Any, Callable, Dict, Tuple, Self

@@ -40,7 +40,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Main file to run application with
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 import newtons_blobs as nb

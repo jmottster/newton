@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A class used to represent an object that draws the first person view Entity
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Tuple, Self, cast

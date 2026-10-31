@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class file for the physics attributes of blobs that will interact with each other (like planets and stars)
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from decimal import *

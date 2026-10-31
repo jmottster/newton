@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 A Protocol class used to define the interface for objects that BlobSaveLoad can, well, save and load
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Any, Dict, Protocol, Self

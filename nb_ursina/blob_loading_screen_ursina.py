@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 Class file for displaying a splash screen showing progress of loading blobs
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 from typing import Self

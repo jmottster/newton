@@ -3,7 +3,7 @@ Newton's Laws, a simulator of physics at the scale of space
 
 The class that saves and loads blob application state
 
-by Jason Mott, copyright 2025
+by Jason Mott, copyright 2026
 """
 
 import json
